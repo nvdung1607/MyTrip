@@ -93,4 +93,55 @@ class TripRepository(
 
     fun getTotalPlanned(tripId: Long): Flow<Long?> = expenseDao.getTotalPlanned(tripId)
     fun getTotalActual(tripId: Long): Flow<Long?> = expenseDao.getTotalActual(tripId)
+
+    suspend fun importSeedTrip() {
+        val todayStartMs = run {
+            val now = System.currentTimeMillis()
+            now - (now % 86_400_000L)
+        }
+        val seedTrip = com.example.mytrip.data.seed.TripSeedData.trip.copy(
+            startDate = todayStartMs,
+            endDate = todayStartMs + 29 * 86_400_000L,
+            createdAt = System.currentTimeMillis()
+        )
+        val seedDays = com.example.mytrip.data.seed.TripSeedData.days
+        
+        val tripId = tripDao.insertTrip(seedTrip)
+        
+        val expenses = ExpenseCategory.values().map {
+            Expense(tripId = tripId, category = it, planned = 0)
+        }
+        expenseDao.insertExpenses(expenses)
+        
+        var currentDayDate = todayStartMs
+        for (daySeed in seedDays) {
+            val day = Day(
+                tripId = tripId,
+                dayNumber = daySeed.dayNumber,
+                date = currentDayDate,
+                title = daySeed.title,
+                notes = daySeed.notes
+            )
+            val dayId = dayDao.insertDay(day)
+            
+            val activities = daySeed.activities.mapIndexed { index, actSeed ->
+                Activity(
+                    dayId = dayId,
+                    orderIndex = index,
+                    name = actSeed.name,
+                    departureTime = actSeed.departure,
+                    arrivalTime = actSeed.arrival,
+                    distanceKm = actSeed.distanceKm,
+                    hotelName = actSeed.hotelName,
+                    hotelPricePlanned = actSeed.hotelPriceK,
+                    checkInSpots = actSeed.checkInSpots,
+                    mapsLink = actSeed.mapsLink,
+                    notes = actSeed.actNotes
+                )
+            }
+            activityDao.insertActivities(activities)
+            
+            currentDayDate += 86_400_000L
+        }
+    }
 }

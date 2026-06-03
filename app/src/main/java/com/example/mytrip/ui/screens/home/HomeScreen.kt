@@ -107,7 +107,7 @@ private fun statusChipColors(status: TripStatus): Pair<Color, Color> = when (sta
 
 // ─── HomeScreen ───────────────────────────────────────────────────────────────
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
     navController: NavController,
@@ -126,6 +126,17 @@ fun HomeScreen(
                     )
                 },
                 actions = {
+                    TextButton(
+                        onClick = { viewModel.importSampleTrip() },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Text(
+                            text = "Tải mẫu 🗺️",
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                     IconButton(onClick = { /* TODO: navigate to settings */ }) {
                         Icon(
                             imageVector = Icons.Filled.Settings,
@@ -162,7 +173,10 @@ fun HomeScreen(
 
             // ── Trip list or empty state ───────────────────────────────────
             if (trips.isEmpty()) {
-                EmptyState(modifier = Modifier.fillMaxSize())
+                EmptyState(
+                    onImportSampleClick = { viewModel.importSampleTrip() },
+                    modifier = Modifier.fillMaxSize()
+                )
             } else {
                 LazyColumn(
                     contentPadding = PaddingValues(
@@ -242,31 +256,62 @@ private fun FilterChipsRow(
 // ─── Empty state ──────────────────────────────────────────────────────────────
 
 @Composable
-private fun EmptyState(modifier: Modifier = Modifier) {
+private fun EmptyState(
+    onImportSampleClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Box(
-        modifier = modifier,
+        modifier = modifier.padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        Card(
+            shape = RoundedCornerShape(24.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+            ),
+            modifier = Modifier.fillMaxWidth().padding(16.dp)
         ) {
-            Text(
-                text = "✈️",
-                fontSize = 72.sp
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "Chưa có chuyến đi nào",
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Hãy tạo chuyến đầu tiên!",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.padding(24.dp).fillMaxWidth()
+            ) {
+                Text(
+                    text = "🗺️",
+                    fontSize = 80.sp
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Chưa có chuyến đi nào",
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Hãy tạo một hành trình mới hoặc tải chuyến đi mẫu Xuyên Việt 30 ngày tự lái bằng Xforce để trải nghiệm đầy đủ tính năng!",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                Button(
+                    onClick = onImportSampleClick,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    ),
+                    modifier = Modifier.fillMaxWidth().height(48.dp)
+                ) {
+                    Text(
+                        text = "🚀 Tải lịch trình Xuyên Việt mẫu",
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
+            }
         }
     }
 }
