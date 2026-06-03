@@ -1,0 +1,405 @@
+package com.example.mytrip.ui.screens.notes
+
+import android.Manifest
+import android.content.Context
+import android.location.LocationManager
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.camera.core.*
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import com.example.mytrip.MyTripApplication
+import com.example.mytrip.data.db.entities.Note
+import com.example.mytrip.data.db.entities.NoteTag
+import com.example.mytrip.ui.screens.trip.TripViewModel
+import com.example.mytrip.util.MoneyUtils
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
+import java.util.concurrent.Executors
+
+@OptIn(ExperimentalPermissionsApi::class)
+@Composable
+fun AddNoteScreen(
+    navController: NavController,
+    tripId: Long,
+    dayId: Long?
+) {
+    val context = LocalContext.current
+    val app = context.applicationContext as MyTripApplication
+    val noteVm: NoteViewModel = viewModel(factory = NoteViewModel.factory(app))
+    val tripVm: TripViewModel = viewModel(factory = object : androidx.lifecycle.ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : androidx.lifecycle.ViewModel> create(c: Class<T>) = TripViewModel(app) as T
+    })
+
+    val trip by tripVm.trip.collectAsState()
+    LaunchedEffect(tripId) { tripVm.loadTrip(tripId) }
+
+    val savedId by noteVm.savedNoteId.collectAsState()
+    LaunchedEffect(savedId) { if (savedId != null) navController.popBackStack() }
+
+    val cameraPermission = rememberPermissionState(Manifest.permission.CAMERA)
+    val locationPermission = rememberPermissionState(Manifest.permission.ACCESS_COARSE_LOCATION)
+
+    // State
+    var photoPath by remember { mutableStateOf<String?>(null) }
+    var showCamera by remember { mutableStateOf(true) }
+    var rating by remember { mutableStateOf(0) }
+    var selectedTag by remember { mutableStateOf(NoteTag.OTHER) }
+    var costInput by remember { mutableStateOf("") }
+    var paidBy by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf("") }
+    var comment by remember { mutableStateOf("") }
+    var showOptional by remember { mutableStateOf(false) }
+    var gpsLat by remember { mutableStateOf<Double?>(null) }
+    var gpsLng by remember { mutableStateOf<Double?>(null) }
+
+    // Auto-get GPS
+    LaunchedEffect(Unit) {
+        if (locationPermission.status.isGranted) {
+            try {
+                val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+                val loc = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                    ?: lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+                loc?.let { gpsLat = it.latitude; gpsLng = it.longitude }
+            } catch (_: Exception) {}
+        } else {
+            locationPermission.launchPermissionRequest()
+        }
+    }
+
+    val memberNames = remember(trip) {
+        trip?.memberNames?.trim('[', ']')
+            ?.split(",")?.map { it.trim().trim('"') }?.filter { it.isNotBlank() }
+            ?: listOf("Tôi")
+    }
+    LaunchedEffect(memberNames) { if (paidBy.isEmpty() && memberNames.isNotEmpty()) paidBy = memberNames[0] }
+
+    if (showCamera && cameraPermission.status.isGranted) {
+        CameraScreen(
+            onPhotoCaptured = { path ->
+                photoPath = path
+                showCamera = false
+            },
+            onSkip = { showCamera = false }
+        )
+    } else if (showCamera && !cameraPermission.status.isGranted) {
+        LaunchedEffect(Unit) { cameraPermission.launchPermissionRequest() }
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Icon(Icons.Default.CameraAlt, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
+                Text("Cần quyền camera", style = MaterialTheme.typography.titleMedium)
+                Button(onClick = { cameraPermission.launchPermissionRequest() }) { Text("Cấp quyền") }
+                TextButton(onClick = { showCamera = false }) { Text("Bỏ qua ảnh") }
+            }
+        }
+    } else {
+        // Form
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Thêm ghi chú") },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(Icons.Default.ArrowBack, null)
+                        }
+                    }
+                )
+            },
+            bottomBar = {
+                Box(Modifier.fillMaxWidth().padding(16.dp)) {
+                    val cost = MoneyUtils.inputToVnd(MoneyUtils.parseInput(costInput))
+                    Button(
+                        onClick = {
+                            noteVm.saveNote(Note(
+                                tripId = tripId,
+                                dayId = dayId,
+                                photoPath = photoPath,
+                                rating = rating,
+                                tag = selectedTag,
+                                cost = cost,
+                                paidBy = paidBy,
+                                name = name,
+                                comment = comment,
+                                gpsLat = gpsLat,
+                                gpsLng = gpsLng,
+                                timestamp = System.currentTimeMillis()
+                            ))
+                        },
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                        enabled = rating > 0
+                    ) {
+                        Icon(Icons.Default.Save, null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Lưu ghi chú", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        ) { padding ->
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                // Photo preview
+                if (photoPath != null) {
+                    Box(Modifier.fillMaxWidth().height(200.dp).clip(RoundedCornerShape(16.dp))) {
+                        AsyncImage(
+                            model = File(photoPath!!),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        IconButton(
+                            onClick = { showCamera = true },
+                            modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
+                                .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                        ) { Icon(Icons.Default.CameraAlt, null, tint = Color.White) }
+                    }
+                } else {
+                    OutlinedButton(
+                        onClick = { if (cameraPermission.status.isGranted) showCamera = true else cameraPermission.launchPermissionRequest() },
+                        modifier = Modifier.fillMaxWidth().height(100.dp),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(Icons.Default.AddAPhoto, null, modifier = Modifier.size(32.dp))
+                            Spacer(Modifier.height(8.dp))
+                            Text("Chụp ảnh")
+                        }
+                    }
+                }
+
+                // ⭐ Rating
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("⭐ Đánh giá *", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            (1..5).forEach { star ->
+                                IconButton(onClick = { rating = star }) {
+                                    Icon(
+                                        imageVector = if (star <= rating) Icons.Default.Star else Icons.Default.StarBorder,
+                                        contentDescription = null,
+                                        tint = if (star <= rating) Color(0xFFFFC107) else MaterialTheme.colorScheme.outline,
+                                        modifier = Modifier.size(36.dp)
+                                    )
+                                }
+                            }
+                        }
+                        if (rating == 0) Text("Bắt buộc chọn đánh giá", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+
+                // 🏷️ Tag
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("🏷️ Loại *", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            items(NoteTag.values()) { tag ->
+                                FilterChip(
+                                    selected = selectedTag == tag,
+                                    onClick = { selectedTag = tag },
+                                    label = { Text("${tag.icon} ${tag.label}") }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // 💰 Chi phí
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("💰 Chi phí *", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        OutlinedTextField(
+                            value = costInput,
+                            onValueChange = { costInput = it.filter { c -> c.isDigit() } },
+                            modifier = Modifier.fillMaxWidth(),
+                            label = { Text("Số tiền") },
+                            placeholder = { Text("VD: 150 = 150.000₫") },
+                            suffix = { Text("k") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true
+                        )
+                        // Shortcuts
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            items(MoneyUtils.SHORTCUTS) { amount ->
+                                SuggestionChip(
+                                    onClick = { costInput = amount.toString() },
+                                    label = { Text(if (amount >= 1000) "${amount/1000}M" else "${amount}k") }
+                                )
+                            }
+                        }
+                        if (costInput.isNotEmpty()) {
+                            Text(
+                                "= ${MoneyUtils.formatVnd(MoneyUtils.inputToVnd(MoneyUtils.parseInput(costInput)))}",
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+
+                // 👤 Ai trả
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("👤 Ai trả *", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            items(memberNames) { member ->
+                                FilterChip(
+                                    selected = paidBy == member,
+                                    onClick = { paidBy = member },
+                                    label = { Text(member) }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Optional fields
+                OutlinedButton(
+                    onClick = { showOptional = !showOptional },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(if (showOptional) Icons.Default.ExpandLess else Icons.Default.ExpandMore, null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(if (showOptional) "Ẩn bớt thông tin" else "+ Thêm thông tin")
+                }
+
+                AnimatedVisibility(visible = showOptional, enter = expandVertically(), exit = shrinkVertically()) {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        OutlinedTextField(
+                            value = name,
+                            onValueChange = { name = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            label = { Text("Tên địa điểm / món ăn") },
+                            leadingIcon = { Icon(Icons.Default.Place, null) },
+                            singleLine = true
+                        )
+                        OutlinedTextField(
+                            value = comment,
+                            onValueChange = { comment = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            label = { Text("Nhận xét chi tiết") },
+                            leadingIcon = { Icon(Icons.Default.Comment, null) },
+                            minLines = 3,
+                            maxLines = 5
+                        )
+                        if (gpsLat != null && gpsLng != null) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Icon(Icons.Default.GpsFixed, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                                Text("GPS: ${String.format("%.5f", gpsLat)}, ${String.format("%.5f", gpsLng)}",
+                                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun CameraScreen(
+    onPhotoCaptured: (String) -> Unit,
+    onSkip: () -> Unit
+) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val executor = remember { Executors.newSingleThreadExecutor() }
+    var imageCapture by remember { mutableStateOf<ImageCapture?>(null) }
+
+    Box(Modifier.fillMaxSize().background(Color.Black)) {
+        AndroidView(
+            factory = { ctx ->
+                val previewView = PreviewView(ctx)
+                val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
+                cameraProviderFuture.addListener({
+                    val provider = cameraProviderFuture.get()
+                    val preview = Preview.Builder().build().also {
+                        it.setSurfaceProvider(previewView.surfaceProvider)
+                    }
+                    val capture = ImageCapture.Builder()
+                        .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                        .build()
+                    imageCapture = capture
+                    try {
+                        provider.unbindAll()
+                        provider.bindToLifecycle(lifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, preview, capture)
+                    } catch (_: Exception) {}
+                }, ContextCompat.getMainExecutor(ctx))
+                previewView
+            },
+            modifier = Modifier.fillMaxSize()
+        )
+
+        // Skip button top-right
+        TextButton(
+            onClick = onSkip,
+            modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
+        ) {
+            Text("Bỏ qua ảnh", color = Color.White, fontWeight = FontWeight.Bold)
+        }
+
+        // Shutter button
+        Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 48.dp)) {
+            IconButton(
+                onClick = {
+                    val ic = imageCapture ?: return@IconButton
+                    val dir = context.getExternalFilesDir("Pictures")
+                    val file = File(dir, "NOTE_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())}.jpg")
+                    val opts = ImageCapture.OutputFileOptions.Builder(file).build()
+                    ic.takePicture(opts, executor, object : ImageCapture.OnImageSavedCallback {
+                        override fun onImageSaved(results: ImageCapture.OutputFileResults) { onPhotoCaptured(file.absolutePath) }
+                        override fun onError(e: ImageCaptureException) { onSkip() }
+                    })
+                },
+                modifier = Modifier.size(80.dp)
+                    .background(Color.White, CircleShape)
+                    .border(4.dp, Color.Gray, CircleShape)
+            ) {
+                Box(Modifier.size(60.dp).background(Color.White, CircleShape))
+            }
+        }
+    }
+}

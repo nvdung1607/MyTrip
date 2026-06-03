@@ -1,20 +1,18 @@
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
 }
 
 android {
     namespace = "com.example.mytrip"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.mytrip"
-        minSdk = 24
-        targetSdk = 36
+        minSdk = 26
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -33,9 +31,24 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        isCoreLibraryDesugaringEnabled = true
+    }
+    kotlinOptions {
+        jvmTarget = "11"
     }
     buildFeatures {
         compose = true
+    }
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "META-INF/NOTICE"
+            excludes += "META-INF/LICENSE"
+            excludes += "META-INF/DEPENDENCIES"
+            excludes += "META-INF/NOTICE.txt"
+            excludes += "META-INF/LICENSE.txt"
+            excludes += "META-INF/ooxml-schemas-1.4.jar"
+        }
     }
 }
 
@@ -48,6 +61,47 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons)
+
+    // Room
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
+
+    // Navigation
+    implementation(libs.androidx.navigation.compose)
+
+    // ViewModel
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+
+    // CameraX
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+
+    // Coil
+    implementation(libs.coil.compose)
+
+    // Apache POI (Excel)
+    implementation(libs.apache.poi)
+    implementation(libs.apache.poi.ooxml)
+
+    // Coroutines
+    implementation(libs.kotlinx.coroutines.android)
+
+    // Accompanist Permissions
+    implementation(libs.accompanist.permissions)
+
+    // Splash screen
+    implementation(libs.androidx.core.splashscreen)
+
+    // DataStore
+    implementation(libs.androidx.datastore.preferences)
+
+    // Desugaring
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
