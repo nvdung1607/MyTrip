@@ -15,6 +15,7 @@ import com.example.mytrip.ui.screens.summary.SummaryScreen
 import com.example.mytrip.ui.screens.today.TodayScreen
 import com.example.mytrip.ui.screens.trip.CreateEditTripScreen
 import com.example.mytrip.ui.screens.trip.TripDetailScreen
+import com.example.mytrip.ui.screens.notes.AllNotesScreen
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
@@ -41,6 +42,9 @@ sealed class Screen(val route: String) {
     }
     object Summary : Screen("summary/{tripId}") {
         fun createRoute(tripId: Long) = "summary/$tripId"
+    }
+    object AllNotes : Screen("all_notes/{tripId}") {
+        fun createRoute(tripId: Long) = "all_notes/$tripId"
     }
 }
 
@@ -120,6 +124,14 @@ fun MyTripNavGraph(
         ) { backStack ->
             val tripId = backStack.arguments?.getLong("tripId") ?: return@composable
             SummaryScreen(navController = navController, tripId = tripId)
+        }
+
+        composable(
+            route = Screen.AllNotes.route,
+            arguments = listOf(navArgument("tripId") { type = NavType.LongType })
+        ) { backStack ->
+            val tripId = backStack.arguments?.getLong("tripId") ?: return@composable
+            AllNotesScreen(navController = navController, tripId = tripId)
         }
     }
 }

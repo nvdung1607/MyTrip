@@ -22,8 +22,8 @@ object TripSeedData {
         type = TripType.CAR,
         startDate = dayMs(0),
         endDate = dayMs(29),
-        numPeople = 1,
-        memberNames = "[\"Mày\"]",
+        numPeople = 3,
+        memberNames = "[\"Mày\",\"Bạn A\",\"Bạn B\"]",
         status = TripStatus.PLANNING,
         createdAt = System.currentTimeMillis()
     )

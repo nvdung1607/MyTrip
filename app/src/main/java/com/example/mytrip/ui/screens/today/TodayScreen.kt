@@ -720,7 +720,7 @@ private fun NoteCard(
                 if (note.cost > 0) {
                     Spacer(Modifier.height(2.dp))
                     Text(
-                        text = "💰 ${MoneyUtils.formatShort(note.cost * 1_000L)}",
+                        text = "💰 ${MoneyUtils.formatShort(note.cost)}",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary
                     )

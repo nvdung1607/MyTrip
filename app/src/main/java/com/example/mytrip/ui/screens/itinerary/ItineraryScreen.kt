@@ -94,6 +94,7 @@ import androidx.navigation.NavController
 import com.example.mytrip.data.db.entities.Activity
 import com.example.mytrip.data.db.entities.ActivityStatus
 import com.example.mytrip.data.db.entities.Day
+import com.example.mytrip.data.db.entities.Cluster
 import com.example.mytrip.navigation.Screen
 import com.example.mytrip.util.DateUtils
 import com.example.mytrip.util.MoneyUtils
@@ -154,8 +155,10 @@ fun ItineraryScreen(
 
     val trip by viewModel.trip.collectAsState()
     val days by viewModel.days.collectAsState()
-    val activitiesMap by viewModel.activitiesMap.collectAsState()
+    val clusters by viewModel.clusters.collectAsState()
     val expandedDays by viewModel.expandedDays.collectAsState()
+    val expandedClusters by viewModel.expandedClusters.collectAsState()
+    val activitiesMap by viewModel.activitiesMap.collectAsState()
 
     // Bottom sheet state
     var showSheet by rememberSaveable { mutableStateOf(false) }
@@ -234,31 +237,80 @@ fun ItineraryScreen(
                     .padding(innerPadding),
                 contentPadding = PaddingValues(bottom = 32.dp)
             ) {
-                val sortedDays = days.sortedBy { it.dayNumber }
-                items(sortedDays, key = { it.id }) { day ->
-                    val activities = activitiesMap[day.id] ?: emptyList()
-                    val isExpanded = expandedDays.contains(day.id)
+                if (clusters.isEmpty()) {
+                    val sortedDays = days.sortedBy { it.dayNumber }
+                    items(sortedDays, key = { it.id }) { day ->
+                        val activities = activitiesMap[day.id] ?: emptyList()
+                        val isExpanded = expandedDays.contains(day.id)
 
-                    DaySection(
-                        day = day,
-                        activities = activities,
-                        isExpanded = isExpanded,
-                        onToggleExpand = { viewModel.toggleDayExpanded(day.id) },
-                        onAddActivity = {
-                            sheetDayId = day.id
-                            editingActivity = null
-                            showSheet = true
-                        },
-                        onEditActivity = { act ->
-                            sheetDayId = day.id
-                            editingActivity = act
-                            showSheet = true
-                        },
-                        onDeleteActivity = { act -> deleteTarget = act },
-                        onStatusChange = { act, status ->
-                            viewModel.updateActivityStatus(act.id, status)
+                        DaySection(
+                            day = day,
+                            activities = activities,
+                            isExpanded = isExpanded,
+                            onToggleExpand = { viewModel.toggleDayExpanded(day.id) },
+                            onAddActivity = {
+                                sheetDayId = day.id
+                                editingActivity = null
+                                showSheet = true
+                            },
+                            onEditActivity = { act ->
+                                sheetDayId = day.id
+                                editingActivity = act
+                                showSheet = true
+                            },
+                            onDeleteActivity = { act -> deleteTarget = act },
+                            onStatusChange = { act, status ->
+                                viewModel.updateActivityStatus(act.id, status)
+                            }
+                        )
+                    }
+                } else {
+                    val sortedClusters = clusters.sortedBy { it.orderIndex }
+                    sortedClusters.forEach { cluster ->
+                        val clusterDays = days.filter { it.clusterId == cluster.id }.sortedBy { it.dayNumber }
+                        if (clusterDays.isNotEmpty()) {
+                            val isClusterExpanded = expandedClusters.contains(cluster.id)
+                            
+                            // Cluster Header
+                            item(key = "cluster_${cluster.id}") {
+                                ClusterHeader(
+                                    cluster = cluster,
+                                    daysCount = clusterDays.size,
+                                    isExpanded = isClusterExpanded,
+                                    onToggle = { viewModel.toggleClusterExpanded(cluster.id) }
+                                )
+                            }
+                            
+                            // Days in Cluster (if expanded)
+                            if (isClusterExpanded) {
+                                items(clusterDays, key = { it.id }) { day ->
+                                    val activities = activitiesMap[day.id] ?: emptyList()
+                                    val isExpanded = expandedDays.contains(day.id)
+
+                                    DaySection(
+                                        day = day,
+                                        activities = activities,
+                                        isExpanded = isExpanded,
+                                        onToggleExpand = { viewModel.toggleDayExpanded(day.id) },
+                                        onAddActivity = {
+                                            sheetDayId = day.id
+                                            editingActivity = null
+                                            showSheet = true
+                                        },
+                                        onEditActivity = { act ->
+                                            sheetDayId = day.id
+                                            editingActivity = act
+                                            showSheet = true
+                                        },
+                                        onDeleteActivity = { act -> deleteTarget = act },
+                                        onStatusChange = { act, status ->
+                                            viewModel.updateActivityStatus(act.id, status)
+                                        }
+                                    )
+                                }
+                            }
                         }
-                    )
+                    }
                 }
             }
         }
@@ -373,7 +425,7 @@ private fun DaySection(
                 // Date and title
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = DateUtils.formatFull(day.date),
+                        text = "Ngày ${day.dayNumber} — ${DateUtils.formatFull(day.date)}",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -966,5 +1018,57 @@ private fun ActivityEditSheet(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+    }
+}
+
+// ─── Cluster header ──────────────────────────────────────────────────────────
+@Composable
+private fun ClusterHeader(
+    cluster: Cluster,
+    daysCount: Int,
+    isExpanded: Boolean,
+    onToggle: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clickable { onToggle() },
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "📦",
+                fontSize = 20.sp,
+                modifier = Modifier.padding(end = 12.dp)
+            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = cluster.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                Text(
+                    text = "Gồm $daysCount ngày • ${if (isExpanded) "Chạm để ẩn" else "Chạm để xem chi tiết"}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
+                )
+            }
+            Icon(
+                imageVector = if (isExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                contentDescription = if (isExpanded) "Thu gọn cụm" else "Mở rộng cụm",
+                tint = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        }
     }
 }

@@ -330,12 +330,12 @@ private fun TripDetailContent(
             ) {
                 ActionCard(
                     modifier = Modifier.weight(1f),
-                    emoji = "📷",
-                    title = "Thêm Note",
-                    subtitle = "Ghi chép & ảnh",
+                    emoji = "📖",
+                    title = "Nhật ký & Ảnh",
+                    subtitle = "Tất cả ghi chép",
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    onClick = { navController.navigate(Screen.AddNote.createRoute(trip.id)) }
+                    onClick = { navController.navigate(Screen.AllNotes.createRoute(trip.id)) }
                 )
                 ActionCard(
                     modifier = Modifier.weight(1f),

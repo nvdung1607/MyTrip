@@ -77,9 +77,65 @@ class TripRepository(
     // ── Note ──────────────────────────────────────────────────────────
     fun getNotes(tripId: Long): Flow<List<Note>> = noteDao.getNotesForTrip(tripId)
     fun getNotesForDay(dayId: Long): Flow<List<Note>> = noteDao.getNotesForDay(dayId)
-    suspend fun insertNote(note: Note): Long = noteDao.insertNote(note)
-    suspend fun updateNote(note: Note) = noteDao.updateNote(note)
-    suspend fun deleteNote(note: Note) = noteDao.deleteNote(note)
+    suspend fun insertNote(note: Note): Long {
+        val noteId = noteDao.insertNote(note)
+        if (note.cost > 0) {
+            val record = ExpenseRecord(
+                tripId = note.tripId,
+                dayId = note.dayId,
+                category = note.tag.toExpenseCategory(),
+                amount = note.cost,
+                paidBy = note.paidBy,
+                description = note.name.ifBlank { note.comment.take(30) }.ifBlank { note.tag.label },
+                timestamp = note.timestamp,
+                noteId = noteId
+            )
+            expenseDao.insertRecord(record)
+        }
+        return noteId
+    }
+
+    suspend fun updateNote(note: Note) {
+        noteDao.updateNote(note)
+        val existingRecord = expenseDao.getRecordByNoteId(note.id)
+        if (note.cost > 0) {
+            val updatedRecord = ExpenseRecord(
+                id = existingRecord?.id ?: 0,
+                tripId = note.tripId,
+                dayId = note.dayId,
+                category = note.tag.toExpenseCategory(),
+                amount = note.cost,
+                paidBy = note.paidBy,
+                description = note.name.ifBlank { note.comment.take(30) }.ifBlank { note.tag.label },
+                timestamp = note.timestamp,
+                noteId = note.id
+            )
+            if (existingRecord != null) {
+                expenseDao.updateRecord(updatedRecord)
+            } else {
+                expenseDao.insertRecord(updatedRecord)
+            }
+        } else {
+            if (existingRecord != null) {
+                expenseDao.deleteRecord(existingRecord)
+            }
+        }
+    }
+
+    suspend fun deleteNote(note: Note) {
+        noteDao.deleteNote(note)
+        expenseDao.deleteRecordByNoteId(note.id)
+    }
+
+    private fun NoteTag.toExpenseCategory(): ExpenseCategory = when (this) {
+        NoteTag.HOTEL -> ExpenseCategory.HOTEL
+        NoteTag.FOOD -> ExpenseCategory.FOOD
+        NoteTag.ATTRACTION -> ExpenseCategory.TICKET
+        NoteTag.SHOP -> ExpenseCategory.GIFT
+        NoteTag.TRANSPORT -> ExpenseCategory.TRANSPORT
+        NoteTag.PERSON -> ExpenseCategory.MISC
+        NoteTag.OTHER -> ExpenseCategory.MISC
+    }
 
     // ── Expense ───────────────────────────────────────────────────────
     fun getExpenses(tripId: Long): Flow<List<Expense>> = expenseDao.getExpensesForTrip(tripId)
@@ -108,15 +164,43 @@ class TripRepository(
         
         val tripId = tripDao.insertTrip(seedTrip)
         
-        val expenses = ExpenseCategory.values().map {
-            Expense(tripId = tripId, category = it, planned = 0)
-        }
+        // Bổ sung các khoản chi phí dự kiến mẫu theo yêu cầu
+        val expenses = listOf(
+            Expense(tripId = tripId, category = ExpenseCategory.HOTEL, planned = 13_050_000L, description = "450.000đ/đêm x 29 đêm (Ngày 30 trả phòng)"),
+            Expense(tripId = tripId, category = ExpenseCategory.FOOD, planned = 18_000_000L, description = "200.000đ/người x 3 người x 30 ngày"),
+            Expense(tripId = tripId, category = ExpenseCategory.TRANSPORT, planned = 8_232_000L, description = "Xăng xe (4.800km / 100) x 7L x 24.500đ/L"),
+            Expense(tripId = tripId, category = ExpenseCategory.TICKET, planned = 6_675_000L, description = "Vé tham quan (Đã bỏ vé Bà Nà Hills)"),
+            Expense(tripId = tripId, category = ExpenseCategory.MISC, planned = 3_500_000L, description = "Phí cầu đường (BOT & Cao tốc Bắc-Nam)"),
+            Expense(tripId = tripId, category = ExpenseCategory.GIFT, planned = 0L, description = "Mua sắm / Quà cáp")
+        )
         expenseDao.insertExpenses(expenses)
+        
+        // Tạo 6 cụm theo lộ trình
+        val clusterNames = listOf(
+            "Cụm 1: Khởi hành & Duyên hải miền Trung (N1-N8)",
+            "Cụm 2: Duyên hải Nam Trung Bộ & TP.HCM (N9-N12)",
+            "Cụm 3: Khám phá Miền Tây Nam Bộ (N13-N18)",
+            "Cụm 4: Ngược dòng lên Tây Nguyên (N19-N22)",
+            "Cụm 5: Cao nguyên Đất đỏ (N23-N26)",
+            "Cụm 6: Hành trình trở về Bắc (N27-N30)"
+        )
+        val clusterIds = clusterNames.mapIndexed { idx, name ->
+            clusterDao.insertCluster(Cluster(tripId = tripId, name = name, orderIndex = idx))
+        }
         
         var currentDayDate = todayStartMs
         for (daySeed in seedDays) {
+            val clusterId = when (daySeed.dayNumber) {
+                in 1..8 -> clusterIds[0]
+                in 9..12 -> clusterIds[1]
+                in 13..18 -> clusterIds[2]
+                in 19..22 -> clusterIds[3]
+                in 23..26 -> clusterIds[4]
+                else -> clusterIds[5]
+            }
             val day = Day(
                 tripId = tripId,
+                clusterId = clusterId,
                 dayNumber = daySeed.dayNumber,
                 date = currentDayDate,
                 title = daySeed.title,

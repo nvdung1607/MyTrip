@@ -53,5 +53,6 @@ data class ExpenseRecord(
     val amount: Long,                  // Số tiền (VND)
     val paidBy: String,                // Tên người trả
     val description: String = "",
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+    val noteId: Long? = null
 )

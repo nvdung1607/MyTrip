@@ -45,6 +45,12 @@ interface ExpenseDao {
     @Delete
     suspend fun deleteRecord(record: ExpenseRecord)
 
+    @Query("SELECT * FROM expense_records WHERE noteId = :noteId LIMIT 1")
+    suspend fun getRecordByNoteId(noteId: Long): ExpenseRecord?
+
+    @Query("DELETE FROM expense_records WHERE noteId = :noteId")
+    suspend fun deleteRecordByNoteId(noteId: Long)
+
     @Query("SELECT SUM(amount) FROM expense_records WHERE tripId = :tripId")
     fun getTotalActual(tripId: Long): Flow<Long?>
 

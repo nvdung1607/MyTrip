@@ -8,6 +8,7 @@ import com.example.mytrip.MyTripApplication
 import com.example.mytrip.data.db.entities.Activity
 import com.example.mytrip.data.db.entities.ActivityStatus
 import com.example.mytrip.data.db.entities.Day
+import com.example.mytrip.data.db.entities.Cluster
 import com.example.mytrip.data.db.entities.Trip
 import com.example.mytrip.data.repository.TripRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -39,6 +40,10 @@ class ItineraryViewModel(application: Application) : AndroidViewModel(applicatio
         if (id != null) repository.getDays(id) else flowOf(emptyList())
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    val clusters: StateFlow<List<Cluster>> = _tripId.flatMapLatest { id ->
+        if (id != null) repository.getClusters(id) else flowOf(emptyList())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
     // Map of dayId -> activities list, rebuilt whenever days or any activity list changes
     private val _activitiesMap = MutableStateFlow<Map<Long, List<Activity>>>(emptyMap())
     val activitiesMap: StateFlow<Map<Long, List<Activity>>> = _activitiesMap.asStateFlow()
@@ -49,6 +54,16 @@ class ItineraryViewModel(application: Application) : AndroidViewModel(applicatio
     // ── Load data ─────────────────────────────────────────────────────
     fun loadData(tripId: Long) {
         _tripId.value = tripId
+        
+        // Observe clusters and initialize expanded state
+        viewModelScope.launch {
+            clusters.collect { clusterList ->
+                if (clusterList.isNotEmpty()) {
+                    expandedClusters.value = clusterList.map { it.id }.toSet()
+                }
+            }
+        }
+
         // Observe days and for each day observe activities
         viewModelScope.launch {
             days.collect { dayList ->

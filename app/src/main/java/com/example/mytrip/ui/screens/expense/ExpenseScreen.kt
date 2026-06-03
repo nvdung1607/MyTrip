@@ -55,6 +55,7 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
     var selectedTab by remember { mutableStateOf(0) }
     var showAddRecord by remember { mutableStateOf(false) }
     var editExpense by remember { mutableStateOf<Expense?>(null) }
+    var selectedCategoryForNewRecord by remember { mutableStateOf(ExpenseCategory.FOOD) }
 
     Scaffold(
         topBar = {
@@ -73,9 +74,12 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
             )
         },
         floatingActionButton = {
-            if (selectedTab == 1) {
+            if (selectedTab == 1 || trip?.status == TripStatus.ONGOING) {
                 ExtendedFloatingActionButton(
-                    onClick = { showAddRecord = true },
+                    onClick = {
+                        selectedCategoryForNewRecord = ExpenseCategory.FOOD
+                        showAddRecord = true
+                    },
                     icon = { Icon(Icons.Default.Add, null) },
                     text = { Text("Thêm chi tiêu") }
                 )
@@ -97,7 +101,14 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
                     records = records,
                     totalPlanned = totalPlanned,
                     totalActual = totalActual,
-                    onEditExpense = { editExpense = it }
+                    onCategoryClick = { category ->
+                        if (trip?.status == TripStatus.ONGOING) {
+                            selectedCategoryForNewRecord = category
+                            showAddRecord = true
+                        } else if (trip?.status == TripStatus.PLANNING) {
+                            editExpense = expenses.find { it.category == category }
+                        }
+                    }
                 )
                 1 -> ActualTab(
                     records = records,
@@ -149,6 +160,7 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
     // Add record bottom sheet
     if (showAddRecord) {
         AddExpenseRecordSheet(
+            initialCategory = selectedCategoryForNewRecord,
             memberNames = memberNames,
             onDismiss = { showAddRecord = false },
             onSave = { record ->
@@ -166,7 +178,7 @@ private fun BudgetTab(
     records: List<ExpenseRecord>,
     totalPlanned: Long,
     totalActual: Long,
-    onEditExpense: (Expense) -> Unit
+    onCategoryClick: (ExpenseCategory) -> Unit
 ) {
     val numPeople = trip?.numPeople ?: 1
     val ratio = if (totalPlanned > 0) (totalActual.toFloat() / totalPlanned).coerceIn(0f, 1f) else 0f
@@ -211,14 +223,25 @@ private fun BudgetTab(
 
         items(expenses, key = { it.id }) { exp ->
             val actual = records.filter { it.category == exp.category }.sumOf { it.amount }
-            Card(modifier = Modifier.fillMaxWidth().clickable { onEditExpense(exp) }) {
+            val isOngoing = trip?.status == TripStatus.ONGOING
+            val isDone = trip?.status == TripStatus.DONE
+            val subtitle = when {
+                isOngoing -> "Nhấn để thêm chi tiêu thực tế"
+                isDone -> "Chuyến đi đã kết thúc"
+                else -> "Nhấn để chỉnh dự kiến"
+            }
+            Card(
+                modifier = Modifier.fillMaxWidth().clickable(enabled = !isDone) {
+                    onCategoryClick(exp.category)
+                }
+            ) {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically) {
                     Text(exp.category.icon, fontSize = 28.sp)
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
                         Text(exp.category.label, fontWeight = FontWeight.Medium)
-                        Text("Nhấn để chỉnh dự kiến", style = MaterialTheme.typography.labelSmall,
+                        Text(subtitle, style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Column(horizontalAlignment = Alignment.End) {
@@ -328,11 +351,12 @@ private fun ActualTab(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddExpenseRecordSheet(
+    initialCategory: ExpenseCategory = ExpenseCategory.FOOD,
     memberNames: List<String>,
     onDismiss: () -> Unit,
     onSave: (ExpenseRecord) -> Unit
 ) {
-    var category by remember { mutableStateOf(ExpenseCategory.FOOD) }
+    var category by remember { mutableStateOf(initialCategory) }
     var amountInput by remember { mutableStateOf("") }
     var paidBy by remember { mutableStateOf(memberNames.firstOrNull() ?: "Tôi") }
     var description by remember { mutableStateOf("") }
