@@ -137,7 +137,7 @@ class ItineraryViewModel(application: Application) : AndroidViewModel(applicatio
                 extras: androidx.lifecycle.viewmodel.CreationExtras
             ): T {
                 val application =
-                    extras[androidx.lifecycle.viewmodel.MutableCreationExtras.APPLICATION_KEY]!!
+                    extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY]!!
                 return ItineraryViewModel(application) as T
             }
         }

@@ -66,7 +66,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 extras: androidx.lifecycle.viewmodel.CreationExtras
             ): T {
                 val application =
-                    extras[androidx.lifecycle.viewmodel.MutableCreationExtras.APPLICATION_KEY]!!
+                    extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY]!!
                 return HomeViewModel(application) as T
             }
         }

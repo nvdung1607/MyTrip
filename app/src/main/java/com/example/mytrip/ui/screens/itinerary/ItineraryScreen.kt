@@ -142,7 +142,7 @@ private val hotelShortcuts = listOf(
 )
 
 // ─── Main screen ──────────────────────────────────────────────────────────────
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun ItineraryScreen(
     navController: NavController,
@@ -444,7 +444,7 @@ private fun DaySection(
 }
 
 // ─── Activity row ─────────────────────────────────────────────────────────────
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 private fun ActivityRow(
     activity: Activity,

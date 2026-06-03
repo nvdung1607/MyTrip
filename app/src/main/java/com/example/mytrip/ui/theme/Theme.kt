@@ -5,6 +5,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
@@ -37,19 +38,19 @@ private val DarkColorScheme = darkColorScheme(
 
 private val LightColorScheme = lightColorScheme(
     primary          = Primary40,
-    onPrimary        = androidx.compose.ui.graphics.Color.White,
+    onPrimary        = Color.White,
     primaryContainer = Primary90,
     onPrimaryContainer = Primary10,
     secondary        = Secondary40,
-    onSecondary      = androidx.compose.ui.graphics.Color.White,
+    onSecondary      = Color.White,
     secondaryContainer = Secondary90,
     onSecondaryContainer = Secondary10,
     tertiary         = Tertiary40,
-    onTertiary       = androidx.compose.ui.graphics.Color.White,
+    onTertiary       = Color.White,
     tertiaryContainer = Tertiary90,
     onTertiaryContainer = Color(0xFF29132E),
     error            = Error40,
-    onError          = androidx.compose.ui.graphics.Color.White,
+    onError          = Color.White,
     errorContainer   = Error90,
     onErrorContainer = Color(0xFF410002),
     background       = Neutral99,
