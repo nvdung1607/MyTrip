@@ -164,12 +164,15 @@ private fun BudgetSection(actual: Long, planned: Long, compact: Boolean = false)
 
 @Composable
 fun EmptyWidget() {
+    val openApp = actionStartActivity(Intent(Intent.ACTION_VIEW, Uri.parse("mytrip://home")).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP })
+
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
             .cornerRadius(16.dp)
             .background(BgColor)
-            .padding(12.dp),
+            .padding(12.dp)
+            .clickable(openApp),
         verticalAlignment = Alignment.Vertical.CenterVertically,
         horizontalAlignment = Alignment.Horizontal.CenterHorizontally
     ) {
@@ -249,6 +252,12 @@ fun SmallWidget(state: MyTripWidgetState) {
                     ProgressBar(state.currentDay.toFloat() / state.totalDays)
                 }
             }
+            state.tripStatus == TripStatus.ONGOING -> {
+                Text(
+                    "Đang đi (Ngoài lịch trình)",
+                    style = TextStyle(color = NavyColor, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                )
+            }
             state.tripStatus == TripStatus.PLANNING -> {
                 Column {
                     Text(
@@ -325,6 +334,11 @@ fun MediumWidget(state: MyTripWidgetState) {
                     Spacer(GlanceModifier.height(4.dp))
                     ProgressBar(state.currentDay.toFloat() / state.totalDays)
                 }
+            } else if (state.tripStatus == TripStatus.ONGOING) {
+                Text(
+                    "Đang đi (Ngoài lịch trình)",
+                    style = TextStyle(color = NavyColor, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                )
             } else if (state.tripStatus == TripStatus.PLANNING) {
                 Column {
                     Text(
@@ -480,6 +494,15 @@ fun LargeWidget(state: MyTripWidgetState) {
                     if (state.tripStatus == TripStatus.ONGOING && state.currentDay > 0) {
                         Text(
                             "Ngày ${state.currentDay} / ${state.totalDays}",
+                            style = TextStyle(
+                                color = NavyColor,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        )
+                    } else if (state.tripStatus == TripStatus.ONGOING) {
+                        Text(
+                            "Ngoài lịch trình",
                             style = TextStyle(
                                 color = NavyColor,
                                 fontSize = 12.sp,

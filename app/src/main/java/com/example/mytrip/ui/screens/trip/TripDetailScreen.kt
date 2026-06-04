@@ -207,6 +207,14 @@ fun TripDetailScreen(
                     }
                 )
             }
+            
+            uiState is TripUiState.Success && trip == null -> {
+                LaunchedEffect(Unit) {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(0)
+                    }
+                }
+            }
         }
 
         // Draggable FAB overlay – thêm nhật ký
