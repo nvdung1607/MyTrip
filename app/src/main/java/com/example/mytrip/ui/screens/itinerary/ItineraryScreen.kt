@@ -100,6 +100,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -695,6 +697,13 @@ private fun ActivityEditSheet(
     var departureTimeError by rememberSaveable { mutableStateOf(false) }
     var arrivalTimeError by rememberSaveable { mutableStateOf(false) }
 
+    val departureTimeValue = remember(departureTime) {
+        TextFieldValue(departureTime, TextRange(departureTime.length))
+    }
+    val arrivalTimeValue = remember(arrivalTime) {
+        TextFieldValue(arrivalTime, TextRange(arrivalTime.length))
+    }
+
     // Expandable detail view toggle
     var showMoreDetails by rememberSaveable { mutableStateOf(false) }
 
@@ -830,9 +839,9 @@ private fun ActivityEditSheet(
         if (selectedType != ActivityType.MEAL) {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(
-                    value = departureTime,
+                    value = departureTimeValue,
                     onValueChange = { 
-                        departureTime = onTimeValueChange(it)
+                        departureTime = onTimeValueChange(it.text)
                         departureTimeError = false 
                     },
                     label = { Text(if (selectedType == ActivityType.ACCOMMODATION) "Check-in" else "Giờ đi", maxLines = 1, overflow = TextOverflow.Ellipsis) },
@@ -852,9 +861,9 @@ private fun ActivityEditSheet(
                     shape = RoundedCornerShape(16.dp)
                 )
                 OutlinedTextField(
-                    value = arrivalTime,
+                    value = arrivalTimeValue,
                     onValueChange = { 
-                        arrivalTime = onTimeValueChange(it)
+                        arrivalTime = onTimeValueChange(it.text)
                         arrivalTimeError = false 
                     },
                     label = { Text(if (selectedType == ActivityType.ACCOMMODATION) "Check-out" else "Giờ đến", maxLines = 1, overflow = TextOverflow.Ellipsis) },
@@ -883,9 +892,6 @@ private fun ActivityEditSheet(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    item {
-                        Text("Gợi ý giờ đến: ", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
                     items(listOf(
                         "+30p" to 30,
                         "+1h" to 60,
