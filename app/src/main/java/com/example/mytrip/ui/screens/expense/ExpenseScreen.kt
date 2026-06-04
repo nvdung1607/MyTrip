@@ -30,6 +30,17 @@ import com.example.mytrip.data.db.entities.*
 import com.example.mytrip.util.DateUtils
 import com.example.mytrip.util.MoneyUtils
 
+// Category accent colors (kept as constants, not hardcoded as theme colors)
+private fun categoryColor(category: ExpenseCategory): Color = when (category) {
+    ExpenseCategory.FOOD         -> Color(0xFF2E7D32)
+    ExpenseCategory.HOTEL        -> Color(0xFF1565C0)
+    ExpenseCategory.TRANSPORT    -> Color(0xFF6A1B9A)
+    ExpenseCategory.TICKET       -> Color(0xFFE65100)
+    ExpenseCategory.SHOPPING     -> Color(0xFFAD1457)
+    ExpenseCategory.OTHER        -> Color(0xFF00695C)
+    else                         -> Color(0xFF455A64)
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExpenseScreen(navController: NavController, tripId: Long) {
@@ -60,13 +71,21 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("💰 Chi phí") },
+                title = {
+                    Text(
+                        "Chi phí",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, null)
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Quay lại")
                     }
                 },
-                actions = {}
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer
+                )
             )
         },
         floatingActionButton = {
@@ -77,17 +96,37 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
                         showAddRecord = true
                     },
                     icon = { Icon(Icons.Default.Add, null) },
-                    text = { Text("Thêm chi tiêu") }
+                    text = { Text("Thêm chi tiêu", fontWeight = FontWeight.Medium) }
                 )
             }
         }
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
-            TabRow(selectedTabIndex = selectedTab) {
-                Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 },
-                    text = { Text("📊 Ngân sách") })
-                Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 },
-                    text = { Text("📝 Thực tế") })
+            TabRow(
+                selectedTabIndex = selectedTab,
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                contentColor = MaterialTheme.colorScheme.primary
+            ) {
+                Tab(
+                    selected = selectedTab == 0,
+                    onClick = { selectedTab = 0 },
+                    text = {
+                        Text(
+                            "Ngân sách",
+                            fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+                )
+                Tab(
+                    selected = selectedTab == 1,
+                    onClick = { selectedTab = 1 },
+                    text = {
+                        Text(
+                            "Thực tế",
+                            fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+                )
             }
 
             when (selectedTab) {
@@ -117,7 +156,6 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
         }
     }
 
-    // Edit planned budget dialog
     // Edit planned budget dialog
     editExpense?.let { exp ->
         var isDetailedMode by remember(exp) { mutableStateOf(false) }
@@ -179,7 +217,7 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
 
         AlertDialog(
             onDismissRequest = { editExpense = null },
-            title = { Text("${exp.category.icon} ${exp.category.label}") },
+            title = { Text("${exp.category.icon} ${exp.category.label}", fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     // Toggle Detailed vs Quick mode
@@ -195,7 +233,7 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
                         FilterChip(
                             selected = isDetailedMode,
                             onClick = { isDetailedMode = true },
-                            label = { Text("🧮 Tính chi tiết") }
+                            label = { Text("Tính chi tiết") }
                         )
                     }
 
@@ -359,6 +397,7 @@ private fun BudgetTab(
     val numPeople = trip?.numPeople ?: 1
     val ratio = if (totalPlanned > 0) (totalActual.toFloat() / totalPlanned).coerceIn(0f, 1f) else 0f
     val overBudget = totalActual > totalPlanned
+    val progressColor = if (overBudget) MaterialTheme.colorScheme.error else Color(0xFF1A73E8)
 
     LazyColumn(
         Modifier.fillMaxSize(),
@@ -366,33 +405,80 @@ private fun BudgetTab(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
-            // Summary card
+            // Budget summary card — large, prominent
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
-                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Column(
+                    Modifier.padding(horizontal = 20.dp, vertical = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
                         Column {
-                            Text("Dự kiến", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(0.7f))
-                            Text(MoneyUtils.formatShort(totalPlanned), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                            Text(
+                                "Dự kiến",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.65f)
+                            )
+                            Text(
+                                MoneyUtils.formatShort(totalPlanned),
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
                         }
                         Column(horizontalAlignment = Alignment.End) {
-                            Text("Thực tế", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(0.7f))
-                            Text(MoneyUtils.formatShort(totalActual),
-                                style = MaterialTheme.typography.headlineSmall,
+                            Text(
+                                "Thực tế",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.65f)
+                            )
+                            Text(
+                                MoneyUtils.formatShort(totalActual),
+                                style = MaterialTheme.typography.headlineMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = if (overBudget) MaterialTheme.colorScheme.error else Color(0xFF2E7D32))
+                                color = if (overBudget) MaterialTheme.colorScheme.error
+                                        else Color(0xFF137333)
+                            )
                         }
                     }
+
+                    // Progress bar 10dp, rounded
                     LinearProgressIndicator(
                         progress = { ratio },
-                        modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(8.dp)),
-                        color = if (overBudget) MaterialTheme.colorScheme.error else Color(0xFF4CAF50),
-                        trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(0.2f)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(10.dp)
+                            .clip(RoundedCornerShape(50)),
+                        color = progressColor,
+                        trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.15f)
                     )
-                    if (overBudget)
-                        Text("⚠️ Vượt ngân sách ${MoneyUtils.formatShort(totalActual - totalPlanned)}", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelMedium)
+
+                    if (overBudget) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Warning,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                "Vượt ngân sách ${MoneyUtils.formatShort(totalActual - totalPlanned)}",
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -406,43 +492,110 @@ private fun BudgetTab(
                 isDone -> "Chuyến đi đã kết thúc"
                 else -> "Nhấn để chỉnh dự kiến"
             }
+            val catColor = categoryColor(exp.category)
+            val catActualOver = actual > exp.planned && exp.planned > 0
+
             Card(
-                modifier = Modifier.fillMaxWidth().clickable(enabled = !isDone) {
-                    onCategoryClick(exp.category)
-                }
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(enabled = !isDone) { onCategoryClick(exp.category) },
+                shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
             ) {
-                Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically) {
-                    Text(exp.category.icon, fontSize = 28.sp)
-                    Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(exp.category.label, fontWeight = FontWeight.Medium)
-                        Text(subtitle, style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Row(
+                    Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Left accent bar
+                    Box(
+                        modifier = Modifier
+                            .width(4.dp)
+                            .height(64.dp)
+                            .background(catColor, RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp))
+                    )
+                    // Icon circle
+                    Box(
+                        modifier = Modifier
+                            .padding(start = 12.dp)
+                            .size(40.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(catColor.copy(alpha = 0.12f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(exp.category.icon, fontSize = 20.sp)
                     }
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(MoneyUtils.formatShort(exp.planned),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-                        Text(MoneyUtils.formatShort(actual), fontWeight = FontWeight.Bold,
-                            color = if (actual > exp.planned && exp.planned > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
+                    Column(
+                        Modifier
+                            .weight(1f)
+                            .padding(start = 12.dp, top = 12.dp, bottom = 12.dp)
+                    ) {
+                        Text(exp.category.label, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            subtitle,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Column(
+                        horizontalAlignment = Alignment.End,
+                        modifier = Modifier.padding(end = 16.dp, top = 12.dp, bottom = 12.dp)
+                    ) {
+                        Text(
+                            MoneyUtils.formatShort(exp.planned),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Text(
+                            MoneyUtils.formatShort(actual),
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (catActualOver) MaterialTheme.colorScheme.error
+                                    else MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
             }
         }
 
         item {
-            // Per person
-            Card(modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
-                Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+            // Per person summary card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+            ) {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Column {
-                        Text("Dự kiến/người", style = MaterialTheme.typography.labelSmall)
-                        Text(MoneyUtils.formatShort(if (numPeople > 0) totalPlanned / numPeople else 0), fontWeight = FontWeight.Bold)
+                        Text(
+                            "Dự kiến / người",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                        )
+                        Text(
+                            MoneyUtils.formatShort(if (numPeople > 0) totalPlanned / numPeople else 0),
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
                     }
                     Column(horizontalAlignment = Alignment.End) {
-                        Text("Thực tế/người", style = MaterialTheme.typography.labelSmall)
-                        Text(MoneyUtils.formatShort(if (numPeople > 0) totalActual / numPeople else 0), fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary)
+                        Text(
+                            "Thực tế / người",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                        )
+                        Text(
+                            MoneyUtils.formatShort(if (numPeople > 0) totalActual / numPeople else 0),
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
             }
@@ -469,18 +622,48 @@ private fun ActualTab(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         grouped.forEach { (date, dayRecords) ->
-            item { Text(date, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold) }
+            item {
+                Text(
+                    date,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 4.dp, bottom = 2.dp)
+                )
+            }
             items(dayRecords, key = { it.id }) { rec ->
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(rec.category.icon, fontSize = 24.sp)
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                ) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Category icon pill
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(categoryColor(rec.category).copy(alpha = 0.12f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(rec.category.icon, fontSize = 20.sp)
+                        }
                         Spacer(Modifier.width(12.dp))
                         Column(Modifier.weight(1f)) {
-                            Text(rec.description.ifEmpty { rec.category.label }, fontWeight = FontWeight.Medium)
+                            Text(
+                                rec.description.ifEmpty { rec.category.label },
+                                fontWeight = FontWeight.SemiBold,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Spacer(Modifier.height(3.dp))
                             Surface(
                                 shape = RoundedCornerShape(50),
-                                color = MaterialTheme.colorScheme.secondaryContainer,
-                                modifier = Modifier.padding(top = 4.dp)
+                                color = MaterialTheme.colorScheme.secondaryContainer
                             ) {
                                 Text(
                                     text = rec.paidBy,
@@ -491,11 +674,23 @@ private fun ActualTab(
                             }
                         }
                         Column(horizontalAlignment = Alignment.End) {
-                            Text(MoneyUtils.formatShort(rec.amount), fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp, color = MaterialTheme.colorScheme.primary)
+                            Text(
+                                MoneyUtils.formatShort(rec.amount),
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.primary
+                            )
                             if (isEditable) {
-                                IconButton(onClick = { deleteTarget = rec }, modifier = Modifier.size(24.dp)) {
-                                    Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(16.dp))
+                                IconButton(
+                                    onClick = { deleteTarget = rec },
+                                    modifier = Modifier.size(28.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Delete,
+                                        null,
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(16.dp)
+                                    )
                                 }
                             }
                         }
@@ -506,22 +701,56 @@ private fun ActualTab(
 
         // Balance summary
         if (memberBalances.isNotEmpty()) {
-            item { Spacer(Modifier.height(8.dp)) }
+            item { Spacer(Modifier.height(4.dp)) }
             item {
-                Text("⚖️ Quyết toán", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(
+                    "Quyết toán",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
             }
             items(memberNames) { name ->
                 val balance = memberBalances[name] ?: 0L
-                Card(modifier = Modifier.fillMaxWidth(),
+                val isPositive = balance >= 0
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = if (balance >= 0) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)
-                    )) {
-                    Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text(name, fontWeight = FontWeight.Medium)
-                        if (balance >= 0) {
-                            Text("✅ Được hoàn ${MoneyUtils.formatShort(balance)}", color = Color(0xFF2E7D32), fontWeight = FontWeight.Bold)
+                        containerColor = if (isPositive)
+                            MaterialTheme.colorScheme.tertiaryContainer
+                        else
+                            MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            name,
+                            fontWeight = FontWeight.SemiBold,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (isPositive) MaterialTheme.colorScheme.onTertiaryContainer
+                                    else MaterialTheme.colorScheme.onErrorContainer
+                        )
+                        if (isPositive) {
+                            Text(
+                                "Được hoàn ${MoneyUtils.formatShort(balance)}",
+                                color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
                         } else {
-                            Text("❗ Cần trả thêm ${MoneyUtils.formatShort(-balance)}", color = Color(0xFFC62828), fontWeight = FontWeight.Bold)
+                            Text(
+                                "Cần trả ${MoneyUtils.formatShort(-balance)}",
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
                         }
                     }
                 }
@@ -534,8 +763,12 @@ private fun ActualTab(
             onDismissRequest = { deleteTarget = null },
             title = { Text("Xóa chi tiêu?") },
             text = { Text("Bạn có chắc muốn xóa khoản ${MoneyUtils.formatShort(rec.amount)} (${rec.category.label})?") },
-            confirmButton = { Button(onClick = { onDeleteRecord(rec); deleteTarget = null },
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) { Text("Xóa") } },
+            confirmButton = {
+                Button(
+                    onClick = { onDeleteRecord(rec); deleteTarget = null },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) { Text("Xóa") }
+            },
             dismissButton = { TextButton(onClick = { deleteTarget = null }) { Text("Hủy") } }
         )
     }
@@ -554,26 +787,36 @@ private fun AddExpenseRecordSheet(
     var paidBy by remember { mutableStateOf(memberNames.firstOrNull() ?: "Tôi") }
     var description by remember { mutableStateOf("") }
 
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    ModalBottomSheet(onDismissRequest = onDismiss, shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
                 .imePadding()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("Thêm chi tiêu", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(
+                "Thêm chi tiêu",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
 
-            Text("Hạng mục", style = MaterialTheme.typography.labelLarge)
+            // Category section
+            Text("Hạng mục", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(ExpenseCategory.values()) { cat ->
-                    FilterChip(selected = category == cat, onClick = { category = cat },
-                        label = { Text("${cat.icon} ${cat.label}") })
+                    FilterChip(
+                        selected = category == cat,
+                        onClick = { category = cat },
+                        label = { Text("${cat.icon} ${cat.label}") }
+                    )
                 }
             }
 
+            // Amount section
             OutlinedTextField(
                 value = amountInput,
                 onValueChange = { amountInput = it.filter { c -> c.isDigit() } },
@@ -584,24 +827,34 @@ private fun AddExpenseRecordSheet(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 shape = RoundedCornerShape(16.dp)
             )
-            if (amountInput.isNotEmpty())
-                Text("= ${MoneyUtils.formatVnd(MoneyUtils.inputToVnd(MoneyUtils.parseInput(amountInput)))}",
-                    color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+            if (amountInput.isNotEmpty()) {
+                Text(
+                    "= ${MoneyUtils.formatVnd(MoneyUtils.inputToVnd(MoneyUtils.parseInput(amountInput)))}",
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
 
+            // Amount shortcuts
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(MoneyUtils.SHORTCUTS) { a ->
-                    SuggestionChip(onClick = { amountInput = a.toString() },
-                        label = { Text(if (a >= 1000) "${a/1000}M" else "${a}k") })
+                    SuggestionChip(
+                        onClick = { amountInput = a.toString() },
+                        label = { Text(if (a >= 1000) "${a/1000}M" else "${a}k") }
+                    )
                 }
             }
 
-            Text("Ai trả", style = MaterialTheme.typography.labelLarge)
+            // Payer section
+            Text("Ai trả", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(memberNames) { m ->
                     FilterChip(selected = paidBy == m, onClick = { paidBy = m }, label = { Text(m) })
                 }
             }
 
+            // Description
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
@@ -611,20 +864,28 @@ private fun AddExpenseRecordSheet(
                 shape = RoundedCornerShape(16.dp)
             )
 
+            // Save button
             Button(
                 onClick = {
-                    onSave(ExpenseRecord(
-                        tripId = 0L, category = category,
-                        amount = MoneyUtils.inputToVnd(MoneyUtils.parseInput(amountInput)),
-                        paidBy = paidBy, description = description,
-                        timestamp = System.currentTimeMillis()
-                    ))
+                    onSave(
+                        ExpenseRecord(
+                            tripId = 0L, category = category,
+                            amount = MoneyUtils.inputToVnd(MoneyUtils.parseInput(amountInput)),
+                            paidBy = paidBy, description = description,
+                            timestamp = System.currentTimeMillis()
+                        )
+                    )
                 },
-                modifier = Modifier.fillMaxWidth().height(52.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape = RoundedCornerShape(16.dp),
                 enabled = amountInput.isNotEmpty()
-            ) { Text("Lưu chi tiêu", fontWeight = FontWeight.Bold) }
+            ) {
+                Text("Lưu chi tiêu", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
+            }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(4.dp))
         }
     }
 }

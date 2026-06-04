@@ -23,7 +23,9 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PinDrop
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.*
@@ -32,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -262,19 +265,26 @@ fun CreateEditTripScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
-            Surface(shadowElevation = 8.dp) {
+            Surface(
+                shadowElevation = 12.dp,
+                color = MaterialTheme.colorScheme.surface
+            ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 12.dp)
+                        .navigationBarsPadding()
                 ) {
                     Button(
                         onClick = { validateAndSave() },
                         enabled = !isSaving,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(52.dp),
-                        shape = RoundedCornerShape(14.dp)
+                            .height(54.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
                     ) {
                         if (isSaving) {
                             CircularProgressIndicator(
@@ -288,7 +298,8 @@ fun CreateEditTripScreen(
                             Text(
                                 text = if (isEditMode) "Lưu thay đổi" else "Tạo chuyến đi",
                                 style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
                             )
                         }
                     }
@@ -302,7 +313,7 @@ fun CreateEditTripScreen(
                 .padding(innerPadding)
                 .imePadding()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
 
@@ -311,7 +322,8 @@ fun CreateEditTripScreen(
                 Text(
                     text = "Chọn cách tạo lịch trình",
                     style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -321,7 +333,7 @@ fun CreateEditTripScreen(
                     Card(
                         onClick = { useFileImport = false },
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = RoundedCornerShape(20.dp),
                         colors = CardDefaults.cardColors(
                             containerColor = if (!useFileImport)
                                 MaterialTheme.colorScheme.primaryContainer
@@ -332,23 +344,32 @@ fun CreateEditTripScreen(
                         ) else null
                     ) {
                         Column(
-                            modifier = Modifier.padding(16.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Icon(Icons.Default.EditNote, null,
+                            Icon(
+                                Icons.Default.EditNote, null,
                                 modifier = Modifier.size(32.dp),
                                 tint = if (!useFileImport) MaterialTheme.colorScheme.primary
-                                       else MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("Tạo thủ công", fontWeight = FontWeight.Bold,
+                                       else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                "Tạo thủ công",
+                                fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.bodyMedium,
                                 textAlign = TextAlign.Center,
                                 color = if (!useFileImport) MaterialTheme.colorScheme.primary
-                                        else MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("Điền form từng bước",
+                                        else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                "Điền form từng bước",
                                 style = MaterialTheme.typography.bodySmall,
                                 textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
 
@@ -356,7 +377,7 @@ fun CreateEditTripScreen(
                     Card(
                         onClick = { useFileImport = true },
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = RoundedCornerShape(20.dp),
                         colors = CardDefaults.cardColors(
                             containerColor = if (useFileImport)
                                 MaterialTheme.colorScheme.primaryContainer
@@ -367,23 +388,32 @@ fun CreateEditTripScreen(
                         ) else null
                     ) {
                         Column(
-                            modifier = Modifier.padding(16.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Icon(Icons.Default.UploadFile, null,
+                            Icon(
+                                Icons.Default.UploadFile, null,
                                 modifier = Modifier.size(32.dp),
                                 tint = if (useFileImport) MaterialTheme.colorScheme.primary
-                                       else MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("Nhập từ file CSV", fontWeight = FontWeight.Bold,
+                                       else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                "Nhập từ CSV",
+                                fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.bodyMedium,
                                 textAlign = TextAlign.Center,
                                 color = if (useFileImport) MaterialTheme.colorScheme.primary
-                                        else MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("Tải file mẫu, điền và import",
+                                        else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                "Tải file mẫu, điền và import",
                                 style = MaterialTheme.typography.bodySmall,
                                 textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
                 }
@@ -392,26 +422,48 @@ fun CreateEditTripScreen(
                 AnimatedVisibility(visible = useFileImport, enter = expandVertically(), exit = shrinkVertically()) {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        ),
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
                         Column(
                             modifier = Modifier.padding(20.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                            verticalArrangement = Arrangement.spacedBy(14.dp)
                         ) {
-                            Text("📋 Hướng dẫn nhập file", fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.titleSmall)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Info,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Text(
+                                    "Hướng dẫn nhập file",
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
 
                             // Steps
-                            listOf(
-                                "1️⃣ Tải file mẫu CSV về máy",
-                                "2️⃣ Mở file bằng Excel / Google Sheets",
-                                "3️⃣ Điền thông tin chuyến đi của bạn",
-                                "4️⃣ Lưu file và chọn nhập vào app"
-                            ).forEach { step ->
-                                Text(step, style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                listOf(
+                                    "1. Tải file mẫu CSV về máy",
+                                    "2. Mở file bằng Excel / Google Sheets",
+                                    "3. Điền thông tin chuyến đi của bạn",
+                                    "4. Lưu file và chọn nhập vào app"
+                                ).forEach { step ->
+                                    Text(
+                                        step,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
                             }
 
                             HorizontalDivider()
@@ -439,19 +491,24 @@ fun CreateEditTripScreen(
                             // Pick file button
                             Button(
                                 onClick = { filePickerLauncher.launch("*/*") },
-                                modifier = Modifier.fillMaxWidth().height(52.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(52.dp),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
                                 if (uiState is TripUiState.Loading) {
-                                    CircularProgressIndicator(modifier = Modifier.size(20.dp),
-                                        color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        strokeWidth = 2.dp
+                                    )
                                     Spacer(Modifier.width(8.dp))
                                     Text("Đang nhập...")
                                 } else {
                                     Icon(Icons.Default.FolderOpen, null, modifier = Modifier.size(20.dp))
                                     Spacer(Modifier.width(8.dp))
                                     Text(
-                                        text = if (importFileName != null) "📂 ${importFileName!!.take(25)}"
+                                        text = if (importFileName != null) importFileName!!.take(25)
                                                else "Chọn file CSV từ máy",
                                         fontWeight = FontWeight.Bold
                                     )
@@ -460,13 +517,15 @@ fun CreateEditTripScreen(
 
                             if (importFileName != null && uiState !is TripUiState.Loading) {
                                 Surface(
-                                    shape = RoundedCornerShape(8.dp),
+                                    shape = RoundedCornerShape(10.dp),
                                     color = MaterialTheme.colorScheme.secondaryContainer
                                 ) {
-                                    Text("File đã chọn: $importFileName",
+                                    Text(
+                                        "File đã chọn: $importFileName",
                                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer)
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    )
                                 }
                             }
                         }
@@ -480,248 +539,216 @@ fun CreateEditTripScreen(
             // ── Show manual form only when not in file import mode ────────────
             if (!useFileImport || isEditMode) {
 
-            // ── 1. Trip Name ──────────────────────────────────────────────────
-            FormSection(title = "🔢 Tên chuyến đi") {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = {
-                        name = it
-                        if (it.isNotBlank()) nameError = false
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("VD: Đà Nẵng - Hội An 2026") },
-                    isError = nameError,
-                    supportingText = if (nameError) {
-                        { Text("Tên chuyến đi không được để trống", color = MaterialTheme.colorScheme.error) }
-                    } else null,
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Words,
-                        imeAction = ImeAction.Next
-                    ),
-                    shape = RoundedCornerShape(16.dp)
-                )
-            }
-
-            // ── 2. Description ────────────────────────────────────────────────
-            FormSection(title = "🗒️ Mô tả (tùy chọn)") {
-                OutlinedTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 80.dp),
-                    placeholder = { Text("Ghi chú ngắn về chuyến đi...") },
-                    maxLines = 4,
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Sentences,
-                        imeAction = ImeAction.Default
-                    ),
-                    shape = RoundedCornerShape(16.dp)
-                )
-            }
-
-            // ── 3. Trip Type ──────────────────────────────────────────────────
-            FormSection(title = "🚗 Loại hình di chuyển") {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    tripTypes.forEach { type ->
-                        val isSelected = selectedType == type
-                        FilterChip(
-                            selected = isSelected,
-                            onClick = { selectedType = type },
-                            label = {
-                                Text(
-                                    text = "${type.icon} ${type.label}",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            },
-                            leadingIcon = if (isSelected) {
-                                { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
-                            } else null,
-                            shape = RoundedCornerShape(20.dp)
-                        )
-                    }
-                }
-            }
-
-            // ── 4. Date range ─────────────────────────────────────────────────
-            FormSection(title = "📅 Ngày đi") {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // Start date
-                    DateButton(
-                        modifier = Modifier.weight(1f),
-                        label = "Ngày bắt đầu",
-                        dateText = DateUtils.formatDate(startDate),
-                        isError = dateError,
-                        onClick = { showStartDatePicker() }
-                    )
-                    // End date
-                    DateButton(
-                        modifier = Modifier.weight(1f),
-                        label = "Ngày kết thúc",
-                        dateText = DateUtils.formatDate(endDate),
-                        isError = dateError,
-                        onClick = { showEndDatePicker() }
+                // ── 1. Trip Name ──────────────────────────────────────────────
+                FormSection(title = "Tên chuyến đi") {
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = {
+                            name = it
+                            if (it.isNotBlank()) nameError = false
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("VD: Đà Nẵng - Hội An 2026") },
+                        isError = nameError,
+                        supportingText = if (nameError) {
+                            { Text("Tên chuyến đi không được để trống", color = MaterialTheme.colorScheme.error) }
+                        } else null,
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Words,
+                            imeAction = ImeAction.Next
+                        ),
+                        shape = RoundedCornerShape(16.dp)
                     )
                 }
-                if (dateError) {
-                    Text(
-                        text = "Ngày kết thúc phải sau ngày bắt đầu",
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
-            }
 
-            // ── 5. Number of people ───────────────────────────────────────────
-            FormSection(title = "👥 Số người tham gia") {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Start
-                ) {
-                    FilledIconButton(
-                        onClick = { if (numPeople > 1) numPeople-- },
-                        enabled = numPeople > 1,
-                        modifier = Modifier.size(40.dp),
-                        shape = CircleShape,
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer
-                        )
-                    ) {
-                        Icon(
-                            Icons.Default.Remove,
-                            contentDescription = "Giảm",
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                    Box(
+                // ── 2. Description ────────────────────────────────────────────
+                FormSection(title = "Mô tả (tùy chọn)") {
+                    OutlinedTextField(
+                        value = description,
+                        onValueChange = { description = it },
                         modifier = Modifier
-                            .padding(horizontal = 20.dp)
-                            .defaultMinSize(minWidth = 48.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "$numPeople",
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                    FilledIconButton(
-                        onClick = { if (numPeople < 20) numPeople++ },
-                        enabled = numPeople < 20,
-                        modifier = Modifier.size(40.dp),
-                        shape = CircleShape,
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer
-                        )
-                    ) {
-                        Icon(
-                            Icons.Default.Add,
-                            contentDescription = "Tăng",
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                    Spacer(Modifier.width(12.dp))
-                    Text(
-                        text = "người",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                            .fillMaxWidth()
+                            .heightIn(min = 80.dp),
+                        placeholder = { Text("Ghi chú ngắn về chuyến đi...") },
+                        maxLines = 4,
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Sentences,
+                            imeAction = ImeAction.Default
+                        ),
+                        shape = RoundedCornerShape(16.dp)
                     )
                 }
-            }
 
-            // ── 6. Member names ───────────────────────────────────────────────
-            AnimatedVisibility(visible = numPeople > 0) {
-                FormSection(title = "👤 Tên thành viên") {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        memberNames.forEachIndexed { index, memberName ->
-                            OutlinedTextField(
-                                value = memberName,
-                                onValueChange = { newVal ->
-                                    memberNames = memberNames.toMutableList().also { it[index] = newVal }
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                label = { Text("Thành viên ${index + 1}") },
-                                leadingIcon = {
-                                    Icon(
-                                        Icons.Default.Person,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(20.dp)
+                // ── 3. Trip Type ──────────────────────────────────────────────
+                FormSection(title = "Loại hình di chuyển") {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        tripTypes.forEach { type ->
+                            val isSelected = selectedType == type
+                            FilterChip(
+                                selected = isSelected,
+                                onClick = { selectedType = type },
+                                label = {
+                                    Text(
+                                        text = "${type.icon} ${type.label}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                     )
                                 },
-                                singleLine = true,
-                                keyboardOptions = KeyboardOptions(
-                                    capitalization = KeyboardCapitalization.Words,
-                                    imeAction = if (index < memberNames.lastIndex) ImeAction.Next else ImeAction.Done
-                                ),
-                                shape = RoundedCornerShape(16.dp)
+                                leadingIcon = if (isSelected) {
+                                    {
+                                        Icon(
+                                            Icons.Default.Check,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                } else null,
+                                shape = RoundedCornerShape(50),
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                                    selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary
+                                )
                             )
                         }
                     }
                 }
-            }
 
-            // ── 7. Auto-calculated days ───────────────────────────────────────
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-                )
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = "ℹ️", style = MaterialTheme.typography.titleMedium)
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            text = "Số ngày tự tính:",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                // ── 4. Date range ─────────────────────────────────────────────
+                FormSection(title = "Ngày đi") {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // Start date
+                        DateCard(
+                            modifier = Modifier.weight(1f),
+                            label = "Ngày bắt đầu",
+                            dateText = DateUtils.formatDate(startDate),
+                            isError = dateError,
+                            onClick = { showStartDatePicker() }
+                        )
+                        // End date
+                        DateCard(
+                            modifier = Modifier.weight(1f),
+                            label = "Ngày kết thúc",
+                            dateText = DateUtils.formatDate(endDate),
+                            isError = dateError,
+                            onClick = { showEndDatePicker() }
                         )
                     }
-                    Surface(
-                        shape = RoundedCornerShape(20.dp),
-                        color = MaterialTheme.colorScheme.primary
-                    ) {
+                    if (dateError) {
                         Text(
-                            text = "$numDays ngày",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+                            text = "Ngày kết thúc phải sau ngày bắt đầu",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(top = 4.dp)
                         )
                     }
                 }
-            }
 
-            // ── 8. Cluster toggle (only if days > 3) ──────────────────────────
-            AnimatedVisibility(
-                visible = numDays > 3,
-                enter = expandVertically(),
-                exit = shrinkVertically()
-            ) {
+                // ── 5. Number of people ───────────────────────────────────────
+                FormSection(title = "Số người tham gia") {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        FilledIconButton(
+                            onClick = { if (numPeople > 1) numPeople-- },
+                            enabled = numPeople > 1,
+                            modifier = Modifier.size(40.dp),
+                            shape = CircleShape,
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer
+                            )
+                        ) {
+                            Icon(
+                                Icons.Default.Remove,
+                                contentDescription = "Giảm",
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .padding(horizontal = 20.dp)
+                                .defaultMinSize(minWidth = 48.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "$numPeople",
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        FilledIconButton(
+                            onClick = { if (numPeople < 20) numPeople++ },
+                            enabled = numPeople < 20,
+                            modifier = Modifier.size(40.dp),
+                            shape = CircleShape,
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer
+                            )
+                        ) {
+                            Icon(
+                                Icons.Default.Add,
+                                contentDescription = "Tăng",
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        Spacer(Modifier.width(12.dp))
+                        Text(
+                            text = "người",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                // ── 6. Member names ───────────────────────────────────────────
+                AnimatedVisibility(visible = numPeople > 0) {
+                    FormSection(title = "Tên thành viên") {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            memberNames.forEachIndexed { index, memberName ->
+                                OutlinedTextField(
+                                    value = memberName,
+                                    onValueChange = { newVal ->
+                                        memberNames = memberNames.toMutableList().also { it[index] = newVal }
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    label = { Text("Thành viên ${index + 1}") },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Default.Person,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    },
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(
+                                        capitalization = KeyboardCapitalization.Words,
+                                        imeAction = if (index < memberNames.lastIndex) ImeAction.Next else ImeAction.Done
+                                    ),
+                                    shape = RoundedCornerShape(16.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // ── 7. Auto-calculated days ───────────────────────────────────
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
                     )
                 ) {
                     Row(
@@ -731,33 +758,91 @@ fun CreateEditTripScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(text = "📌", style = MaterialTheme.typography.titleMedium)
-                                Spacer(Modifier.width(8.dp))
-                                Text(
-                                    text = "Chia cụm địa điểm",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Info,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
                             Text(
-                                text = "Gộp các ngày thành từng cụm (VD: Hà Nội, Đà Nẵng, Huế...)",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(top = 2.dp, start = 28.dp)
+                                text = "Số ngày tự tính:",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         }
-                        Switch(
-                            checked = useClusters,
-                            onCheckedChange = { useClusters = it }
-                        )
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = MaterialTheme.colorScheme.primary
+                        ) {
+                            Text(
+                                text = "$numDays ngày",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+                            )
+                        }
                     }
                 }
-            }
 
-            // Bottom spacing for FAB / button
+                // ── 8. Cluster toggle (only if days > 3) ──────────────────────
+                AnimatedVisibility(
+                    visible = numDays > 3,
+                    enter = expandVertically(),
+                    exit = shrinkVertically()
+                ) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.PinDrop,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Text(
+                                        text = "Chia cụm địa điểm",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                                Text(
+                                    text = "Gộp các ngày thành từng cụm (VD: Hà Nội, Đà Nẵng, Huế...)",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(top = 2.dp, start = 28.dp)
+                                )
+                            }
+                            Switch(
+                                checked = useClusters,
+                                onCheckedChange = { useClusters = it }
+                            )
+                        }
+                    }
+                }
+
             } // end if (!useFileImport || isEditMode)
+
             Spacer(Modifier.height(8.dp))
         }
     }
@@ -782,47 +867,54 @@ private fun FormSection(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DateButton(
+private fun DateCard(
     modifier: Modifier = Modifier,
     label: String,
     dateText: String,
     isError: Boolean,
     onClick: () -> Unit
 ) {
-    OutlinedButton(
+    OutlinedCard(
         onClick = onClick,
-        modifier = modifier.height(56.dp),
-        shape = RoundedCornerShape(12.dp),
+        modifier = modifier.height(68.dp),
+        shape = RoundedCornerShape(16.dp),
         border = androidx.compose.foundation.BorderStroke(
             width = 1.dp,
             color = if (isError) MaterialTheme.colorScheme.error
             else MaterialTheme.colorScheme.outline
-        ),
-        contentPadding = PaddingValues(horizontal = 12.dp)
-    ) {
-        Icon(
-            imageVector = Icons.Default.CalendarToday,
-            contentDescription = null,
-            modifier = Modifier.size(16.dp),
-            tint = if (isError) MaterialTheme.colorScheme.error
-            else MaterialTheme.colorScheme.primary
         )
-        Spacer(Modifier.width(6.dp))
-        Column(horizontalAlignment = Alignment.Start) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall,
-                color = if (isError) MaterialTheme.colorScheme.error
-                else MaterialTheme.colorScheme.onSurfaceVariant
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.CalendarToday,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = if (isError) MaterialTheme.colorScheme.error
+                else MaterialTheme.colorScheme.primary
             )
-            Text(
-                text = dateText,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium,
-                color = if (isError) MaterialTheme.colorScheme.error
-                else MaterialTheme.colorScheme.onSurface
-            )
+            Column(verticalArrangement = Arrangement.Center) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (isError) MaterialTheme.colorScheme.error
+                    else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = dateText,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (isError) MaterialTheme.colorScheme.error
+                    else MaterialTheme.colorScheme.onSurface
+                )
+            }
         }
     }
 }

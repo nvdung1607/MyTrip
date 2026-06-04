@@ -3,23 +3,21 @@ package com.example.mytrip.ui.screens.trip
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -54,7 +52,13 @@ fun TripDetailScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            icon = { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+            icon = {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error
+                )
+            },
             title = { Text("Xóa chuyến đi?", fontWeight = FontWeight.Bold) },
             text = {
                 Text(
@@ -71,7 +75,10 @@ fun TripDetailScreen(
                         }
                         showDeleteDialog = false
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    ),
+                    shape = RoundedCornerShape(14.dp)
                 ) {
                     Text("Xóa", color = MaterialTheme.colorScheme.onError)
                 }
@@ -109,8 +116,8 @@ fun TripDetailScreen(
                         Box {
                             IconButton(onClick = { showMenu = true }) {
                                 Icon(
-                                    Icons.Default.Settings,
-                                    contentDescription = "Cài đặt",
+                                    Icons.Default.MoreVert,
+                                    contentDescription = "Tùy chọn",
                                     tint = Color.White
                                 )
                             }
@@ -119,14 +126,28 @@ fun TripDetailScreen(
                                 onDismissRequest = { showMenu = false }
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text("✏️ Chỉnh sửa chuyến đi") },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.Edit, contentDescription = null,
+                                            modifier = Modifier.size(18.dp))
+                                    },
+                                    text = { Text("Chỉnh sửa chuyến đi") },
                                     onClick = {
                                         showMenu = false
                                         navController.navigate(Screen.EditTrip.createRoute(tripId))
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("🗑️ Xóa chuyến đi") },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.Delete, contentDescription = null,
+                                            modifier = Modifier.size(18.dp),
+                                            tint = MaterialTheme.colorScheme.error)
+                                    },
+                                    text = {
+                                        Text(
+                                            "Xóa chuyến đi",
+                                            color = MaterialTheme.colorScheme.error
+                                        )
+                                    },
                                     onClick = {
                                         showMenu = false
                                         showDeleteDialog = true
@@ -134,7 +155,12 @@ fun TripDetailScreen(
                                 )
                                 HorizontalDivider()
                                 DropdownMenuItem(
-                                    text = { Text("🔵 Đặt trạng thái: Sắp đi") },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.Schedule, contentDescription = null,
+                                            modifier = Modifier.size(18.dp),
+                                            tint = MaterialTheme.colorScheme.primary)
+                                    },
+                                    text = { Text("Đặt trạng thái: Sắp đi") },
                                     enabled = t.status != TripStatus.PLANNING,
                                     onClick = {
                                         showMenu = false
@@ -142,7 +168,12 @@ fun TripDetailScreen(
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("🟢 Đặt trạng thái: Đang đi") },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.DirectionsRun, contentDescription = null,
+                                            modifier = Modifier.size(18.dp),
+                                            tint = Color(0xFF137333))
+                                    },
+                                    text = { Text("Đặt trạng thái: Đang đi") },
                                     enabled = t.status != TripStatus.ONGOING,
                                     onClick = {
                                         showMenu = false
@@ -150,7 +181,12 @@ fun TripDetailScreen(
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("⚫ Đặt trạng thái: Hoàn thành") },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.CheckCircle, contentDescription = null,
+                                            modifier = Modifier.size(18.dp),
+                                            tint = MaterialTheme.colorScheme.outline)
+                                    },
+                                    text = { Text("Đặt trạng thái: Hoàn thành") },
                                     enabled = t.status != TripStatus.DONE,
                                     onClick = {
                                         showMenu = false
@@ -170,56 +206,56 @@ fun TripDetailScreen(
     ) { innerPadding ->
 
         Box(modifier = Modifier.fillMaxSize()) {
-        when {
-            uiState is TripUiState.Loading && trip == null -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
+            when {
+                uiState is TripUiState.Loading && trip == null -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
                 }
-            }
 
-            uiState is TripUiState.Error -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = (uiState as TripUiState.Error).message,
-                        color = MaterialTheme.colorScheme.error
+                uiState is TripUiState.Error -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = (uiState as TripUiState.Error).message,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+
+                trip != null -> {
+                    TripDetailContent(
+                        trip = trip!!,
+                        totalPlanned = totalPlanned,
+                        topPadding = innerPadding.calculateTopPadding(),
+                        navController = navController,
+                        onStatusChange = { newStatus ->
+                            viewModel.updateStatus(tripId, newStatus)
+                        }
                     )
                 }
             }
 
-            trip != null -> {
-                TripDetailContent(
-                    trip = trip!!,
-                    totalPlanned = totalPlanned,
-                    topPadding = innerPadding.calculateTopPadding(),
-                    navController = navController,
-                    onStatusChange = { newStatus ->
-                        viewModel.updateStatus(tripId, newStatus)
-                    }
+            // Draggable FAB overlay – thêm nhật ký
+            if (trip != null) {
+                DraggableFab(
+                    onClick = {
+                        navController.navigate(Screen.AddNote.createRoute(tripId, null))
+                    },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
                 )
             }
-        }
-
-        // Draggable FAB overlay – thêm nhật ký
-        if (trip != null) {
-            DraggableFab(
-                onClick = {
-                    navController.navigate(Screen.AddNote.createRoute(tripId, null))
-                },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            )
-        }
         } // end Box
     }
 }
@@ -244,7 +280,7 @@ private fun TripDetailContent(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(240.dp)
+                .height(220.dp)
                 .background(
                     brush = Brush.linearGradient(
                         colors = tripTypeGradient(trip.type),
@@ -253,53 +289,75 @@ private fun TripDetailContent(
                     )
                 )
         ) {
-            // Overlay scrim for readability
+            // Scrim for readability
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.18f))
+                    .background(Color.Black.copy(alpha = 0.20f))
             )
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = topPadding + 8.dp, start = 20.dp, end = 20.dp, bottom = 20.dp),
+                    .windowInsetsPadding(WindowInsets.statusBars)
+                    .padding(top = topPadding, start = 20.dp, end = 20.dp, bottom = 20.dp),
                 verticalArrangement = Arrangement.Bottom
             ) {
-
                 // Trip name
                 Text(
                     text = trip.name,
-                    style = MaterialTheme.typography.displaySmall.copy(
+                    style = MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
-                        lineHeight = 38.sp
+                        lineHeight = 36.sp
                     ),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(8.dp))
 
                 // Type + dates row
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Surface(
-                        shape = RoundedCornerShape(20.dp),
-                        color = Color.White.copy(alpha = 0.22f)
+                        shape = RoundedCornerShape(50),
+                        color = Color.White.copy(alpha = 0.20f)
                     ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = tripTypeIcon(trip.type),
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Text(
+                                text = trip.type.label,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = Color.White
+                            )
+                        }
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.CalendarToday,
+                            contentDescription = null,
+                            tint = Color.White.copy(alpha = 0.85f),
+                            modifier = Modifier.size(13.dp)
+                        )
                         Text(
-                            text = "${trip.type.icon} ${trip.type.label}",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = Color.White,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                            text = "${DateUtils.formatDate(trip.startDate)} – ${DateUtils.formatDate(trip.endDate)}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White.copy(alpha = 0.90f)
                         )
                     }
-                    Text(
-                        text = "📅 ${DateUtils.formatDate(trip.startDate)} – ${DateUtils.formatDate(trip.endDate)}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.White.copy(alpha = 0.9f)
-                    )
                 }
             }
         }
@@ -313,30 +371,30 @@ private fun TripDetailContent(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 12.dp),
+                    .padding(vertical = 14.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 StatItem(
-                    icon = "🗓️",
+                    icon = Icons.Default.DateRange,
                     value = "$numDays",
                     label = "ngày"
                 )
                 VerticalDivider(modifier = Modifier.height(40.dp))
                 StatItem(
-                    icon = "👥",
+                    icon = Icons.Default.Group,
                     value = "${trip.numPeople}",
                     label = "người"
                 )
                 VerticalDivider(modifier = Modifier.height(40.dp))
                 StatItem(
-                    icon = "💰",
+                    icon = Icons.Default.AccountBalanceWallet,
                     value = if (totalPlanned > 0) MoneyUtils.formatShort(totalPlanned) else "–",
                     label = "dự kiến"
                 )
             }
         }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(20.dp))
 
         // ─── Action grid ──────────────────────────────────────────────────────
         Column(
@@ -350,14 +408,14 @@ private fun TripDetailContent(
                 modifier = Modifier.padding(bottom = 4.dp)
             )
 
-            // Row 1: Lịch trình + Hôm nay
+            // Row 1: Lịch trình + Hôm nay / Trạng thái
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 ActionCard(
                     modifier = Modifier.weight(1f),
-                    emoji = "🗓️",
+                    icon = Icons.Default.DateRange,
                     title = "Lịch trình",
                     subtitle = "$numDays ngày",
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -367,7 +425,7 @@ private fun TripDetailContent(
                 if (trip.status == TripStatus.ONGOING) {
                     ActionCard(
                         modifier = Modifier.weight(1f),
-                        emoji = "🌄",
+                        icon = Icons.Default.WbSunny,
                         title = "Hôm nay",
                         subtitle = "Đang đi",
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
@@ -382,7 +440,7 @@ private fun TripDetailContent(
                     }
                     ActionCard(
                         modifier = Modifier.weight(1f),
-                        emoji = "🔄",
+                        icon = Icons.Default.Sync,
                         title = "Trạng thái",
                         subtitle = statusLabel,
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
@@ -392,14 +450,14 @@ private fun TripDetailContent(
                 }
             }
 
-            // Row 2: Add Note + Chi phí
+            // Row 2: Nhật ký + Chi phí
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 ActionCard(
                     modifier = Modifier.weight(1f),
-                    emoji = "📖",
+                    icon = Icons.AutoMirrored.Filled.MenuBook,
                     title = "Nhật ký & Ảnh",
                     subtitle = "Tất cả ghi chép",
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -408,7 +466,7 @@ private fun TripDetailContent(
                 )
                 ActionCard(
                     modifier = Modifier.weight(1f),
-                    emoji = "💰",
+                    icon = Icons.Default.AccountBalanceWallet,
                     title = "Chi phí",
                     subtitle = if (totalPlanned > 0) MoneyUtils.formatShort(totalPlanned) else "Chưa có",
                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -420,75 +478,54 @@ private fun TripDetailContent(
             // Row 3: Tổng kết (full width)
             ActionCard(
                 modifier = Modifier.fillMaxWidth(),
-                emoji = "📊",
+                icon = Icons.Default.BarChart,
                 title = "Tổng kết chuyến đi",
                 subtitle = "Chi phí & hành trình",
-                containerColor = MaterialTheme.colorScheme.inverseSurface.copy(alpha = 0.08f),
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.60f),
                 contentColor = MaterialTheme.colorScheme.onSurface,
                 onClick = { navController.navigate(Screen.Summary.createRoute(trip.id)) },
                 fullWidth = true
             )
         }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(88.dp)) // space for FAB
     }
 
+    // ─── Status change dialog ─────────────────────────────────────────────────
     if (showStatusDialog) {
         AlertDialog(
             onDismissRequest = { showStatusDialog = false },
-            title = { Text("Chuyển trạng thái chuyến đi", fontWeight = FontWeight.Bold) },
+            icon = {
+                Icon(Icons.Default.Sync, contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary)
+            },
+            title = { Text("Chuyển trạng thái", fontWeight = FontWeight.Bold) },
             text = {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Chọn trạng thái mới cho chuyến đi của bạn:")
-                    Spacer(modifier = Modifier.height(4.dp))
-                    
-                    // Planning option
-                    Button(
-                        onClick = {
-                            onStatusChange(TripStatus.PLANNING)
-                            showStatusDialog = false
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (trip.status == TripStatus.PLANNING) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = if (trip.status == TripStatus.PLANNING) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    ) {
-                        Text("🔵 Sắp đi")
-                    }
-                    
-                    // Ongoing option
-                    Button(
-                        onClick = {
-                            onStatusChange(TripStatus.ONGOING)
-                            showStatusDialog = false
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (trip.status == TripStatus.ONGOING) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = if (trip.status == TripStatus.ONGOING) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    ) {
-                        Text("🟢 Đang đi")
-                    }
-                    
-                    // Done option
-                    Button(
-                        onClick = {
-                            onStatusChange(TripStatus.DONE)
-                            showStatusDialog = false
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (trip.status == TripStatus.DONE) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = if (trip.status == TripStatus.DONE) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    ) {
-                        Text("⚫ Hoàn thành")
-                    }
+                    StatusOptionButton(
+                        icon = Icons.Default.Schedule,
+                        label = "Sắp đi",
+                        isSelected = trip.status == TripStatus.PLANNING,
+                        selectedColor = MaterialTheme.colorScheme.primary,
+                        onClick = { onStatusChange(TripStatus.PLANNING); showStatusDialog = false }
+                    )
+                    StatusOptionButton(
+                        icon = Icons.Default.DirectionsRun,
+                        label = "Đang đi",
+                        isSelected = trip.status == TripStatus.ONGOING,
+                        selectedColor = Color(0xFF137333),
+                        onClick = { onStatusChange(TripStatus.ONGOING); showStatusDialog = false }
+                    )
+                    StatusOptionButton(
+                        icon = Icons.Default.CheckCircle,
+                        label = "Hoàn thành",
+                        isSelected = trip.status == TripStatus.DONE,
+                        selectedColor = MaterialTheme.colorScheme.outline,
+                        onClick = { onStatusChange(TripStatus.DONE); showStatusDialog = false }
+                    )
                 }
             },
             confirmButton = {},
@@ -501,46 +538,85 @@ private fun TripDetailContent(
     }
 }
 
-// ─── Helper composables ───────────────────────────────────────────────────────
+// ─── Helper composables ────────────────────────────────────────────────────────
+
+@Composable
+private fun StatusOptionButton(
+    icon: ImageVector,
+    label: String,
+    isSelected: Boolean,
+    selectedColor: Color,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (isSelected) selectedColor else MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    ) {
+        Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
+        Spacer(Modifier.width(8.dp))
+        Text(label, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
+    }
+}
 
 @Composable
 private fun StatusChip(status: TripStatus) {
-    val (bgColor, label) = when (status) {
-        TripStatus.PLANNING -> StatusPlanning to "🔵 Sắp đi"
-        TripStatus.ONGOING  -> StatusOngoing  to "🟢 Đang đi"
-        TripStatus.DONE     -> StatusDone     to "⚫ Hoàn thành"
+    val (bgColor, label, icon) = when (status) {
+        TripStatus.PLANNING -> Triple(StatusPlanning, "Sắp đi", Icons.Default.Schedule)
+        TripStatus.ONGOING  -> Triple(StatusOngoing,  "Đang đi", Icons.Default.DirectionsRun)
+        TripStatus.DONE     -> Triple(StatusDone,     "Hoàn thành", Icons.Default.CheckCircle)
     }
     Surface(
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(50),
         color = bgColor.copy(alpha = 0.85f)
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = Color.White,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
-        )
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(14.dp)
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }
 
 @Composable
 private fun StatItem(
-    icon: String,
+    icon: ImageVector,
     value: String,
     label: String
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(2.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
         modifier = Modifier.padding(horizontal = 8.dp)
     ) {
-        Text(text = icon, style = MaterialTheme.typography.titleMedium)
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(22.dp)
+        )
         Text(
             text = value,
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
+            color = MaterialTheme.colorScheme.onSurface
         )
         Text(
             text = label,
@@ -553,7 +629,7 @@ private fun StatItem(
 @Composable
 private fun ActionCard(
     modifier: Modifier = Modifier,
-    emoji: String,
+    icon: ImageVector,
     title: String,
     subtitle: String,
     containerColor: Color,
@@ -563,8 +639,8 @@ private fun ActionCard(
 ) {
     Card(
         onClick = onClick,
-        modifier = modifier.then(if (fullWidth) Modifier.height(68.dp) else Modifier.height(100.dp)),
-        shape = RoundedCornerShape(16.dp),
+        modifier = modifier.then(if (fullWidth) Modifier.height(68.dp) else Modifier.height(104.dp)),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = containerColor)
     ) {
         if (fullWidth) {
@@ -575,8 +651,13 @@ private fun ActionCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text(emoji, style = MaterialTheme.typography.headlineSmall)
-                Column {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = contentColor,
+                    modifier = Modifier.size(26.dp)
+                )
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = title,
                         style = MaterialTheme.typography.titleMedium,
@@ -586,10 +667,9 @@ private fun ActionCard(
                     Text(
                         text = subtitle,
                         style = MaterialTheme.typography.bodySmall,
-                        color = contentColor.copy(alpha = 0.7f)
+                        color = contentColor.copy(alpha = 0.75f)
                     )
                 }
-                Spacer(Modifier.weight(1f))
                 Icon(
                     Icons.Default.ChevronRight,
                     contentDescription = null,
@@ -600,10 +680,25 @@ private fun ActionCard(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(14.dp),
+                    .padding(16.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(emoji, style = MaterialTheme.typography.headlineSmall)
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(
+                            color = contentColor.copy(alpha = 0.12f),
+                            shape = RoundedCornerShape(12.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = contentColor,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
                 Column {
                     Text(
                         text = title,
@@ -616,7 +711,7 @@ private fun ActionCard(
                     Text(
                         text = subtitle,
                         style = MaterialTheme.typography.bodySmall,
-                        color = contentColor.copy(alpha = 0.7f),
+                        color = contentColor.copy(alpha = 0.75f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -629,10 +724,21 @@ private fun ActionCard(
 // ─── Trip type gradient helper ────────────────────────────────────────────────
 
 private fun tripTypeGradient(type: TripType): List<Color> = when (type) {
-    TripType.CAR       -> listOf(Color(0xFF1565C0), Color(0xFF42A5F5))
-    TripType.MOTORBIKE -> listOf(Color(0xFFBF360C), Color(0xFFFF7043))
-    TripType.PUBLIC    -> listOf(Color(0xFF1B5E20), Color(0xFF66BB6A))
-    TripType.TREKKING  -> listOf(Color(0xFF4A148C), Color(0xFFAB47BC))
-    TripType.CAMPING   -> listOf(Color(0xFF004D40), Color(0xFF26A69A))
-    TripType.OTHER     -> listOf(Color(0xFF37474F), Color(0xFF78909C))
+    TripType.CAR       -> listOf(Color(0xFF1A73E8), Color(0xFF4DABF7))
+    TripType.MOTORBIKE -> listOf(Color(0xFFE8710A), Color(0xFFFFB347))
+    TripType.PUBLIC    -> listOf(Color(0xFF137333), Color(0xFF34A853))
+    TripType.TREKKING  -> listOf(Color(0xFF7B1FA2), Color(0xFFAB47BC))
+    TripType.CAMPING   -> listOf(Color(0xFF00695C), Color(0xFF26A69A))
+    TripType.OTHER     -> listOf(Color(0xFF5F6368), Color(0xFF9AA0A6))
+}
+
+// ─── Trip type icon helper ────────────────────────────────────────────────────
+
+private fun tripTypeIcon(type: TripType): ImageVector = when (type) {
+    TripType.CAR       -> Icons.Default.DirectionsCar
+    TripType.MOTORBIKE -> Icons.Default.TwoWheeler
+    TripType.PUBLIC    -> Icons.Default.DirectionsBus
+    TripType.TREKKING  -> Icons.Default.Hiking
+    TripType.CAMPING   -> Icons.Default.Forest
+    TripType.OTHER     -> Icons.Default.Explore
 }
