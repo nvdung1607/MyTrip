@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.mytrip.MyTripApplication
 import com.example.mytrip.data.db.entities.Note
+import com.example.mytrip.widget.MyTripWidgetUpdater
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,13 +25,17 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _isLoading.value = true
             val id = repository.insertNote(note)
+            MyTripWidgetUpdater.update(getApplication())
             _savedNoteId.value = id
             _isLoading.value = false
         }
     }
 
     fun deleteNote(note: Note) {
-        viewModelScope.launch { repository.deleteNote(note) }
+        viewModelScope.launch {
+            repository.deleteNote(note)
+            MyTripWidgetUpdater.update(getApplication())
+        }
     }
 
     companion object {

@@ -99,6 +99,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalContext
@@ -1008,15 +1009,18 @@ private fun ActivityEditSheet(
         // ── Loại hoạt động ────────────────────────────────────────────
         Text("Loại hoạt động", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 16.dp)) {
-            ActivityType.values().forEach { type ->
+            ActivityType.entries.forEach { type ->
+                val isSelected = selectedType == type
                 FilterChip(
-                    selected = selectedType == type,
+                    selected = isSelected,
                     onClick = {
                         selectedType = type
                         name = "" // reset name suggestions on type change
                     },
                     label = { Text("${type.icon} ${type.label}") },
                     border = FilterChipDefaults.filterChipBorder(
+                        enabled = true,
+                        selected = isSelected,
                         borderColor = MaterialTheme.colorScheme.outline,
                         selectedBorderColor = MaterialTheme.colorScheme.outline,
                         borderWidth = 1.dp,
@@ -1320,4 +1324,3 @@ private fun ActivityEditSheet(
         Spacer(modifier = Modifier.height(16.dp))
     }
 }
-

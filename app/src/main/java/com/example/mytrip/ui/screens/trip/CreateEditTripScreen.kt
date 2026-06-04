@@ -187,14 +187,7 @@ fun CreateEditTripScreen(
     }
 
     // ─── Trip type chips ──────────────────────────────────────────────────────
-    val tripTypes = listOf(
-        TripType.CAR,
-        TripType.MOTORBIKE,
-        TripType.PUBLIC,
-        TripType.TREKKING,
-        TripType.CAMPING,
-        TripType.OTHER
-    )
+    val tripTypes = TripType.entries
 
     // ─── Save logic ───────────────────────────────────────────────────────────
     fun validateAndSave() {
@@ -546,6 +539,8 @@ fun CreateEditTripScreen(
                             } else null,
                             shape = RoundedCornerShape(20.dp),
                             border = FilterChipDefaults.filterChipBorder(
+                                enabled = true,
+                                selected = isSelected,
                                 borderColor = MaterialTheme.colorScheme.outline,
                                 selectedBorderColor = MaterialTheme.colorScheme.outline,
                                 borderWidth = 1.dp,

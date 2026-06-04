@@ -4,16 +4,7 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Background Base with gradient filling the 108x108 safe area -->
-    <path android:pathData="M0,0 h108 v108 h-108 Z">
-        <gradient
-            android:startX="12"
-            android:startY="12"
-            android:endX="96"
-            android:endY="96"
-            android:type="linear">
-            <item android:offset="0.0" android:color="#FF26D0CE"/>
-            <item android:offset="1.0" android:color="#FF1A2980"/>
-        </gradient>
-    </path>
+    <path
+        android:fillColor="#FFF7FCFC"
+        android:pathData="M0,0 h108 v108 h-108 Z" />
 </vector>

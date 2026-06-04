@@ -10,6 +10,7 @@ import com.example.mytrip.data.db.entities.Trip
 import com.example.mytrip.data.db.entities.TripStatus
 import com.example.mytrip.data.repository.TripRepository
 import com.example.mytrip.util.CsvImportUtils
+import com.example.mytrip.widget.MyTripWidgetUpdater
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -69,18 +70,21 @@ class TripViewModel(application: Application) : AndroidViewModel(application) {
      * Save trip: if trip.id == 0 → create (returns new id), else → update (returns same id).
      */
     suspend fun saveTrip(trip: Trip): Long {
-        return if (trip.id == 0L) {
+        val tripId = if (trip.id == 0L) {
             repository.createTrip(trip)
         } else {
             repository.updateTrip(trip)
             trip.id
         }
+        MyTripWidgetUpdater.update(getApplication())
+        return tripId
     }
 
     fun deleteTrip(trip: Trip) {
         viewModelScope.launch {
             try {
                 repository.deleteTrip(trip)
+                MyTripWidgetUpdater.update(getApplication())
                 _uiState.value = TripUiState.Success
             } catch (e: Exception) {
                 _uiState.value = TripUiState.Error(e.message ?: "Không thể xóa chuyến đi")
@@ -92,6 +96,7 @@ class TripViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 repository.updateTripStatus(id, status)
+                MyTripWidgetUpdater.update(getApplication())
             } catch (e: Exception) {
                 _uiState.value = TripUiState.Error(e.message ?: "Không thể cập nhật trạng thái")
             }

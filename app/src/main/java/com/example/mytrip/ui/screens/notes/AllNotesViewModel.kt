@@ -10,6 +10,7 @@ import com.example.mytrip.data.db.entities.Note
 import com.example.mytrip.data.db.entities.NoteTag
 import com.example.mytrip.data.db.entities.Trip
 import com.example.mytrip.data.repository.TripRepository
+import com.example.mytrip.widget.MyTripWidgetUpdater
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -103,6 +104,7 @@ class AllNotesViewModel(application: Application) : AndroidViewModel(application
     fun deleteNote(note: Note) {
         viewModelScope.launch {
             repository.deleteNote(note)
+            MyTripWidgetUpdater.update(getApplication())
         }
     }
 

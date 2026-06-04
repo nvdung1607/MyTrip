@@ -11,6 +11,7 @@ import com.example.mytrip.data.db.entities.Day
 import com.example.mytrip.data.db.entities.Cluster
 import com.example.mytrip.data.db.entities.Trip
 import com.example.mytrip.data.repository.TripRepository
+import com.example.mytrip.widget.MyTripWidgetUpdater
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -114,6 +115,7 @@ class ItineraryViewModel(application: Application) : AndroidViewModel(applicatio
             val dayActivities = _activitiesMap.value[activity.dayId] ?: emptyList()
             val ordered = activity.copy(orderIndex = dayActivities.size)
             repository.insertActivity(ordered)
+            MyTripWidgetUpdater.update(getApplication())
         }
     }
 
@@ -135,24 +137,28 @@ class ItineraryViewModel(application: Application) : AndroidViewModel(applicatio
             toUpdate.forEach { repository.updateActivity(it) }
             // Insert new one
             repository.insertActivity(activity.copy(orderIndex = newIndex))
+            MyTripWidgetUpdater.update(getApplication())
         }
     }
 
     fun updateActivity(activity: Activity) {
         viewModelScope.launch {
             repository.updateActivity(activity)
+            MyTripWidgetUpdater.update(getApplication())
         }
     }
 
     fun deleteActivity(activity: Activity) {
         viewModelScope.launch {
             repository.deleteActivity(activity)
+            MyTripWidgetUpdater.update(getApplication())
         }
     }
 
     fun updateActivityStatus(id: Long, status: ActivityStatus) {
         viewModelScope.launch {
             repository.updateActivityStatus(id, status)
+            MyTripWidgetUpdater.update(getApplication())
         }
     }
 
@@ -160,6 +166,7 @@ class ItineraryViewModel(application: Application) : AndroidViewModel(applicatio
         viewModelScope.launch {
             val reordered = activities.mapIndexed { idx, act -> act.copy(orderIndex = idx) }
             reordered.forEach { repository.updateActivity(it) }
+            MyTripWidgetUpdater.update(getApplication())
             snackbarEvent.tryEmit("Đã sắp xếp lại! Vui lòng kiểm tra lại giờ giấc của các hoạt động.")
         }
     }

@@ -102,6 +102,10 @@ dependencies {
     // Reorderable drag-and-drop
     implementation(libs.reorderable)
 
+    // Glance (Home Screen Widget)
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.material3)
+
     // Desugaring
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
 

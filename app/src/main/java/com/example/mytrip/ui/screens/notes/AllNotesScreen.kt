@@ -4,8 +4,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -15,7 +13,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
@@ -116,7 +113,7 @@ fun AllNotesScreen(
                             }
                         }
                         "WEEK" -> viewModel.setFilter(NoteFilter.ByWeek(1))
-                        "TAG" -> viewModel.setFilter(NoteFilter.ByTag(NoteTag.HOTEL))
+                        "TAG" -> viewModel.setFilter(NoteFilter.ByTag(NoteTag.OTHER))
                     }
                 }
             )
@@ -227,12 +224,15 @@ private fun ScrollableFilterCategories(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         item {
+            val isSelected = activeGroup == "ALL"
             FilterChip(
-                selected = activeGroup == "ALL",
+                selected = isSelected,
                 onClick = { onGroupSelected("ALL") },
                 label = { Text("Tất cả") },
                 shape = RoundedCornerShape(50),
                 border = FilterChipDefaults.filterChipBorder(
+                    enabled = true,
+                    selected = isSelected,
                     borderColor = MaterialTheme.colorScheme.outline,
                     selectedBorderColor = MaterialTheme.colorScheme.outline,
                     borderWidth = 1.dp,
@@ -241,12 +241,15 @@ private fun ScrollableFilterCategories(
             )
         }
         item {
+            val isSelected = activeGroup == "DAY"
             FilterChip(
-                selected = activeGroup == "DAY",
+                selected = isSelected,
                 onClick = { onGroupSelected("DAY") },
                 label = { Text("Lọc theo ngày") },
                 shape = RoundedCornerShape(50),
                 border = FilterChipDefaults.filterChipBorder(
+                    enabled = true,
+                    selected = isSelected,
                     borderColor = MaterialTheme.colorScheme.outline,
                     selectedBorderColor = MaterialTheme.colorScheme.outline,
                     borderWidth = 1.dp,
@@ -255,12 +258,15 @@ private fun ScrollableFilterCategories(
             )
         }
         item {
+            val isSelected = activeGroup == "WEEK"
             FilterChip(
-                selected = activeGroup == "WEEK",
+                selected = isSelected,
                 onClick = { onGroupSelected("WEEK") },
                 label = { Text("Lọc theo tuần") },
                 shape = RoundedCornerShape(50),
                 border = FilterChipDefaults.filterChipBorder(
+                    enabled = true,
+                    selected = isSelected,
                     borderColor = MaterialTheme.colorScheme.outline,
                     selectedBorderColor = MaterialTheme.colorScheme.outline,
                     borderWidth = 1.dp,
@@ -269,12 +275,15 @@ private fun ScrollableFilterCategories(
             )
         }
         item {
+            val isSelected = activeGroup == "TAG"
             FilterChip(
-                selected = activeGroup == "TAG",
+                selected = isSelected,
                 onClick = { onGroupSelected("TAG") },
                 label = { Text("Lọc theo loại") },
                 shape = RoundedCornerShape(50),
                 border = FilterChipDefaults.filterChipBorder(
+                    enabled = true,
+                    selected = isSelected,
                     borderColor = MaterialTheme.colorScheme.outline,
                     selectedBorderColor = MaterialTheme.colorScheme.outline,
                     borderWidth = 1.dp,
@@ -313,6 +322,8 @@ private fun AnimatedSubFilters(
                                 label = { Text("Ngày ${day.dayNumber} (${DateUtils.formatDate(day.date)})") },
                                 shape = RoundedCornerShape(50),
                                 border = FilterChipDefaults.filterChipBorder(
+                                    enabled = true,
+                                    selected = selected,
                                     borderColor = MaterialTheme.colorScheme.outline,
                                     selectedBorderColor = MaterialTheme.colorScheme.outline,
                                     borderWidth = 1.dp,
@@ -347,6 +358,8 @@ private fun AnimatedSubFilters(
                                 label = { Text(labelText) },
                                 shape = RoundedCornerShape(50),
                                 border = FilterChipDefaults.filterChipBorder(
+                                    enabled = true,
+                                    selected = selected,
                                     borderColor = MaterialTheme.colorScheme.outline,
                                     selectedBorderColor = MaterialTheme.colorScheme.outline,
                                     borderWidth = 1.dp,
@@ -361,7 +374,7 @@ private fun AnimatedSubFilters(
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(NoteTag.values()) { tag ->
+                        items(NoteTag.entries) { tag ->
                             val selected = currentFilter is NoteFilter.ByTag && currentFilter.tag == tag
                             FilterChip(
                                 selected = selected,
@@ -369,6 +382,8 @@ private fun AnimatedSubFilters(
                                 label = { Text("${tag.icon} ${tag.label}") },
                                 shape = RoundedCornerShape(50),
                                 border = FilterChipDefaults.filterChipBorder(
+                                    enabled = true,
+                                    selected = selected,
                                     borderColor = MaterialTheme.colorScheme.outline,
                                     selectedBorderColor = MaterialTheme.colorScheme.outline,
                                     borderWidth = 1.dp,

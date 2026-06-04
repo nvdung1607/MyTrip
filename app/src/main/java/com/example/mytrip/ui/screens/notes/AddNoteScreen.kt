@@ -22,6 +22,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Comment
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -34,7 +36,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -50,7 +51,6 @@ import com.example.mytrip.util.MoneyUtils
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
-import com.google.accompanist.permissions.shouldShowRationale
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -68,7 +68,7 @@ fun AddNoteScreen(
     val noteVm: NoteViewModel = viewModel(factory = NoteViewModel.factory(app))
     val tripVm: TripViewModel = viewModel(factory = object : androidx.lifecycle.ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
-        override fun <T : androidx.lifecycle.ViewModel> create(c: Class<T>) = TripViewModel(app) as T
+        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>) = TripViewModel(app) as T
     })
 
     val trip by tripVm.trip.collectAsState()
@@ -83,7 +83,7 @@ fun AddNoteScreen(
     // State
     var photoPaths by remember { mutableStateOf<List<String>>(emptyList()) }
     var showCamera by remember { mutableStateOf(false) } // Bắt đầu ở màn hình Form trực tiếp
-    var rating by remember { mutableStateOf(0) }
+    var rating by remember { mutableIntStateOf(0) }
     var selectedTag by remember { mutableStateOf(NoteTag.OTHER) }
     var costInput by remember { mutableStateOf("0") }
     var paidBy by remember { mutableStateOf("") }
@@ -152,7 +152,7 @@ fun AddNoteScreen(
                     title = { Text("Thêm nhật ký") },
                     navigationIcon = {
                         IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(Icons.Default.ArrowBack, null)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
                         }
                     }
                 )
@@ -285,7 +285,6 @@ fun AddNoteScreen(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Text("Thêm hình ảnh kỷ niệm", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -333,7 +332,10 @@ fun AddNoteScreen(
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("⭐ Đánh giá *", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
+                        ) {
                             (1..5).forEach { star ->
                                 IconButton(onClick = { rating = star }) {
                                     Icon(
@@ -345,7 +347,14 @@ fun AddNoteScreen(
                                 }
                             }
                         }
-                        if (rating == 0) Text("Bắt buộc chọn đánh giá", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall)
+                        if (rating == 0) {
+                            Text(
+                                text = "Bắt buộc chọn đánh giá",
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            )
+                        }
                     }
                 }
 
@@ -354,15 +363,18 @@ fun AddNoteScreen(
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("🏷️ Loại *", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                         FlowRow(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    NoteTag.values().forEach { tag ->
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                                    NoteTag.entries.forEach { tag ->
+                                        val isSelected = selectedTag == tag
                                         FilterChip(
-                                            selected = selectedTag == tag,
+                                            selected = isSelected,
                                             onClick = { selectedTag = tag },
                                             label = { Text("${tag.icon} ${tag.label}") },
                                             border = FilterChipDefaults.filterChipBorder(
+                                                enabled = true,
+                                                selected = isSelected,
                                                 borderColor = MaterialTheme.colorScheme.outline,
                                                 selectedBorderColor = MaterialTheme.colorScheme.outline,
                                                 borderWidth = 1.dp,
@@ -417,11 +429,14 @@ fun AddNoteScreen(
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     memberNames.forEach { member ->
+                                        val isSelected = paidBy == member
                                         FilterChip(
-                                            selected = paidBy == member,
+                                            selected = isSelected,
                                             onClick = { paidBy = member },
                                             label = { Text(member) },
                                             border = FilterChipDefaults.filterChipBorder(
+                                                enabled = true,
+                                                selected = isSelected,
                                                 borderColor = MaterialTheme.colorScheme.outline,
                                                 selectedBorderColor = MaterialTheme.colorScheme.outline,
                                                 borderWidth = 1.dp,
@@ -450,7 +465,7 @@ fun AddNoteScreen(
                             onValueChange = { comment = it },
                             modifier = Modifier.fillMaxWidth(),
                             label = { Text("Nhận xét chi tiết") },
-                            leadingIcon = { Icon(Icons.Default.Comment, null) },
+                            leadingIcon = { Icon(Icons.AutoMirrored.Filled.Comment, null) },
                             minLines = 3,
                             maxLines = 5,
                             shape = RoundedCornerShape(16.dp)
@@ -458,7 +473,7 @@ fun AddNoteScreen(
                         if (gpsLat != null && gpsLng != null) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Icon(Icons.Default.GpsFixed, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
-                                Text("GPS: ${String.format("%.5f", gpsLat)}, ${String.format("%.5f", gpsLng)}",
+                                Text(String.format(Locale.US, "GPS: %.5f, %.5f", gpsLat, gpsLng),
                                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         }
@@ -539,7 +554,7 @@ private fun copyUriToExternalFilesDir(context: Context, uri: Uri): String? {
     return try {
         val inputStream = context.contentResolver.openInputStream(uri) ?: return null
         val dir = context.getExternalFilesDir("Pictures")
-        val file = File(dir, "NOTE_${java.util.UUID.randomUUID()}.jpg")
+        val file = File(dir, "NOTE_${UUID.randomUUID()}.jpg")
         val outputStream = java.io.FileOutputStream(file)
         inputStream.use { input ->
             outputStream.use { output ->
@@ -552,4 +567,3 @@ private fun copyUriToExternalFilesDir(context: Context, uri: Uri): String? {
         null
     }
 }
-

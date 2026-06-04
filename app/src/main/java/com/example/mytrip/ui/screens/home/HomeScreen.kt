@@ -8,6 +8,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -65,10 +66,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mytrip.R
 import androidx.navigation.NavController
 import com.example.mytrip.data.db.entities.Trip
 import com.example.mytrip.data.db.entities.TripStatus
@@ -120,24 +123,30 @@ fun HomeScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = "🗺️ MyTrip",
-                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
-                    )
-                },
-                actions = {
-                    TextButton(
-                        onClick = { viewModel.importSampleTrip() },
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.primary
-                        )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.logo),
+                            contentDescription = "App Logo",
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = "Tải mẫu 🗺️",
-                            fontWeight = FontWeight.Bold
+                            text = "My Trip",
+                            style = androidx.compose.ui.text.TextStyle(
+                                brush = Brush.linearGradient(
+                                    listOf(Color(0xFF00B4DB), Color(0xFF0083B0))
+                                ),
+                                fontWeight = FontWeight.ExtraBold,
+                                fontFamily = androidx.compose.ui.text.font.FontFamily.Cursive,
+                                fontSize = 34.sp,
+                                letterSpacing = 1.sp
+                            )
                         )
                     }
-
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
@@ -148,10 +157,12 @@ fun HomeScreen(
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { navController.navigate(Screen.CreateTrip.route) },
-                icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-                text = { Text("Tạo chuyến đi") },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
+                icon = { Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(24.dp)) },
+                text = { Text("Tạo chuyến đi", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) },
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                shape = RoundedCornerShape(24.dp),
+                elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp, pressedElevation = 8.dp)
             )
         }
     ) { innerPadding ->
@@ -169,7 +180,6 @@ fun HomeScreen(
             // ── Trip list or empty state ───────────────────────────────────
             if (trips.isEmpty()) {
                 EmptyState(
-                    onImportSampleClick = { viewModel.importSampleTrip() },
                     modifier = Modifier.fillMaxSize()
                 )
             } else {
@@ -238,18 +248,27 @@ private fun FilterChipsRow(
             FilterChip(
                 selected = selected,
                 onClick = { onFilterSelected(option.status) },
-                label = { Text(option.label) },
+                label = { 
+                    Text(
+                        text = option.label,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
+                    )
+                },
+                shape = RoundedCornerShape(50),
                 colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    selectedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer
                 ),
                 border = FilterChipDefaults.filterChipBorder(
                     enabled = true,
                     selected = selected,
-                    borderColor = MaterialTheme.colorScheme.outline,
-                    selectedBorderColor = MaterialTheme.colorScheme.outline,
-                    borderWidth = 1.dp,
-                    selectedBorderWidth = 1.dp
+                    borderColor = Color.Transparent,
+                    selectedBorderColor = Color.Transparent,
+                    borderWidth = 0.dp,
+                    selectedBorderWidth = 0.dp
                 )
             )
         }
@@ -260,7 +279,6 @@ private fun FilterChipsRow(
 
 @Composable
 private fun EmptyState(
-    onImportSampleClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -281,7 +299,7 @@ private fun EmptyState(
                 modifier = Modifier.padding(24.dp).fillMaxWidth()
             ) {
                 Text(
-                    text = "🗺️",
+                    text = "✈️",
                     fontSize = 80.sp
                 )
                 Spacer(modifier = Modifier.height(16.dp))
@@ -292,28 +310,12 @@ private fun EmptyState(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Hãy tạo một hành trình mới hoặc tải chuyến đi mẫu Xuyên Việt 30 ngày tự lái bằng Xforce để trải nghiệm đầy đủ tính năng!",
+                    text = "Hãy tạo một hành trình mới để bắt đầu lên lịch trình, theo dõi hôm nay và quản lý chi phí.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                     modifier = Modifier.padding(horizontal = 8.dp)
                 )
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                Button(
-                    onClick = onImportSampleClick,
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    ),
-                    modifier = Modifier.fillMaxWidth().height(48.dp)
-                ) {
-                    Text(
-                        text = "🚀 Tải lịch trình Xuyên Việt mẫu",
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                }
             }
         }
     }
@@ -368,7 +370,7 @@ fun TripCard(
                     .padding(16.dp)
             ) {
                 // Trip name
-                Column(modifier = Modifier.align(Alignment.CenterStart)) {
+                Column(modifier = Modifier.align(Alignment.CenterStart).padding(end = 90.dp)) {
                     Text(
                         text = trip.name,
                         style = MaterialTheme.typography.titleLarge.copy(

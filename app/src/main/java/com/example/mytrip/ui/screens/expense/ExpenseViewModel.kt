@@ -11,6 +11,7 @@ import com.example.mytrip.data.db.entities.*
 import com.example.mytrip.data.repository.TripRepository
 import com.example.mytrip.util.ExcelUtils
 import com.example.mytrip.util.MoneyUtils
+import com.example.mytrip.widget.MyTripWidgetUpdater
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -61,19 +62,31 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun updatePlanned(expense: Expense) {
-        viewModelScope.launch { repository.updateExpense(expense) }
+        viewModelScope.launch {
+            repository.updateExpense(expense)
+            MyTripWidgetUpdater.update(getApplication())
+        }
     }
 
     fun addRecord(record: ExpenseRecord) {
-        viewModelScope.launch { repository.insertExpenseRecord(record) }
+        viewModelScope.launch {
+            repository.insertExpenseRecord(record)
+            MyTripWidgetUpdater.update(getApplication())
+        }
     }
 
     fun updateRecord(record: ExpenseRecord) {
-        viewModelScope.launch { repository.updateExpenseRecord(record) }
+        viewModelScope.launch {
+            repository.updateExpenseRecord(record)
+            MyTripWidgetUpdater.update(getApplication())
+        }
     }
 
     fun deleteRecord(record: ExpenseRecord) {
-        viewModelScope.launch { repository.deleteExpenseRecord(record) }
+        viewModelScope.launch {
+            repository.deleteExpenseRecord(record)
+            MyTripWidgetUpdater.update(getApplication())
+        }
     }
 
     private fun computeBalances() {

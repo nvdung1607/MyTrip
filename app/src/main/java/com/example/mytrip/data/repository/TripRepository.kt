@@ -21,7 +21,7 @@ class TripRepository(
     suspend fun getTripByIdOnce(id: Long): Trip? = tripDao.getTripByIdOnce(id)
 
     suspend fun createTrip(trip: Trip): Long {
-        val tripId = tripDao.insertTrip(trip)
+        val tripId = tripDao.insertTripEnforcingSingleOngoing(trip)
         // Tạo days tương ứng với số ngày
         val days = generateDays(trip.copy(id = tripId))
         dayDao.insertDays(days)
@@ -33,9 +33,10 @@ class TripRepository(
         return tripId
     }
 
-    suspend fun updateTrip(trip: Trip) = tripDao.updateTrip(trip)
+    suspend fun updateTrip(trip: Trip) = tripDao.updateTripEnforcingSingleOngoing(trip)
     suspend fun deleteTrip(trip: Trip) = tripDao.deleteTrip(trip)
-    suspend fun updateTripStatus(id: Long, status: TripStatus) = tripDao.updateStatus(id, status)
+    suspend fun updateTripStatus(id: Long, status: TripStatus) =
+        tripDao.updateStatusEnforcingSingleOngoing(id, status)
 
     private fun generateDays(trip: Trip): List<Day> {
         val days = mutableListOf<Day>()
@@ -227,7 +228,7 @@ class TripRepository(
         return tripId
     }
 
-    suspend fun importSeedTrip() {
+    suspend fun importSeedTrip(overrideType: TripType? = null) {
 
         val todayStartMs = run {
             val now = System.currentTimeMillis()
@@ -236,7 +237,8 @@ class TripRepository(
         val seedTrip = com.example.mytrip.data.seed.TripSeedData.trip.copy(
             startDate = todayStartMs,
             endDate = todayStartMs + 29 * 86_400_000L,
-            createdAt = System.currentTimeMillis()
+            createdAt = System.currentTimeMillis(),
+            type = overrideType ?: com.example.mytrip.data.seed.TripSeedData.trip.type
         )
         val seedDays = com.example.mytrip.data.seed.TripSeedData.days
         

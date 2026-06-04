@@ -12,6 +12,7 @@ import com.example.mytrip.data.db.entities.Note
 import com.example.mytrip.data.db.entities.Trip
 import com.example.mytrip.data.repository.TripRepository
 import com.example.mytrip.util.DateUtils
+import com.example.mytrip.widget.MyTripWidgetUpdater
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -113,6 +114,7 @@ class TodayViewModel(application: Application) : AndroidViewModel(application) {
     fun updateActivityStatus(activityId: Long, status: ActivityStatus) {
         viewModelScope.launch {
             repository.updateActivityStatus(activityId, status)
+            MyTripWidgetUpdater.update(getApplication())
         }
     }
 
@@ -123,12 +125,14 @@ class TodayViewModel(application: Application) : AndroidViewModel(application) {
     fun updateActivityActualNotes(activity: Activity, notes: String) {
         viewModelScope.launch {
             repository.updateActivity(activity.copy(actualNotes = notes))
+            MyTripWidgetUpdater.update(getApplication())
         }
     }
 
     fun updateDay(day: Day) {
         viewModelScope.launch {
             repository.updateDay(day)
+            MyTripWidgetUpdater.update(getApplication())
             loadData(currentTripId)
         }
     }
@@ -147,12 +151,14 @@ class TodayViewModel(application: Application) : AndroidViewModel(application) {
             toUpdate.forEach { repository.updateActivity(it) }
             // Insert new one
             repository.insertActivity(activity.copy(orderIndex = newIndex))
+            MyTripWidgetUpdater.update(getApplication())
         }
     }
 
     fun updateActivity(activity: Activity) {
         viewModelScope.launch {
             repository.updateActivity(activity)
+            MyTripWidgetUpdater.update(getApplication())
         }
     }
 
@@ -160,12 +166,14 @@ class TodayViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val reordered = activities.mapIndexed { idx, act -> act.copy(orderIndex = idx) }
             reordered.forEach { repository.updateActivity(it) }
+            MyTripWidgetUpdater.update(getApplication())
         }
     }
 
     fun deleteActivity(activity: Activity) {
         viewModelScope.launch {
             repository.deleteActivity(activity)
+            MyTripWidgetUpdater.update(getApplication())
         }
     }
 
