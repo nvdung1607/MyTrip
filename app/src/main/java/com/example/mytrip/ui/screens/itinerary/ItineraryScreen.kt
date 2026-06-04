@@ -120,14 +120,26 @@ import org.json.JSONArray
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
-// ─── Palette for day number circles ───────────────────────────────────────────
-private val dayColors = listOf(
-    Color(0xFF6750A4), Color(0xFF0288D1), Color(0xFF2E7D32),
-    Color(0xFFC62828), Color(0xFFE65100), Color(0xFF6A1B9A),
-    Color(0xFF00695C), Color(0xFF1565C0), Color(0xFFAD1457)
-)
+// ─── Palette for day number circles — Primary / Tertiary / Secondary cycling ──
+@Composable
+private fun dayCircleColor(dayNumber: Int): Color {
+    val colors = listOf(
+        MaterialTheme.colorScheme.primary,
+        MaterialTheme.colorScheme.tertiary,
+        MaterialTheme.colorScheme.secondary
+    )
+    return colors[(dayNumber - 1) % colors.size]
+}
 
-private fun dayColor(dayNumber: Int): Color = dayColors[(dayNumber - 1) % dayColors.size]
+@Composable
+private fun dayCircleOnColor(dayNumber: Int): Color {
+    val colors = listOf(
+        MaterialTheme.colorScheme.onPrimary,
+        MaterialTheme.colorScheme.onTertiary,
+        MaterialTheme.colorScheme.onSecondary
+    )
+    return colors[(dayNumber - 1) % colors.size]
+}
 
 private fun statusColor(status: ActivityStatus): Color = when (status) {
     ActivityStatus.PENDING -> Color(0xFF9E9E9E)
@@ -221,14 +233,14 @@ fun ItineraryScreen(
                     Column {
                         Text(
                             text = trip?.name ?: "Lịch trình",
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = "${days.size} ngày",
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -414,31 +426,62 @@ private fun DaySection(
     onStatusChange: (Activity, ActivityStatus) -> Unit,
     onReorder: (Int, Int) -> Unit
 ) {
+    val circleColor = dayCircleColor(day.dayNumber)
+    val circleOnColor = dayCircleOnColor(day.dayNumber)
+
     Column(modifier = Modifier.fillMaxWidth()) {
-        // Day header card
+        // Day header card — tonal surface, clear hierarchy
         Card(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp).clickable { onToggleExpand() },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 5.dp)
+                .clickable { onToggleExpand() },
             shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // Day number circle — rotates through Primary/Tertiary/Secondary
                 Box(
-                    modifier = Modifier.size(44.dp).clip(CircleShape).background(dayColor(day.dayNumber)),
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(circleColor),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("N${day.dayNumber}", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Text(
+                        "N${day.dayNumber}",
+                        color = circleOnColor,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp
+                    )
                 }
                 Spacer(modifier = Modifier.width(14.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Ngày ${day.dayNumber} — ${DateUtils.formatFull(day.date)}", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        "Ngày ${day.dayNumber} — ${DateUtils.formatFull(day.date)}",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold
+                    )
                     if (day.title.isNotBlank()) {
-                        Text(day.title, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(
+                            day.title,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
-                    Text("${activities.size} hoạt động", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        "${activities.size} hoạt động",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
                 Icon(
                     imageVector = if (isExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
@@ -454,7 +497,6 @@ private fun DaySection(
 
             Column(modifier = Modifier.fillMaxWidth().padding(start = 28.dp, end = 16.dp, bottom = 4.dp)) {
                 sortedActivities.forEachIndexed { idx, activity ->
-                    // "Insert here" divider button above first item or between items
                     InsertBetweenButton(onClick = { onInsertAfter(idx - 1) })
 
                     ActivityRow(
@@ -475,7 +517,7 @@ private fun DaySection(
                     InsertBetweenButton(onClick = { onInsertAfter(sortedActivities.size - 1) })
                 }
 
-                // Add activity button at bottom (only show if list is empty, otherwise the insert button above is sufficient)
+                // Add activity button at bottom (only show if list is empty)
                 if (sortedActivities.isEmpty()) {
                     TextButton(
                         onClick = onAddActivity,
@@ -513,7 +555,7 @@ private fun InsertBetweenButton(onClick: () -> Unit) {
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = "Thêm vào đây",
-                    modifier = Modifier.size(11.dp),
+                    modifier = Modifier.size(10.dp),
                     tint = MaterialTheme.colorScheme.outline
                 )
             }
@@ -578,16 +620,28 @@ private fun ActivityRow(
             // Activity type icon
             Text(activity.activityType.icon, fontSize = 16.sp, modifier = Modifier.padding(end = 6.dp, top = 2.dp))
 
-            // Time column
-            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(48.dp)) {
+            // Time column — wider, clearer display
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.width(52.dp)
+            ) {
                 if (activity.departureTime.isNotBlank()) {
-                    Text(activity.departureTime, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+                    Text(
+                        activity.departureTime,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
                 if (activity.departureTime.isNotBlank() && activity.arrivalTime.isNotBlank()) {
                     Box(modifier = Modifier.width(1.dp).height(8.dp).background(MaterialTheme.colorScheme.outlineVariant))
                 }
                 if (activity.arrivalTime.isNotBlank()) {
-                    Text(activity.arrivalTime, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        activity.arrivalTime,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
 
@@ -637,18 +691,22 @@ private fun ActivityRow(
                 }
             }
 
-            // Right: status dot + edit button
+            // Right: status dot (12dp) + edit button
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(
-                    modifier = Modifier.size(10.dp).clip(CircleShape).background(statusColor(activity.status)).clickable {
-                        val next = when (activity.status) {
-                            ActivityStatus.PENDING -> ActivityStatus.DONE
-                            ActivityStatus.DONE    -> ActivityStatus.SKIPPED
-                            ActivityStatus.SKIPPED -> ActivityStatus.CHANGED
-                            ActivityStatus.CHANGED -> ActivityStatus.PENDING
+                    modifier = Modifier
+                        .size(12.dp)
+                        .clip(CircleShape)
+                        .background(statusColor(activity.status))
+                        .clickable {
+                            val next = when (activity.status) {
+                                ActivityStatus.PENDING -> ActivityStatus.DONE
+                                ActivityStatus.DONE    -> ActivityStatus.SKIPPED
+                                ActivityStatus.SKIPPED -> ActivityStatus.CHANGED
+                                ActivityStatus.CHANGED -> ActivityStatus.PENDING
+                            }
+                            onStatusChange(next)
                         }
-                        onStatusChange(next)
-                    }
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 FilledTonalIconButton(onClick = onEdit, modifier = Modifier.size(30.dp)) {
@@ -660,7 +718,10 @@ private fun ActivityRow(
         if (activity.status != ActivityStatus.PENDING) {
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
             Row(
-                modifier = Modifier.fillMaxWidth().background(statusColor(activity.status).copy(alpha = 0.08f)).padding(horizontal = 14.dp, vertical = 3.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(statusColor(activity.status).copy(alpha = 0.08f))
+                    .padding(horizontal = 14.dp, vertical = 3.dp)
             ) {
                 Box(modifier = Modifier.size(7.dp).align(Alignment.CenterVertically).clip(CircleShape).background(statusColor(activity.status)))
                 Spacer(modifier = Modifier.width(5.dp))
@@ -751,7 +812,7 @@ private fun ActivityEditSheet(
         if (parts.size != 2) return ""
         val hour = parts[0].toIntOrNull() ?: return ""
         val minute = parts[1].toIntOrNull() ?: return ""
-        
+
         val totalMinutes = hour * 60 + minute + minutesToAdd
         val newHour = (totalMinutes / 60) % 24
         val newMinute = totalMinutes % 60
@@ -762,7 +823,7 @@ private fun ActivityEditSheet(
         val cal = Calendar.getInstance()
         val initHour = currentTime.split(":").firstOrNull()?.toIntOrNull() ?: cal.get(Calendar.HOUR_OF_DAY)
         val initMinute = currentTime.split(":").lastOrNull()?.toIntOrNull() ?: cal.get(Calendar.MINUTE)
-        
+
         android.app.TimePickerDialog(
             context,
             { _, hour, minute ->
@@ -784,7 +845,14 @@ private fun ActivityEditSheet(
             .padding(horizontal = 20.dp, vertical = 16.dp)
     ) {
         // Sheet handle
-        Box(modifier = Modifier.align(Alignment.CenterHorizontally).width(40.dp).height(4.dp).clip(RoundedCornerShape(2.dp)).background(MaterialTheme.colorScheme.outlineVariant))
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .width(40.dp)
+                .height(4.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(MaterialTheme.colorScheme.outlineVariant)
+        )
 
         Spacer(modifier = Modifier.height(14.dp))
 
@@ -797,7 +865,12 @@ private fun ActivityEditSheet(
         Spacer(modifier = Modifier.height(16.dp))
 
         // ── Loại hoạt động ────────────────────────────────────────────
-        Text("Loại hoạt động", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp))
+        Text(
+            "Loại hoạt động",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 16.dp)) {
             ActivityType.values().forEach { type ->
                 FilterChip(
@@ -840,9 +913,9 @@ private fun ActivityEditSheet(
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(
                     value = departureTimeValue,
-                    onValueChange = { 
+                    onValueChange = {
                         departureTime = onTimeValueChange(it.text)
-                        departureTimeError = false 
+                        departureTimeError = false
                     },
                     label = { Text(if (selectedType == ActivityType.ACCOMMODATION) "Check-in" else "Giờ đi", maxLines = 1, overflow = TextOverflow.Ellipsis) },
                     placeholder = { Text("HH:mm") },
@@ -862,9 +935,9 @@ private fun ActivityEditSheet(
                 )
                 OutlinedTextField(
                     value = arrivalTimeValue,
-                    onValueChange = { 
+                    onValueChange = {
                         arrivalTime = onTimeValueChange(it.text)
-                        arrivalTimeError = false 
+                        arrivalTimeError = false
                     },
                     label = { Text(if (selectedType == ActivityType.ACCOMMODATION) "Check-out" else "Giờ đến", maxLines = 1, overflow = TextOverflow.Ellipsis) },
                     placeholder = { Text("HH:mm") },
@@ -883,7 +956,7 @@ private fun ActivityEditSheet(
                     shape = RoundedCornerShape(16.dp)
                 )
             }
-            
+
             // Smart time offset suggestion chips
             if (isValidTime(departureTime) && departureTime.isNotBlank()) {
                 Spacer(modifier = Modifier.height(6.dp))
@@ -1065,11 +1138,15 @@ private fun ActivityEditSheet(
 
         // Action buttons
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            FilledTonalButton(onClick = onDismiss, modifier = Modifier.weight(1f)) { Text("Huỷ") }
+            FilledTonalButton(
+                onClick = onDismiss,
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(16.dp)
+            ) { Text("Huỷ") }
             Button(
                 onClick = {
                     if (name.isBlank()) { nameError = true; return@Button }
-                    
+
                     val isDepValid = isValidTime(departureTime)
                     val isArrValid = isValidTime(arrivalTime)
                     if (!isDepValid) { departureTimeError = true }
@@ -1098,7 +1175,8 @@ private fun ActivityEditSheet(
                     )
                     onSave(activity)
                 },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(16.dp)
             ) { Text(if (existingActivity == null) "Thêm" else "Lưu") }
         }
 
@@ -1110,19 +1188,42 @@ private fun ActivityEditSheet(
 @Composable
 private fun ClusterHeader(cluster: Cluster, daysCount: Int, isExpanded: Boolean, onToggle: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp).clickable { onToggle() },
-        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clickable { onToggle() },
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("📦", fontSize = 20.sp, modifier = Modifier.padding(end = 12.dp))
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("📦", fontSize = 20.sp)
+            }
+            Spacer(modifier = Modifier.width(14.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(cluster.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSecondaryContainer)
-                Text("Gồm $daysCount ngày • ${if (isExpanded) "Chạm để ẩn" else "Chạm để xem chi tiết"}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f))
+                Text(
+                    cluster.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                Text(
+                    "Gồm $daysCount ngày • ${if (isExpanded) "Chạm để ẩn" else "Chạm để xem chi tiết"}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.75f)
+                )
             }
             Icon(
                 imageVector = if (isExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,

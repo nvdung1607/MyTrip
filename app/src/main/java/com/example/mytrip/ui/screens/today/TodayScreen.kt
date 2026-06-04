@@ -578,9 +578,9 @@ private fun TimelineItem(
     onDelete: (Activity) -> Unit
 ) {
     val statusColor = when (activity.status) {
-        ActivityStatus.DONE -> Color(0xFF2E7D32)
-        ActivityStatus.SKIPPED -> Color(0xFFC62828)
-        ActivityStatus.CHANGED -> Color(0xFFE65100)
+        ActivityStatus.DONE    -> Color(0xFF137333)  // Google Green
+        ActivityStatus.SKIPPED -> MaterialTheme.colorScheme.error
+        ActivityStatus.CHANGED -> Color(0xFFE8710A)  // Google Orange
         ActivityStatus.PENDING -> MaterialTheme.colorScheme.primary
     }
 
