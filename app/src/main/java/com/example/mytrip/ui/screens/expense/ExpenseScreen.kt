@@ -370,8 +370,15 @@ private fun AddExpenseRecordSheet(
     var description by remember { mutableStateOf("") }
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp).navigationBarsPadding(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .imePadding()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
             Text("Thêm chi tiêu", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
 
             Text("Hạng mục", style = MaterialTheme.typography.labelLarge)
