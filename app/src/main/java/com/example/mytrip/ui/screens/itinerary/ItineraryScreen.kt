@@ -48,6 +48,12 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.UnfoldLess
 import androidx.compose.material.icons.filled.UnfoldMore
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import java.util.Calendar
+import java.util.Locale
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -466,14 +472,16 @@ private fun DaySection(
                     InsertBetweenButton(onClick = { onInsertAfter(sortedActivities.size - 1) })
                 }
 
-                // Add activity button at bottom
-                TextButton(
-                    onClick = onAddActivity,
-                    modifier = Modifier.padding(top = 2.dp, bottom = 8.dp)
-                ) {
-                    Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Thêm hoạt động")
+                // Add activity button at bottom (only show if list is empty, otherwise the insert button above is sufficient)
+                if (sortedActivities.isEmpty()) {
+                    TextButton(
+                        onClick = onAddActivity,
+                        modifier = Modifier.padding(top = 2.dp, bottom = 8.dp)
+                    ) {
+                        Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Thêm hoạt động")
+                    }
                 }
             }
         }
@@ -488,21 +496,26 @@ private fun InsertBetweenButton(onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
-        Box(modifier = Modifier.weight(1f).height(1.dp).background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)))
+        Box(modifier = Modifier.weight(1f).height(1.dp).background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)))
         Surface(
             onClick = onClick,
             shape = CircleShape,
-            color = MaterialTheme.colorScheme.secondaryContainer,
-            modifier = Modifier.padding(horizontal = 8.dp)
+            color = MaterialTheme.colorScheme.surface,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)),
+            modifier = Modifier
+                .padding(horizontal = 12.dp)
+                .size(20.dp)
         ) {
-            Icon(
-                Icons.Default.Add,
-                contentDescription = "Thêm vào đây",
-                modifier = Modifier.padding(4.dp).size(14.dp),
-                tint = MaterialTheme.colorScheme.onSecondaryContainer
-            )
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Thêm vào đây",
+                    modifier = Modifier.size(11.dp),
+                    tint = MaterialTheme.colorScheme.outline
+                )
+            }
         }
-        Box(modifier = Modifier.weight(1f).height(1.dp).background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)))
+        Box(modifier = Modifier.weight(1f).height(1.dp).background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)))
     }
 }
 
@@ -678,6 +691,11 @@ private fun ActivityEditSheet(
     // Time fields (TRANSIT, SIGHTSEEING, ACCOMMODATION, ACTIVITY)
     var departureTime by rememberSaveable { mutableStateOf(existingActivity?.departureTime ?: "") }
     var arrivalTime by rememberSaveable { mutableStateOf(existingActivity?.arrivalTime ?: "") }
+    var departureTimeError by rememberSaveable { mutableStateOf(false) }
+    var arrivalTimeError by rememberSaveable { mutableStateOf(false) }
+
+    // Expandable detail view toggle
+    var showMoreDetails by rememberSaveable { mutableStateOf(false) }
 
     // TRANSIT fields
     var distanceText by rememberSaveable {
@@ -695,6 +713,66 @@ private fun ActivityEditSheet(
         mutableStateOf(if ((existingActivity?.hotelPricePlanned ?: 0L) > 0L) existingActivity!!.hotelPricePlanned.toString() else "")
     }
 
+    // Helper functions for time validation & formatting
+    fun isValidTime(time: String): Boolean {
+        val clean = time.trim()
+        if (clean.isEmpty()) return true
+        val regex = Regex("^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$")
+        return regex.matches(clean)
+    }
+
+    fun formatDigitsToTime(digits: String): String {
+        return when (digits.length) {
+            0 -> ""
+            1 -> digits
+            2 -> "$digits:"
+            3 -> "${digits.substring(0, 2)}:${digits.substring(2)}"
+            else -> "${digits.substring(0, 2)}:${digits.substring(2, 4)}"
+        }
+    }
+
+    fun onTimeValueChange(newVal: String, oldVal: String): String {
+        val cleanNew = newVal.filter { it.isDigit() }
+        val cleanOld = oldVal.filter { it.isDigit() }
+        if (newVal.length < oldVal.length) {
+            if (oldVal.endsWith(":") && !newVal.contains(":")) {
+                return if (cleanNew.isNotEmpty()) cleanNew.dropLast(1) else ""
+            }
+            return formatDigitsToTime(cleanNew)
+        }
+        val digits = cleanNew.take(4)
+        return formatDigitsToTime(digits)
+    }
+
+    fun addTimeToFormatted(time: String, minutesToAdd: Int): String {
+        val parts = time.split(":")
+        if (parts.size != 2) return ""
+        val hour = parts[0].toIntOrNull() ?: return ""
+        val minute = parts[1].toIntOrNull() ?: return ""
+        
+        val totalMinutes = hour * 60 + minute + minutesToAdd
+        val newHour = (totalMinutes / 60) % 24
+        val newMinute = totalMinutes % 60
+        return String.format(Locale.US, "%02d:%02d", newHour, newMinute)
+    }
+
+    fun showTimePicker(currentTime: String, onTimeSelected: (String) -> Unit) {
+        val cal = Calendar.getInstance()
+        val initHour = currentTime.split(":").firstOrNull()?.toIntOrNull() ?: cal.get(Calendar.HOUR_OF_DAY)
+        val initMinute = currentTime.split(":").lastOrNull()?.toIntOrNull() ?: cal.get(Calendar.MINUTE)
+        
+        android.app.TimePickerDialog(
+            context,
+            { _, hour, minute ->
+                val formatted = String.format(Locale.US, "%02d:%02d", hour, minute)
+                onTimeSelected(formatted)
+            },
+            initHour,
+            initMinute,
+            true // 24 hours format
+        ).show()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -709,9 +787,7 @@ private fun ActivityEditSheet(
         Spacer(modifier = Modifier.height(14.dp))
 
         Text(
-            text = if (existingActivity == null) {
-                if (insertAfterIndex >= 0) "Chèn hoạt động mới" else "Thêm hoạt động"
-            } else "Chỉnh sửa hoạt động",
+            text = if (existingActivity == null) "Tạo hoạt động mới" else "Chỉnh sửa hoạt động",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
@@ -757,115 +833,88 @@ private fun ActivityEditSheet(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // ── Fields theo loại ──────────────────────────────────────────
-
-        // Giờ – show for all except MEAL
+        // ── Giờ (Basic - Always Visible except MEAL) ──────────────────
         if (selectedType != ActivityType.MEAL) {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(
                     value = departureTime,
-                    onValueChange = { departureTime = it },
-                    label = { Text(if (selectedType == ActivityType.ACCOMMODATION) "Giờ check-in" else "Giờ xuất phát") },
+                    onValueChange = { 
+                        departureTime = onTimeValueChange(it, departureTime)
+                        departureTimeError = false 
+                    },
+                    label = { Text(if (selectedType == ActivityType.ACCOMMODATION) "Check-in" else "Giờ đi", maxLines = 1, overflow = TextOverflow.Ellipsis) },
                     placeholder = { Text("HH:mm") },
+                    isError = departureTimeError,
+                    supportingText = if (departureTimeError) {{ Text("Định dạng: HH:mm (VD: 08:30)", color = MaterialTheme.colorScheme.error) }} else null,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
+                    leadingIcon = {
+                        IconButton(onClick = {
+                            showTimePicker(departureTime) { departureTime = it; departureTimeError = false }
+                        }) {
+                            Icon(Icons.Filled.AccessTime, contentDescription = "Chọn giờ")
+                        }
+                    },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(16.dp)
                 )
                 OutlinedTextField(
                     value = arrivalTime,
-                    onValueChange = { arrivalTime = it },
-                    label = { Text(if (selectedType == ActivityType.ACCOMMODATION) "Giờ check-out" else "Giờ đến nơi") },
+                    onValueChange = { 
+                        arrivalTime = onTimeValueChange(it, arrivalTime)
+                        arrivalTimeError = false 
+                    },
+                    label = { Text(if (selectedType == ActivityType.ACCOMMODATION) "Check-out" else "Giờ đến", maxLines = 1, overflow = TextOverflow.Ellipsis) },
                     placeholder = { Text("HH:mm") },
+                    isError = arrivalTimeError,
+                    supportingText = if (arrivalTimeError) {{ Text("Định dạng: HH:mm (VD: 10:30)", color = MaterialTheme.colorScheme.error) }} else null,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
+                    leadingIcon = {
+                        IconButton(onClick = {
+                            showTimePicker(arrivalTime) { arrivalTime = it; arrivalTimeError = false }
+                        }) {
+                            Icon(Icons.Filled.AccessTime, contentDescription = "Chọn giờ")
+                        }
+                    },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(16.dp)
                 )
             }
-            Spacer(modifier = Modifier.height(12.dp))
-        }
-
-        // TRANSIT: khoảng cách + maps
-        if (selectedType == ActivityType.TRANSIT) {
-            OutlinedTextField(
-                value = distanceText,
-                onValueChange = { distanceText = it },
-                label = { Text("Khoảng cách (km)") },
-                placeholder = { Text("0.0") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            OutlinedTextField(
-                value = mapsLink,
-                onValueChange = { mapsLink = it },
-                label = { Text("Link Google Maps") },
-                placeholder = { Text("https://maps.google.com/...") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-                singleLine = true,
-                trailingIcon = {
-                    if (mapsLink.isNotBlank()) {
-                        IconButton(onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(mapsLink))) }) {
-                            Icon(Icons.Filled.OpenInNew, null, tint = MaterialTheme.colorScheme.primary)
-                        }
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-        }
-
-        // SIGHTSEEING: check-in spots + maps
-        if (selectedType == ActivityType.SIGHTSEEING) {
-            Text("Điểm check-in cần ghé", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
-            if (checkInSpots.isNotEmpty()) {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 6.dp)) {
-                    checkInSpots.forEach { spot ->
-                        InputChip(
-                            selected = false,
-                            onClick = { checkInSpots = checkInSpots.filter { it != spot } },
-                            label = { Text(spot, style = MaterialTheme.typography.labelSmall) },
-                            trailingIcon = {
-                                Icon(Icons.Filled.Close, null, modifier = Modifier.size(14.dp))
-                            }
+            
+            // Smart time offset suggestion chips
+            if (isValidTime(departureTime) && departureTime.isNotBlank()) {
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Gợi ý giờ đến:", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    listOf(
+                        "+30p" to 30,
+                        "+1h" to 60,
+                        "+2h" to 120,
+                        "+3h" to 180,
+                        "+4h" to 240
+                    ).forEach { (label, mins) ->
+                        SuggestionChip(
+                            onClick = {
+                                val suggested = addTimeToFormatted(departureTime, mins)
+                                if (suggested.isNotEmpty()) {
+                                    arrivalTime = suggested
+                                    arrivalTimeError = false
+                                }
+                            },
+                            label = { Text(label, style = MaterialTheme.typography.labelSmall) }
                         )
                     }
                 }
             }
-            OutlinedTextField(
-                value = spotInput,
-                onValueChange = { spotInput = it },
-                label = { Text("Thêm điểm check-in") },
-                placeholder = { Text("Nhập tên rồi nhấn Enter") },
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = {
-                    val t = spotInput.trim()
-                    if (t.isNotBlank() && !checkInSpots.contains(t)) checkInSpots = checkInSpots + t
-                    spotInput = ""
-                }),
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            OutlinedTextField(
-                value = mapsLink,
-                onValueChange = { mapsLink = it },
-                label = { Text("Link Google Maps") },
-                placeholder = { Text("https://maps.google.com/...") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
-            )
             Spacer(modifier = Modifier.height(12.dp))
         }
 
-        // ACCOMMODATION: khách sạn + giá
+        // ACCOMMODATION: Khách sạn (Tên là Basic - Always Visible)
         if (selectedType == ActivityType.ACCOMMODATION) {
             OutlinedTextField(
                 value = hotelName,
@@ -876,51 +925,140 @@ private fun ActivityEditSheet(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp)
             )
-            Spacer(modifier = Modifier.height(10.dp))
-            OutlinedTextField(
-                value = hotelPriceText,
-                onValueChange = { hotelPriceText = it },
-                label = { Text("Giá phòng dự kiến (nghìn ₫)") },
-                placeholder = { Text("VD: 500 = 500.000 ₫") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                singleLine = true,
-                supportingText = { val v = hotelPriceText.toLongOrNull() ?: 0L; if (v > 0) Text(MoneyUtils.formatVnd(MoneyUtils.inputToVnd(v))) },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                hotelShortcuts.forEach { sc ->
-                    SuggestionChip(onClick = { hotelPriceText = sc.valueK.toString() }, label = { Text(sc.label, style = MaterialTheme.typography.labelSmall) })
-                }
-            }
-            Spacer(modifier = Modifier.height(10.dp))
-            OutlinedTextField(
-                value = mapsLink,
-                onValueChange = { mapsLink = it },
-                label = { Text("Link Google Maps khách sạn") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
-            )
             Spacer(modifier = Modifier.height(12.dp))
         }
 
-        // MEAL: chỉ có tên + ghi chú
-        // ACTIVITY: chỉ có tên + giờ + ghi chú (giờ đã hiện ở trên)
-
-        // Ghi chú – always shown
-        OutlinedTextField(
-            value = notes,
-            onValueChange = { notes = it },
-            label = { Text("Ghi chú thêm") },
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-            minLines = 2,
-            maxLines = 4,
+        // ── Nút mở rộng thông tin chi tiết ────────────────────────────
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp)
-        )
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TextButton(onClick = { showMoreDetails = !showMoreDetails }) {
+                Icon(
+                    imageVector = if (showMoreDetails) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                    contentDescription = null
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(if (showMoreDetails) "Ẩn bớt thông tin chi tiết" else "Thêm thông tin chi tiết (Google Maps, chi phí, ghi chú...)")
+            }
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // ── Phân hệ thông tin chi tiết ──────────────────────────────────
+        AnimatedVisibility(
+            visible = showMoreDetails,
+            enter = expandVertically(),
+            exit = shrinkVertically()
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+
+                // ACCOMMODATION: Giá phòng (Detailed)
+                if (selectedType == ActivityType.ACCOMMODATION) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = hotelPriceText,
+                            onValueChange = { hotelPriceText = it },
+                            label = { Text("Giá phòng dự kiến (nghìn ₫)") },
+                            placeholder = { Text("VD: 500 = 500.000 ₫") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                            supportingText = { val v = hotelPriceText.toLongOrNull() ?: 0L; if (v > 0) Text(MoneyUtils.formatVnd(MoneyUtils.inputToVnd(v))) },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            hotelShortcuts.forEach { sc ->
+                                SuggestionChip(onClick = { hotelPriceText = sc.valueK.toString() }, label = { Text(sc.label, style = MaterialTheme.typography.labelSmall) })
+                            }
+                        }
+                    }
+                }
+
+                // TRANSIT: Khoảng cách (Detailed)
+                if (selectedType == ActivityType.TRANSIT) {
+                    OutlinedTextField(
+                        value = distanceText,
+                        onValueChange = { distanceText = it },
+                        label = { Text("Khoảng cách (km)") },
+                        placeholder = { Text("0.0") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp)
+                    )
+                }
+
+                // SIGHTSEEING: Check-in spots (Detailed)
+                if (selectedType == ActivityType.SIGHTSEEING) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Điểm check-in cần ghé", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        if (checkInSpots.isNotEmpty()) {
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                checkInSpots.forEach { spot ->
+                                    InputChip(
+                                        selected = false,
+                                        onClick = { checkInSpots = checkInSpots.filter { it != spot } },
+                                        label = { Text(spot, style = MaterialTheme.typography.labelSmall) },
+                                        trailingIcon = {
+                                            Icon(Icons.Filled.Close, null, modifier = Modifier.size(14.dp))
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                        OutlinedTextField(
+                            value = spotInput,
+                            onValueChange = { spotInput = it },
+                            label = { Text("Thêm điểm check-in") },
+                            placeholder = { Text("Nhập tên rồi nhấn Enter") },
+                            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
+                            keyboardActions = KeyboardActions(onDone = {
+                                val t = spotInput.trim()
+                                if (t.isNotBlank() && !checkInSpots.contains(t)) checkInSpots = checkInSpots + t
+                                spotInput = ""
+                            }),
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                    }
+                }
+
+                // Link Google Maps (Detailed, shown for Transit, Sightseeing, Accommodation)
+                if (selectedType == ActivityType.TRANSIT || selectedType == ActivityType.SIGHTSEEING || selectedType == ActivityType.ACCOMMODATION) {
+                    OutlinedTextField(
+                        value = mapsLink,
+                        onValueChange = { mapsLink = it },
+                        label = { Text("Link Google Maps") },
+                        placeholder = { Text("https://maps.google.com/...") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+                        singleLine = true,
+                        trailingIcon = {
+                            if (mapsLink.isNotBlank()) {
+                                IconButton(onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(mapsLink))) }) {
+                                    Icon(Icons.Filled.OpenInNew, null, tint = MaterialTheme.colorScheme.primary)
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp)
+                    )
+                }
+
+                // Ghi chú thêm (Detailed)
+                OutlinedTextField(
+                    value = notes,
+                    onValueChange = { notes = it },
+                    label = { Text("Ghi chú thêm") },
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+                    minLines = 2,
+                    maxLines = 4,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp)
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -930,6 +1068,13 @@ private fun ActivityEditSheet(
             Button(
                 onClick = {
                     if (name.isBlank()) { nameError = true; return@Button }
+                    
+                    val isDepValid = isValidTime(departureTime)
+                    val isArrValid = isValidTime(arrivalTime)
+                    if (!isDepValid) { departureTimeError = true }
+                    if (!isArrValid) { arrivalTimeError = true }
+                    if (!isDepValid || !isArrValid) return@Button
+
                     focusManager.clearFocus()
                     val activity = Activity(
                         id = existingActivity?.id ?: 0L,

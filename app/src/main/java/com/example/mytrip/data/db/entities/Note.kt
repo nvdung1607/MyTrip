@@ -34,6 +34,7 @@ data class Note(
 
     // Bắt buộc
     val photoPath: String? = null,     // đường dẫn ảnh local
+    val photoPaths: List<String> = emptyList(), // danh sách tất cả ảnh local
     val rating: Int = 0,               // 1-5 sao
     val tag: NoteTag = NoteTag.OTHER,
     val cost: Long = 0,                // Chi phí thực tế (VND đã bỏ 3 số 0)

@@ -40,6 +40,7 @@ import com.example.mytrip.navigation.Screen
 import com.example.mytrip.util.DateUtils
 import com.example.mytrip.util.MoneyUtils
 import com.example.mytrip.ui.components.DraggableFab
+import com.example.mytrip.ui.components.NoteDetailDialog
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -207,116 +208,10 @@ fun AllNotesScreen(
     if (expandedNote != null) {
         val note = expandedNote!!
         val noteDay = days.find { it.id == note.dayId }
-        AlertDialog(
-            onDismissRequest = { expandedNote = null },
-            confirmButton = {
-                TextButton(onClick = { expandedNote = null }) { Text("Đóng") }
-            },
-            title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(note.tag.icon, fontSize = 24.sp)
-                    Spacer(Modifier.width(8.dp))
-                    Text(note.tag.label, fontWeight = FontWeight.Bold)
-                }
-            },
-            text = {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    if (note.photoPath != null) {
-                        AsyncImage(
-                            model = note.photoPath,
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                        )
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Rating
-                        Row {
-                            repeat(5) { i ->
-                                Icon(
-                                    imageVector = Icons.Default.Star,
-                                    contentDescription = null,
-                                    tint = if (i < note.rating) Color(0xFFFFC107) else MaterialTheme.colorScheme.outlineVariant,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                        }
-                        
-                        // Day Label
-                        if (noteDay != null) {
-                            Surface(
-                                shape = RoundedCornerShape(50),
-                                color = MaterialTheme.colorScheme.primaryContainer
-                            ) {
-                                Text(
-                                    text = "Ngày ${noteDay.dayNumber}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    }
-
-                    if (note.name.isNotBlank()) {
-                        Text(
-                            text = note.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-
-                    if (note.cost > 0) {
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = MaterialTheme.colorScheme.secondaryContainer,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(Modifier.padding(12.dp)) {
-                                Text(
-                                    text = "Chi phí: ${MoneyUtils.formatVnd(note.cost)}",
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                                )
-                                if (note.paidBy.isNotBlank()) {
-                                    Text(
-                                        text = "Người trả: ${note.paidBy}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    if (note.comment.isNotBlank()) {
-                        Text(
-                            text = note.comment,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-
-                    Text(
-                        text = "Ghi chép vào: ${DateUtils.formatFull(note.timestamp)}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
+        NoteDetailDialog(
+            note = note,
+            dayNumber = noteDay?.dayNumber,
+            onDismiss = { expandedNote = null }
         )
     }
 }

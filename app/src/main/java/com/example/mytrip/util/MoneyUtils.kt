@@ -44,7 +44,7 @@ object MoneyUtils {
     }
 
     /** Nút shortcut amounts (đơn vị k) */
-    val SHORTCUTS = listOf(50L, 100L, 200L, 300L, 500L, 1_000L)
+    val SHORTCUTS = listOf(0L, 50L, 100L, 200L, 300L, 500L, 1_000L)
 
     /**
      * Tính toán chia đầu người và số dư mỗi người.

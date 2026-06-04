@@ -117,29 +117,207 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
     }
 
     // Edit planned budget dialog
+    // Edit planned budget dialog
     editExpense?.let { exp ->
+        var isDetailedMode by remember(exp) { mutableStateOf(false) }
+
+        val tripNumDays = trip?.let { DateUtils.countDays(it.startDate, it.endDate) }?.coerceAtLeast(1) ?: 1
+        val tripNumPeople = trip?.numPeople ?: 1
+
+        // States for detailed mode
+        var hotelPrice by remember(exp) { mutableStateOf("") }
+        var hotelNights by remember(exp) { mutableStateOf((tripNumDays - 1).coerceAtLeast(1).toString()) }
+
+        var foodCostPerPersonPerDay by remember(exp) { mutableStateOf("") }
+        var foodDays by remember(exp) { mutableStateOf(tripNumDays.toString()) }
+        var foodPeople by remember(exp) { mutableStateOf(tripNumPeople.toString()) }
+
+        var ticketPrice by remember(exp) { mutableStateOf("") }
+        var ticketCount by remember(exp) { mutableStateOf(tripNumPeople.toString()) }
+
+        var genericPrice by remember(exp) { mutableStateOf("") }
+        var genericQuantity by remember(exp) { mutableStateOf("1") }
+
         var input by remember(exp) { mutableStateOf(MoneyUtils.vndToInput(exp.planned).toString().takeIf { it != "0" } ?: "") }
+
+        // Automatically update the main input when in detailed mode
+        LaunchedEffect(
+            isDetailedMode, exp.category,
+            hotelPrice, hotelNights,
+            foodCostPerPersonPerDay, foodDays, foodPeople,
+            ticketPrice, ticketCount,
+            genericPrice, genericQuantity
+        ) {
+            if (isDetailedMode) {
+                val calculatedValue = when (exp.category) {
+                    ExpenseCategory.HOTEL -> {
+                        val p = hotelPrice.toLongOrNull() ?: 0L
+                        val n = hotelNights.toLongOrNull() ?: 0L
+                        p * n
+                    }
+                    ExpenseCategory.FOOD -> {
+                        val c = foodCostPerPersonPerDay.toLongOrNull() ?: 0L
+                        val d = foodDays.toLongOrNull() ?: 0L
+                        val p = foodPeople.toLongOrNull() ?: 0L
+                        c * d * p
+                    }
+                    ExpenseCategory.TICKET -> {
+                        val p = ticketPrice.toLongOrNull() ?: 0L
+                        val c = ticketCount.toLongOrNull() ?: 0L
+                        p * c
+                    }
+                    else -> {
+                        val p = genericPrice.toLongOrNull() ?: 0L
+                        val q = genericQuantity.toLongOrNull() ?: 0L
+                        p * q
+                    }
+                }
+                input = if (calculatedValue > 0) calculatedValue.toString() else ""
+            }
+        }
+
         AlertDialog(
             onDismissRequest = { editExpense = null },
             title = { Text("${exp.category.icon} ${exp.category.label}") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    OutlinedTextField(
-                        value = input,
-                        onValueChange = { input = it.filter { c -> c.isDigit() } },
-                        label = { Text("Dự kiến") },
-                        suffix = { Text("k") },
-                        placeholder = { Text("VD: 500 = 500.000₫") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        shape = RoundedCornerShape(16.dp)
-                    )
-                    if (input.isNotEmpty())
-                        Text("= ${MoneyUtils.formatVnd(MoneyUtils.inputToVnd(MoneyUtils.parseInput(input)))}",
-                            color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(MoneyUtils.SHORTCUTS) { a ->
-                            SuggestionChip(onClick = { input = a.toString() },
-                                label = { Text(if (a >= 1000) "${a/1000}M" else "${a}k") })
+                    // Toggle Detailed vs Quick mode
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        FilterChip(
+                            selected = !isDetailedMode,
+                            onClick = { isDetailedMode = false },
+                            label = { Text("Nhập nhanh") }
+                        )
+                        FilterChip(
+                            selected = isDetailedMode,
+                            onClick = { isDetailedMode = true },
+                            label = { Text("🧮 Tính chi tiết") }
+                        )
+                    }
+
+                    if (!isDetailedMode) {
+                        OutlinedTextField(
+                            value = input,
+                            onValueChange = { input = it.filter { c -> c.isDigit() } },
+                            label = { Text("Dự kiến") },
+                            suffix = { Text("k") },
+                            placeholder = { Text("VD: 500 = 500.000₫") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    } else {
+                        // Detailed inputs
+                        when (exp.category) {
+                            ExpenseCategory.HOTEL -> {
+                                OutlinedTextField(
+                                    value = hotelPrice,
+                                    onValueChange = { hotelPrice = it.filter { c -> c.isDigit() } },
+                                    label = { Text("Giá phòng / đêm (k)") },
+                                    suffix = { Text("k") },
+                                    placeholder = { Text("VD: 500 = 500.000₫") },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    shape = RoundedCornerShape(16.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                OutlinedTextField(
+                                    value = hotelNights,
+                                    onValueChange = { hotelNights = it.filter { c -> c.isDigit() } },
+                                    label = { Text("Số đêm") },
+                                    placeholder = { Text("VD: 3") },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    shape = RoundedCornerShape(16.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                            ExpenseCategory.FOOD -> {
+                                OutlinedTextField(
+                                    value = foodCostPerPersonPerDay,
+                                    onValueChange = { foodCostPerPersonPerDay = it.filter { c -> c.isDigit() } },
+                                    label = { Text("Tiền ăn / người / ngày (k)") },
+                                    suffix = { Text("k") },
+                                    placeholder = { Text("VD: 150 = 150.000₫") },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    shape = RoundedCornerShape(16.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                OutlinedTextField(
+                                    value = foodDays,
+                                    onValueChange = { foodDays = it.filter { c -> c.isDigit() } },
+                                    label = { Text("Số ngày") },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    shape = RoundedCornerShape(16.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                OutlinedTextField(
+                                    value = foodPeople,
+                                    onValueChange = { foodPeople = it.filter { c -> c.isDigit() } },
+                                    label = { Text("Số người ăn") },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    shape = RoundedCornerShape(16.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                            ExpenseCategory.TICKET -> {
+                                OutlinedTextField(
+                                    value = ticketPrice,
+                                    onValueChange = { ticketPrice = it.filter { c -> c.isDigit() } },
+                                    label = { Text("Giá vé / người (k)") },
+                                    suffix = { Text("k") },
+                                    placeholder = { Text("VD: 100 = 100.000₫") },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    shape = RoundedCornerShape(16.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                OutlinedTextField(
+                                    value = ticketCount,
+                                    onValueChange = { ticketCount = it.filter { c -> c.isDigit() } },
+                                    label = { Text("Số vé") },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    shape = RoundedCornerShape(16.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                            else -> {
+                                OutlinedTextField(
+                                    value = genericPrice,
+                                    onValueChange = { genericPrice = it.filter { c -> c.isDigit() } },
+                                    label = { Text("Đơn giá / khoản chi (k)") },
+                                    suffix = { Text("k") },
+                                    placeholder = { Text("VD: 200 = 200.000₫") },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    shape = RoundedCornerShape(16.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                OutlinedTextField(
+                                    value = genericQuantity,
+                                    onValueChange = { genericQuantity = it.filter { c -> c.isDigit() } },
+                                    label = { Text("Số lượng / Số chặng") },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    shape = RoundedCornerShape(16.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+                    }
+
+                    if (input.isNotEmpty()) {
+                        Text(
+                            text = "= ${MoneyUtils.formatVnd(MoneyUtils.inputToVnd(MoneyUtils.parseInput(input)))}",
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    if (!isDetailedMode) {
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            items(MoneyUtils.SHORTCUTS) { a ->
+                                SuggestionChip(onClick = { input = a.toString() },
+                                    label = { Text(if (a >= 1000) "${a/1000}M" else "${a}k") })
+                            }
                         }
                     }
                 }
@@ -183,7 +361,7 @@ private fun BudgetTab(
 
     LazyColumn(
         Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 88.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
@@ -283,7 +461,11 @@ private fun ActualTab(
         DateUtils.formatDate(it.timestamp)
     }.toSortedMap(compareByDescending { it })
 
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    LazyColumn(
+        Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 88.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
         grouped.forEach { (date, dayRecords) ->
             item { Text(date, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold) }
             items(dayRecords, key = { it.id }) { rec ->
@@ -340,7 +522,6 @@ private fun ActualTab(
                     }
                 }
             }
-            item { Spacer(Modifier.height(80.dp)) }
         }
     }
 

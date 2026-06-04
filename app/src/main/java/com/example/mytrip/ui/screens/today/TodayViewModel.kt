@@ -126,6 +126,25 @@ class TodayViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun updateDay(day: Day) {
+        viewModelScope.launch {
+            repository.updateDay(day)
+            loadData(currentTripId)
+        }
+    }
+
+    fun updateActivity(activity: Activity) {
+        viewModelScope.launch {
+            repository.updateActivity(activity)
+        }
+    }
+
+    fun deleteActivity(activity: Activity) {
+        viewModelScope.launch {
+            repository.deleteActivity(activity)
+        }
+    }
+
     companion object {
         val Factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")

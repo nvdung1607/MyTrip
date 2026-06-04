@@ -87,7 +87,12 @@ fun TripDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("") },
+                title = {
+                    val t = trip
+                    if (t != null) {
+                        StatusChip(status = t.status)
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
@@ -98,24 +103,61 @@ fun TripDetailScreen(
                     }
                 },
                 actions = {
-                    if (trip != null) {
-                        IconButton(
-                            onClick = {
-                                navController.navigate(Screen.EditTrip.createRoute(tripId))
+                    val t = trip
+                    if (t != null) {
+                        var showMenu by remember { mutableStateOf(false) }
+                        Box {
+                            IconButton(onClick = { showMenu = true }) {
+                                Icon(
+                                    Icons.Default.Settings,
+                                    contentDescription = "Cài đặt",
+                                    tint = Color.White
+                                )
                             }
-                        ) {
-                            Icon(
-                                Icons.Default.Edit,
-                                contentDescription = "Chỉnh sửa",
-                                tint = Color.White
-                            )
-                        }
-                        IconButton(onClick = { showDeleteDialog = true }) {
-                            Icon(
-                                Icons.Default.Delete,
-                                contentDescription = "Xóa chuyến đi",
-                                tint = Color.White.copy(alpha = 0.85f)
-                            )
+                            DropdownMenu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("✏️ Chỉnh sửa chuyến đi") },
+                                    onClick = {
+                                        showMenu = false
+                                        navController.navigate(Screen.EditTrip.createRoute(tripId))
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("🗑️ Xóa chuyến đi") },
+                                    onClick = {
+                                        showMenu = false
+                                        showDeleteDialog = true
+                                    }
+                                )
+                                HorizontalDivider()
+                                DropdownMenuItem(
+                                    text = { Text("🔵 Đặt trạng thái: Sắp đi") },
+                                    enabled = t.status != TripStatus.PLANNING,
+                                    onClick = {
+                                        showMenu = false
+                                        viewModel.updateStatus(tripId, TripStatus.PLANNING)
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("🟢 Đặt trạng thái: Đang đi") },
+                                    enabled = t.status != TripStatus.ONGOING,
+                                    onClick = {
+                                        showMenu = false
+                                        viewModel.updateStatus(tripId, TripStatus.ONGOING)
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("⚫ Đặt trạng thái: Hoàn thành") },
+                                    enabled = t.status != TripStatus.DONE,
+                                    onClick = {
+                                        showMenu = false
+                                        viewModel.updateStatus(tripId, TripStatus.DONE)
+                                    }
+                                )
+                            }
                         }
                     }
                 },
@@ -173,6 +215,8 @@ fun TripDetailScreen(
                 onClick = {
                     navController.navigate(Screen.AddNote.createRoute(tripId, null))
                 },
+                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.65f),
+                contentColor = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
@@ -222,9 +266,6 @@ private fun TripDetailContent(
                     .padding(top = topPadding + 8.dp, start = 20.dp, end = 20.dp, bottom = 20.dp),
                 verticalArrangement = Arrangement.Bottom
             ) {
-                // Status chip
-                StatusChip(status = trip.status)
-                Spacer(Modifier.height(8.dp))
 
                 // Trip name
                 Text(
@@ -377,71 +418,7 @@ private fun TripDetailContent(
             )
         }
 
-        Spacer(Modifier.height(20.dp))
-
-        // ─── Status change button ─────────────────────────────────────────────
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Text(
-                text = "Trạng thái chuyến đi",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-
-            when (trip.status) {
-                TripStatus.PLANNING -> {
-                    Button(
-                        onClick = { onStatusChange(TripStatus.ONGOING) },
-                        modifier = Modifier.fillMaxWidth().height(48.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = StatusOngoing
-                        )
-                    ) {
-                        Icon(Icons.Default.DirectionsRun, contentDescription = null)
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            text = "Đặt trạng thái: Đang đi",
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-                TripStatus.ONGOING -> {
-                    Button(
-                        onClick = { onStatusChange(TripStatus.DONE) },
-                        modifier = Modifier.fillMaxWidth().height(48.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = StatusDone
-                        )
-                    ) {
-                        Icon(Icons.Default.CheckCircle, contentDescription = null)
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            text = "Đặt trạng thái: Hoàn thành",
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-                TripStatus.DONE -> {
-                    OutlinedButton(
-                        onClick = { onStatusChange(TripStatus.PLANNING) },
-                        modifier = Modifier.fillMaxWidth().height(48.dp),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(Icons.Default.Refresh, contentDescription = null)
-                        Spacer(Modifier.width(8.dp))
-                        Text("Đặt lại thành Sắp đi")
-                    }
-                }
-            }
-        }
-
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(16.dp))
     }
 }
 

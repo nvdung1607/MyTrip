@@ -48,7 +48,7 @@ class MainActivity : ComponentActivity() {
                             navigated = true
                             val ongoingTrip = allTrips!!.firstOrNull { it.status == TripStatus.ONGOING }
                             if (ongoingTrip != null) {
-                                navController.navigate(Screen.Today.createRoute(ongoingTrip.id)) {
+                                navController.navigate(Screen.TripDetail.createRoute(ongoingTrip.id)) {
                                     popUpTo(Screen.Home.route) { inclusive = false }
                                 }
                             }

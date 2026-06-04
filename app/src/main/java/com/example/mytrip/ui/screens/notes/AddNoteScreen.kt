@@ -79,17 +79,29 @@ fun AddNoteScreen(
     val locationPermission = rememberPermissionState(Manifest.permission.ACCESS_COARSE_LOCATION)
 
     // State
-    var photoPath by remember { mutableStateOf<String?>(null) }
-    var showCamera by remember { mutableStateOf(true) }
+    var photoPaths by remember { mutableStateOf<List<String>>(emptyList()) }
+    var showCamera by remember { mutableStateOf(false) } // Bắt đầu ở màn hình Form trực tiếp
     var rating by remember { mutableStateOf(0) }
     var selectedTag by remember { mutableStateOf(NoteTag.OTHER) }
-    var costInput by remember { mutableStateOf("") }
+    var costInput by remember { mutableStateOf("0") }
     var paidBy by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var comment by remember { mutableStateOf("") }
     var showOptional by remember { mutableStateOf(false) }
     var gpsLat by remember { mutableStateOf<Double?>(null) }
     var gpsLng by remember { mutableStateOf<Double?>(null) }
+
+    // Launcher chọn nhiều ảnh từ thư viện máy
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetMultipleContents()
+    ) { uris ->
+        val copiedPaths = uris.mapNotNull { uri ->
+            copyUriToExternalFilesDir(context, uri)
+        }
+        if (copiedPaths.isNotEmpty()) {
+            photoPaths = photoPaths + copiedPaths
+        }
+    }
 
     // Auto-get GPS
     LaunchedEffect(Unit) {
@@ -115,7 +127,7 @@ fun AddNoteScreen(
     if (showCamera && cameraPermission.status.isGranted) {
         CameraScreen(
             onPhotoCaptured = { path ->
-                photoPath = path
+                photoPaths = photoPaths + path
                 showCamera = false
             },
             onSkip = { showCamera = false }
@@ -135,7 +147,7 @@ fun AddNoteScreen(
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Thêm ghi chú") },
+                    title = { Text("Thêm nhật ký") },
                     navigationIcon = {
                         IconButton(onClick = { navController.popBackStack() }) {
                             Icon(Icons.Default.ArrowBack, null)
@@ -151,7 +163,8 @@ fun AddNoteScreen(
                             noteVm.saveNote(Note(
                                 tripId = tripId,
                                 dayId = dayId,
-                                photoPath = photoPath,
+                                photoPath = photoPaths.firstOrNull(),
+                                photoPaths = photoPaths,
                                 rating = rating,
                                 tag = selectedTag,
                                 cost = cost,
@@ -182,32 +195,135 @@ fun AddNoteScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                // Photo preview
-                if (photoPath != null) {
-                    Box(Modifier.fillMaxWidth().height(200.dp).clip(RoundedCornerShape(16.dp))) {
-                        AsyncImage(
-                            model = File(photoPath!!),
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                        IconButton(
-                            onClick = { showCamera = true },
-                            modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
-                                .background(Color.Black.copy(alpha = 0.5f), CircleShape)
-                        ) { Icon(Icons.Default.CameraAlt, null, tint = Color.White) }
+                // Photo layout (horizontal list if not empty, otherwise action card)
+                if (photoPaths.isNotEmpty()) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("📷 Hình ảnh (${photoPaths.size})", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            items(photoPaths) { path ->
+                                Box(Modifier.size(120.dp).clip(RoundedCornerShape(12.dp))) {
+                                    AsyncImage(
+                                        model = File(path),
+                                        contentDescription = null,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                    IconButton(
+                                        onClick = { photoPaths = photoPaths.filter { it != path } },
+                                        modifier = Modifier
+                                            .align(Alignment.TopEnd)
+                                            .padding(4.dp)
+                                            .size(24.dp)
+                                            .background(Color.Black.copy(alpha = 0.6f), CircleShape)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = "Xóa",
+                                            tint = Color.White,
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                    }
+                                }
+                            }
+                            
+                            // Nút thêm ảnh từ Camera trong hàng
+                            item {
+                                Card(
+                                    modifier = Modifier.size(120.dp),
+                                    shape = RoundedCornerShape(12.dp),
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
+                                    onClick = { if (cameraPermission.status.isGranted) showCamera = true else cameraPermission.launchPermissionRequest() }
+                                ) {
+                                    Column(
+                                        modifier = Modifier.fillMaxSize(),
+                                        verticalArrangement = Arrangement.Center,
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Icon(Icons.Default.AddAPhoto, null, tint = MaterialTheme.colorScheme.primary)
+                                        Spacer(Modifier.height(4.dp))
+                                        Text("Chụp ảnh", style = MaterialTheme.typography.labelSmall)
+                                    }
+                                }
+                            }
+                            
+                            // Nút thêm ảnh từ máy trong hàng
+                            item {
+                                Card(
+                                    modifier = Modifier.size(120.dp),
+                                    shape = RoundedCornerShape(12.dp),
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
+                                    onClick = { galleryLauncher.launch("image/*") }
+                                ) {
+                                    Column(
+                                        modifier = Modifier.fillMaxSize(),
+                                        verticalArrangement = Arrangement.Center,
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Icon(Icons.Default.Image, null, tint = MaterialTheme.colorScheme.primary)
+                                        Spacer(Modifier.height(4.dp))
+                                        Text("Chọn từ máy", style = MaterialTheme.typography.labelSmall)
+                                    }
+                                }
+                            }
+                        }
                     }
                 } else {
-                    OutlinedButton(
-                        onClick = { if (cameraPermission.status.isGranted) showCamera = true else cameraPermission.launchPermissionRequest() },
-                        modifier = Modifier.fillMaxWidth().height(100.dp),
-                        shape = RoundedCornerShape(16.dp)
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Default.AddAPhoto, null, modifier = Modifier.size(32.dp))
-                            Spacer(Modifier.height(8.dp))
-                            Text("Chụp ảnh")
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Text("📸 Thêm hình ảnh kỷ niệm", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                OutlinedButton(
+                                    onClick = { if (cameraPermission.status.isGranted) showCamera = true else cameraPermission.launchPermissionRequest() },
+                                    modifier = Modifier.weight(1f).height(56.dp),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Icon(Icons.Default.AddAPhoto, null)
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("Chụp ảnh")
+                                }
+                                OutlinedButton(
+                                    onClick = { galleryLauncher.launch("image/*") },
+                                    modifier = Modifier.weight(1f).height(56.dp),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Icon(Icons.Default.Image, null)
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("Chọn từ máy")
+                                }
+                            }
                         }
+                    }
+                }
+
+                // 📝 Tên ghi chú
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("📝 Tên ghi chú / địa điểm", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        OutlinedTextField(
+                            value = name,
+                            onValueChange = { name = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = { Text("VD: Ăn trưa hải sản, Vé cáp treo...") },
+                            leadingIcon = { Icon(Icons.Default.Place, null) },
+                            singleLine = true,
+                            shape = RoundedCornerShape(16.dp)
+                        )
                     }
                 }
 
@@ -310,15 +426,6 @@ fun AddNoteScreen(
                 AnimatedVisibility(visible = showOptional, enter = expandVertically(), exit = shrinkVertically()) {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         OutlinedTextField(
-                            value = name,
-                            onValueChange = { name = it },
-                            modifier = Modifier.fillMaxWidth(),
-                            label = { Text("Tên địa điểm / món ăn") },
-                            leadingIcon = { Icon(Icons.Default.Place, null) },
-                            singleLine = true,
-                            shape = RoundedCornerShape(16.dp)
-                        )
-                        OutlinedTextField(
                             value = comment,
                             onValueChange = { comment = it },
                             modifier = Modifier.fillMaxWidth(),
@@ -407,3 +514,22 @@ private fun CameraScreen(
         }
     }
 }
+
+private fun copyUriToExternalFilesDir(context: Context, uri: Uri): String? {
+    return try {
+        val inputStream = context.contentResolver.openInputStream(uri) ?: return null
+        val dir = context.getExternalFilesDir("Pictures")
+        val file = File(dir, "NOTE_${java.util.UUID.randomUUID()}.jpg")
+        val outputStream = java.io.FileOutputStream(file)
+        inputStream.use { input ->
+            outputStream.use { output ->
+                input.copyTo(output)
+            }
+        }
+        file.absolutePath
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+}
+
