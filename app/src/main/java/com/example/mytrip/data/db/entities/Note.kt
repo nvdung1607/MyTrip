@@ -6,12 +6,12 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 enum class NoteTag(val label: String, val icon: String) {
-    HOTEL("Khách sạn / Nơi nghỉ", "🏨"),
-    FOOD("Quán ăn / Món ăn", "🍜"),
+    HOTEL("Khách sạn", "🏨"),
+    FOOD("Ăn uống", "🍜"),
     ATTRACTION("Điểm tham quan", "🏛️"),
-    SHOP("Cửa hàng / Mua sắm", "🛍️"),
+    SHOP("Mua sắm", "🛍️"),
     TRANSPORT("Di chuyển", "🚗"),
-    PERSON("Người gặp gỡ", "👤"),
+    PERSON("Gặp gỡ", "👤"),
     OTHER("Khác", "📌")
 }
 

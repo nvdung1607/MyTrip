@@ -870,7 +870,7 @@ private fun ActivityEditSheet(
             OutlinedTextField(
                 value = hotelName,
                 onValueChange = { hotelName = it },
-                label = { Text("Tên khách sạn / nơi nghỉ") },
+                label = { Text("Tên khách sạn") },
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
