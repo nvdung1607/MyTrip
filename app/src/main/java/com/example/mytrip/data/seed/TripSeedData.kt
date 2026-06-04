@@ -23,7 +23,7 @@ object TripSeedData {
         startDate = dayMs(0),
         endDate = dayMs(29),
         numPeople = 3,
-        memberNames = "[\"Mày\",\"Bạn A\",\"Bạn B\"]",
+        memberNames = "[\"Tao\",\"Bố\",\"Mẹ\"]",
         status = TripStatus.PLANNING,
         createdAt = System.currentTimeMillis()
     )

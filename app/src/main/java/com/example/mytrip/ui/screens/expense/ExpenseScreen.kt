@@ -66,11 +66,7 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
                         Icon(Icons.Default.ArrowBack, null)
                     }
                 },
-                actions = {
-                    IconButton(onClick = { vm.shareTextReport(ctx) }) {
-                        Icon(Icons.Default.Share, "Chia sẻ")
-                    }
-                }
+                actions = {}
             )
         },
         floatingActionButton = {

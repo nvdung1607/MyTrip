@@ -2,7 +2,10 @@ package com.example.mytrip.data.repository
 
 import com.example.mytrip.data.db.dao.*
 import com.example.mytrip.data.db.entities.*
+import com.example.mytrip.util.CsvImportUtils
 import kotlinx.coroutines.flow.Flow
+import org.json.JSONArray
+
 
 class TripRepository(
     private val tripDao: TripDao,
@@ -150,7 +153,82 @@ class TripRepository(
     fun getTotalPlanned(tripId: Long): Flow<Long?> = expenseDao.getTotalPlanned(tripId)
     fun getTotalActual(tripId: Long): Flow<Long?> = expenseDao.getTotalActual(tripId)
 
+    /**
+     * Import a trip from CSV data parsed by CsvImportUtils.
+     * Creates Trip, Clusters (from unique cluster names), Days, and default Expenses.
+     * Returns the new tripId.
+     */
+    suspend fun importFromCsv(data: CsvImportUtils.TripImportData): Long {
+        val namesJson = JSONArray(data.memberNames).toString()
+        val trip = Trip(
+            name = data.name,
+            type = data.type,
+            startDate = data.startDateMs,
+            endDate = data.endDateMs,
+            numPeople = data.numPeople,
+            memberNames = namesJson,
+            description = data.description,
+            useClusters = data.days.any { it.clusterName.isNotBlank() }
+        )
+        val tripId = tripDao.insertTrip(trip)
+
+        // Build cluster map (cluster name -> clusterId) preserving insertion order
+        val clusterMap = linkedMapOf<String, Long>()
+        data.days.forEach { day ->
+            val cn = day.clusterName.trim()
+            if (cn.isNotBlank() && !clusterMap.containsKey(cn)) {
+                val idx = clusterMap.size
+                val clusterId = clusterDao.insertCluster(
+                    Cluster(tripId = tripId, name = cn, orderIndex = idx)
+                )
+                clusterMap[cn] = clusterId
+            }
+        }
+
+        // Insert days
+        var currentDate = data.startDateMs
+        for (daySeed in data.days.sortedBy { it.dayNumber }) {
+            val clusterId = clusterMap[daySeed.clusterName.trim()]
+            val spotsJson = if (daySeed.checkInSpots.isNotEmpty()) {
+                org.json.JSONArray(daySeed.checkInSpots).toString()
+            } else ""
+            val dayId = dayDao.insertDay(
+                Day(
+                    tripId = tripId,
+                    clusterId = clusterId,
+                    dayNumber = daySeed.dayNumber,
+                    date = currentDate,
+                    title = daySeed.title,
+                    notes = daySeed.notes
+                )
+            )
+            // Auto-create a single activity from the day's title/km
+            if (daySeed.distanceKm > 0) {
+                activityDao.insertActivity(
+                    Activity(
+                        dayId = dayId,
+                        orderIndex = 0,
+                        name = daySeed.title,
+                        distanceKm = daySeed.distanceKm,
+                        checkInSpots = spotsJson,
+                        notes = daySeed.notes
+                    )
+                )
+            }
+            currentDate += 86_400_000L
+        }
+
+        // Default expense categories
+        val expenses = ExpenseCategory.values().map {
+            Expense(tripId = tripId, category = it, planned = 0)
+        }
+        expenseDao.insertExpenses(expenses)
+
+        return tripId
+    }
+
     suspend fun importSeedTrip() {
+
         val todayStartMs = run {
             val now = System.currentTimeMillis()
             now - (now % 86_400_000L)
@@ -177,12 +255,12 @@ class TripRepository(
         
         // Tạo 6 cụm theo lộ trình
         val clusterNames = listOf(
-            "Cụm 1: Khởi hành & Duyên hải miền Trung (N1-N8)",
-            "Cụm 2: Duyên hải Nam Trung Bộ & TP.HCM (N9-N12)",
-            "Cụm 3: Khám phá Miền Tây Nam Bộ (N13-N18)",
-            "Cụm 4: Ngược dòng lên Tây Nguyên (N19-N22)",
-            "Cụm 5: Cao nguyên Đất đỏ (N23-N26)",
-            "Cụm 6: Hành trình trở về Bắc (N27-N30)"
+            "Cụm 1: Bắc Trung Bộ (N1-N3)",
+            "Cụm 2: Nam Trung Bộ (N4-N9)",
+            "Cụm 3: Đông Nam Bộ (N10-N13)",
+            "Cụm 4: Miền Tây (N14-N20)",
+            "Cụm 5: Tây Nguyên (N21-N26)",
+            "Cụm 6: Hồi Hương (N27-N30)"
         )
         val clusterIds = clusterNames.mapIndexed { idx, name ->
             clusterDao.insertCluster(Cluster(tripId = tripId, name = name, orderIndex = idx))
@@ -191,12 +269,12 @@ class TripRepository(
         var currentDayDate = todayStartMs
         for (daySeed in seedDays) {
             val clusterId = when (daySeed.dayNumber) {
-                in 1..8 -> clusterIds[0]
-                in 9..12 -> clusterIds[1]
-                in 13..18 -> clusterIds[2]
-                in 19..22 -> clusterIds[3]
-                in 23..26 -> clusterIds[4]
-                else -> clusterIds[5]
+                in 1..3  -> clusterIds[0]   // Bắc Trung Bộ
+                in 4..9  -> clusterIds[1]   // Nam Trung Bộ
+                in 10..13 -> clusterIds[2]  // Đông Nam Bộ
+                in 14..20 -> clusterIds[3]  // Miền Tây
+                in 21..26 -> clusterIds[4]  // Tây Nguyên
+                else     -> clusterIds[5]   // Hồi Hương (N27-N30)
             }
             val day = Day(
                 tripId = tripId,

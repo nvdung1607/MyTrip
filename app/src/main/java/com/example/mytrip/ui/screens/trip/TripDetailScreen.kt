@@ -31,6 +31,7 @@ import com.example.mytrip.data.db.entities.TripType
 import com.example.mytrip.navigation.Screen
 import com.example.mytrip.util.DateUtils
 import com.example.mytrip.util.MoneyUtils
+import com.example.mytrip.ui.components.DraggableFab
 import com.example.mytrip.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -123,8 +124,10 @@ fun TripDetailScreen(
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background,
     ) { innerPadding ->
+
+        Box(modifier = Modifier.fillMaxSize()) {
         when {
             uiState is TripUiState.Loading && trip == null -> {
                 Box(
@@ -163,6 +166,19 @@ fun TripDetailScreen(
                 )
             }
         }
+
+        // Draggable FAB overlay – thêm nhật ký
+        if (trip != null) {
+            DraggableFab(
+                onClick = {
+                    navController.navigate(Screen.AddNote.createRoute(tripId, null))
+                },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            )
+        }
+        } // end Box
     }
 }
 

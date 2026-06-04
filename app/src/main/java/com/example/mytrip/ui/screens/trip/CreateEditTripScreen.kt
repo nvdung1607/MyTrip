@@ -1,6 +1,8 @@
 package com.example.mytrip.ui.screens.trip
 
 import android.app.DatePickerDialog
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
@@ -18,8 +20,12 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.EditNote
+import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,11 +37,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.mytrip.data.db.entities.Trip
 import com.example.mytrip.data.db.entities.TripType
+import com.example.mytrip.navigation.Screen
 import com.example.mytrip.util.DateUtils
 import kotlinx.coroutines.launch
 import org.json.JSONArray
@@ -51,9 +60,47 @@ fun CreateEditTripScreen(
     val isEditMode = tripId != null
     val trip by viewModel.trip.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
+    val importedTripId by viewModel.importedTripId.collectAsState()
+    val importError by viewModel.importError.collectAsState()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    // Import mode (only in create mode)
+    var useFileImport by remember { mutableStateOf(false) }
+    var importFileName by remember { mutableStateOf<String?>(null) }
+    var importSuccess by remember { mutableStateOf(false) }
+
+    // File picker launcher for CSV
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            importFileName = uri.lastPathSegment ?: "file.csv"
+            viewModel.importFromCsvUri(context, uri)
+        }
+    }
+
+    // Navigate to TripDetail after import success
+    LaunchedEffect(importedTripId) {
+        val newId = importedTripId
+        if (newId != null) {
+            importSuccess = true
+            snackbarHostState.showSnackbar("✅ Nhập lịch trình thành công!")
+            navController.navigate(Screen.TripDetail.createRoute(newId)) {
+                popUpTo(Screen.Home.route)
+            }
+        }
+    }
+
+    // Show import error
+    LaunchedEffect(importError) {
+        val err = importError
+        if (err != null) {
+            snackbarHostState.showSnackbar("❌ $err")
+            viewModel.clearImportError()
+        }
+    }
 
     // ─── Form state ───────────────────────────────────────────────────────────
     var name by remember { mutableStateOf("") }
@@ -257,6 +304,180 @@ fun CreateEditTripScreen(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
+
+            // ── MODE SELECTOR (only in Create mode) ──────────────────────────
+            if (!isEditMode) {
+                Text(
+                    text = "Chọn cách tạo lịch trình",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Manual card
+                    Card(
+                        onClick = { useFileImport = false },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (!useFileImport)
+                                MaterialTheme.colorScheme.primaryContainer
+                            else MaterialTheme.colorScheme.surfaceVariant
+                        ),
+                        border = if (!useFileImport) androidx.compose.foundation.BorderStroke(
+                            2.dp, MaterialTheme.colorScheme.primary
+                        ) else null
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(Icons.Default.EditNote, null,
+                                modifier = Modifier.size(32.dp),
+                                tint = if (!useFileImport) MaterialTheme.colorScheme.primary
+                                       else MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Tạo thủ công", fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.bodyMedium,
+                                textAlign = TextAlign.Center,
+                                color = if (!useFileImport) MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Điền form từng bước",
+                                style = MaterialTheme.typography.bodySmall,
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+
+                    // File import card
+                    Card(
+                        onClick = { useFileImport = true },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (useFileImport)
+                                MaterialTheme.colorScheme.primaryContainer
+                            else MaterialTheme.colorScheme.surfaceVariant
+                        ),
+                        border = if (useFileImport) androidx.compose.foundation.BorderStroke(
+                            2.dp, MaterialTheme.colorScheme.primary
+                        ) else null
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(Icons.Default.UploadFile, null,
+                                modifier = Modifier.size(32.dp),
+                                tint = if (useFileImport) MaterialTheme.colorScheme.primary
+                                       else MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Nhập từ file CSV", fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.bodyMedium,
+                                textAlign = TextAlign.Center,
+                                color = if (useFileImport) MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Tải file mẫu, điền và import",
+                                style = MaterialTheme.typography.bodySmall,
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+
+                // ── FILE IMPORT PANEL ─────────────────────────────────────────
+                AnimatedVisibility(visible = useFileImport, enter = expandVertically(), exit = shrinkVertically()) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(20.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Text("📋 Hướng dẫn nhập file", fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleSmall)
+
+                            // Steps
+                            listOf(
+                                "1️⃣ Tải file mẫu CSV về máy",
+                                "2️⃣ Mở file bằng Excel / Google Sheets",
+                                "3️⃣ Điền thông tin chuyến đi của bạn",
+                                "4️⃣ Lưu file và chọn nhập vào app"
+                            ).forEach { step ->
+                                Text(step, style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+
+                            HorizontalDivider()
+
+                            // Download template button
+                            OutlinedButton(
+                                onClick = {
+                                    coroutineScope.launch {
+                                        val savedName = viewModel.downloadTemplateCsv(context)
+                                        if (savedName != null) {
+                                            snackbarHostState.showSnackbar("✅ Đã tải về Thư mục Tải xuống: $savedName")
+                                        } else {
+                                            snackbarHostState.showSnackbar("❌ Không tải được file mẫu")
+                                        }
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.Default.Download, null, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text("Tải file mẫu (.csv)", fontWeight = FontWeight.Medium)
+                            }
+
+                            // Pick file button
+                            Button(
+                                onClick = { filePickerLauncher.launch("*/*") },
+                                modifier = Modifier.fillMaxWidth().height(52.dp),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                if (uiState is TripUiState.Loading) {
+                                    CircularProgressIndicator(modifier = Modifier.size(20.dp),
+                                        color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("Đang nhập...")
+                                } else {
+                                    Icon(Icons.Default.FolderOpen, null, modifier = Modifier.size(20.dp))
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(
+                                        text = if (importFileName != null) "📂 ${importFileName!!.take(25)}"
+                                               else "Chọn file CSV từ máy",
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+
+                            if (importFileName != null && uiState !is TripUiState.Loading) {
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.secondaryContainer
+                                ) {
+                                    Text("File đã chọn: $importFileName",
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Divider between mode choices and manual form
+                if (!useFileImport) HorizontalDivider()
+            }
+
+            // ── Show manual form only when not in file import mode ────────────
+            if (!useFileImport || isEditMode) {
 
             // ── 1. Trip Name ──────────────────────────────────────────────────
             FormSection(title = "🔢 Tên chuyến đi") {
@@ -535,10 +756,12 @@ fun CreateEditTripScreen(
             }
 
             // Bottom spacing for FAB / button
+            } // end if (!useFileImport || isEditMode)
             Spacer(Modifier.height(8.dp))
         }
     }
 }
+
 
 // ─── Helper composables ───────────────────────────────────────────────────────
 

@@ -18,7 +18,7 @@ import com.example.mytrip.data.db.entities.*
         Expense::class,
         ExpenseRecord::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

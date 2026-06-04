@@ -68,11 +68,6 @@ fun SummaryScreen(navController: NavController, tripId: Long) {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, null)
                     }
-                },
-                actions = {
-                    IconButton(onClick = { vm.shareTextReport(ctx) }) {
-                        Icon(Icons.Default.Share, "Chia sẻ")
-                    }
                 }
             )
         }
@@ -235,14 +230,6 @@ fun SummaryScreen(navController: NavController, tripId: Long) {
                         Icon(Icons.Default.TableChart, null)
                         Spacer(Modifier.width(8.dp))
                         Text("📄 Xuất file Excel", fontWeight = FontWeight.Bold)
-                    }
-                    OutlinedButton(
-                        onClick = { vm.shareTextReport(ctx) },
-                        modifier = Modifier.fillMaxWidth().height(52.dp)
-                    ) {
-                        Icon(Icons.Default.Share, null)
-                        Spacer(Modifier.width(8.dp))
-                        Text("📤 Chia sẻ báo cáo (Zalo/Messenger)", fontWeight = FontWeight.Bold)
                     }
                 }
             }

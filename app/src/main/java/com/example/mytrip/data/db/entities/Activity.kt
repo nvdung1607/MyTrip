@@ -12,6 +12,14 @@ enum class ActivityStatus(val label: String) {
     CHANGED("Đã thay đổi")
 }
 
+enum class ActivityType(val label: String, val icon: String) {
+    TRANSIT("Di chuyển", "🚗"),
+    SIGHTSEEING("Tham quan", "🏛️"),
+    ACCOMMODATION("Lưu trú", "🏨"),
+    MEAL("Ăn uống", "🍜"),
+    ACTIVITY("Hoạt động", "🎯")
+}
+
 @Entity(
     tableName = "activities",
     foreignKeys = [ForeignKey(
@@ -27,6 +35,9 @@ data class Activity(
     val id: Long = 0,
     val dayId: Long,
     val orderIndex: Int = 0,
+
+    // Loại hoạt động
+    val activityType: ActivityType = ActivityType.TRANSIT,
 
     // Thông tin kế hoạch
     val name: String,                    // Tên địa điểm / hoạt động

@@ -39,6 +39,8 @@ import com.example.mytrip.data.db.entities.NoteTag
 import com.example.mytrip.navigation.Screen
 import com.example.mytrip.util.DateUtils
 import com.example.mytrip.util.MoneyUtils
+import com.example.mytrip.ui.components.DraggableFab
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,22 +92,16 @@ fun AllNotesScreen(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer
                 )
             )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { navController.navigate(Screen.AddNote.createRoute(tripId, null)) },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Thêm ghi chú")
-            }
         }
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
             // ─── Filter Categories Row ─────────────────────────────────────────
             ScrollableFilterCategories(
                 activeGroup = activeCategoryGroup,
@@ -176,7 +172,14 @@ fun AllNotesScreen(
                 }
             }
         }
+        DraggableFab(
+            onClick = {
+                navController.navigate(Screen.AddNote.createRoute(tripId, null))
+            },
+            modifier = Modifier.fillMaxSize()
+        )
     }
+}
 
     // ── Delete confirmation dialog ────────────────────────────────────
     if (noteToDelete != null) {

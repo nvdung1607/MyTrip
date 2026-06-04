@@ -86,18 +86,6 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
         _memberBalances.value = MoneyUtils.splitExpenses(pairs, t.numPeople, names)
     }
 
-    fun shareTextReport(context: Context) {
-        val t = _trip.value ?: return
-        val names = t.memberNames.trim('[', ']')
-            .split(",").map { it.trim().trim('"') }.filter { it.isNotBlank() }
-            .ifEmpty { listOf("Tôi") }
-        val text = ExcelUtils.generateTextReport(t, _expenses.value, _records.value, names)
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, text)
-        }
-        context.startActivity(Intent.createChooser(intent, "Chia sẻ báo cáo chi phí"))
-    }
 
     companion object {
         fun factory(app: Application) = object : ViewModelProvider.Factory {

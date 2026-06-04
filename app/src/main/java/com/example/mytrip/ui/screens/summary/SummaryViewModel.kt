@@ -2,7 +2,6 @@ package com.example.mytrip.ui.screens.summary
 
 import android.app.Application
 import android.content.Context
-import android.content.Intent
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -75,24 +74,15 @@ class SummaryViewModel(application: Application) : AndroidViewModel(application)
         _memberBalances.value = MoneyUtils.splitExpenses(recs.map { it.paidBy to it.amount }, t.numPeople, names)
     }
 
-    fun shareTextReport(context: Context) {
+    fun exportToExcel(context: Context) {
         val t = _trip.value ?: return
         val names = t.memberNames.trim('[', ']')
             .split(",").map { it.trim().trim('"') }.filter { it.isNotBlank() }.ifEmpty { listOf("Tôi") }
-        val text = ExcelUtils.generateTextReport(t, _expenses.value, _records.value, names)
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, text)
-        }
-        context.startActivity(Intent.createChooser(intent, "Chia sẻ tổng kết chuyến đi"))
-    }
-
-    fun exportToExcel(context: Context) {
-        val t = _trip.value ?: return
         viewModelScope.launch {
             try {
                 val uri = ExcelUtils.exportTripToExcel(
-                    context, t, _days.value, _activitiesMap.value, _expenses.value, _records.value
+                    context, t, _days.value, _activitiesMap.value,
+                    _expenses.value, _records.value, _notes.value, names
                 )
                 ExcelUtils.shareExcelFile(context, uri)
             } catch (e: Exception) {

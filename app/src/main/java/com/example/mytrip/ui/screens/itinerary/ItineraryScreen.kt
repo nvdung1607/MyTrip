@@ -28,6 +28,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -38,6 +40,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -52,6 +56,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -60,6 +65,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -93,13 +100,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.mytrip.data.db.entities.Activity
 import com.example.mytrip.data.db.entities.ActivityStatus
-import com.example.mytrip.data.db.entities.Day
+import com.example.mytrip.data.db.entities.ActivityType
 import com.example.mytrip.data.db.entities.Cluster
+import com.example.mytrip.data.db.entities.Day
 import com.example.mytrip.navigation.Screen
 import com.example.mytrip.util.DateUtils
 import com.example.mytrip.util.MoneyUtils
 import kotlinx.coroutines.launch
 import org.json.JSONArray
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 // ─── Palette for day number circles ───────────────────────────────────────────
 private val dayColors = listOf(
@@ -143,6 +153,21 @@ private val hotelShortcuts = listOf(
     MoneyShortcut("2M", 2_000L)
 )
 
+// ─── Suggestion lists per type ────────────────────────────────────────────────
+private val transitSuggestions = listOf("Đi xe máy", "Đi ô tô", "Bắt xe khách", "Đi tàu hỏa", "Bay", "Đi thuyền", "Thuê xe tuk-tuk")
+private val sightseeingSuggestions = listOf("Bãi biển", "Hồ", "Núi", "Chùa", "Đền", "Phố cổ", "Công viên", "Bảo tàng", "Thác nước", "Hang động")
+private val mealSuggestions = listOf("Ăn sáng", "Ăn trưa", "Ăn tối", "Quán hải sản", "Quán bún bò", "Quán phở", "Nhà hàng địa phương", "Coffee break")
+private val accommodationSuggestions = listOf("Check-in khách sạn", "Check-out khách sạn", "Nhà nghỉ", "Homestay", "Resort")
+private val activitySuggestions = listOf("Tắm biển", "Leo núi", "Chèo thuyền kayak", "Cắm trại", "Mua sắm", "Thăm bạn bè", "Thuê xe đạp")
+
+private fun suggestionsFor(type: ActivityType): List<String> = when (type) {
+    ActivityType.TRANSIT -> transitSuggestions
+    ActivityType.SIGHTSEEING -> sightseeingSuggestions
+    ActivityType.MEAL -> mealSuggestions
+    ActivityType.ACCOMMODATION -> accommodationSuggestions
+    ActivityType.ACTIVITY -> activitySuggestions
+}
+
 // ─── Main screen ──────────────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
@@ -164,12 +189,21 @@ fun ItineraryScreen(
     var showSheet by rememberSaveable { mutableStateOf(false) }
     var editingActivity by remember { mutableStateOf<Activity?>(null) }
     var sheetDayId by rememberSaveable { mutableStateOf(0L) }
+    var insertAfterIndex by rememberSaveable { mutableStateOf(-1) } // -1 = append
 
     // Delete dialog state
     var deleteTarget by remember { mutableStateOf<Activity?>(null) }
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Observe snackbar events from ViewModel
+    LaunchedEffect(Unit) {
+        viewModel.snackbarEvent.collect { msg ->
+            snackbarHostState.showSnackbar(msg)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -197,44 +231,24 @@ fun ItineraryScreen(
                 },
                 actions = {
                     IconButton(onClick = { viewModel.expandAll() }) {
-                        Icon(
-                            Icons.Filled.UnfoldMore,
-                            contentDescription = "Mở rộng tất cả",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
+                        Icon(Icons.Filled.UnfoldMore, contentDescription = "Mở rộng tất cả", tint = MaterialTheme.colorScheme.primary)
                     }
                     IconButton(onClick = { viewModel.collapseAll() }) {
-                        Icon(
-                            Icons.Filled.UnfoldLess,
-                            contentDescription = "Thu gọn tất cả",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
+                        Icon(Icons.Filled.UnfoldLess, contentDescription = "Thu gọn tất cả", tint = MaterialTheme.colorScheme.primary)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
         if (days.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Chưa có ngày nào trong lịch trình",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
+                Text(text = "Chưa có ngày nào trong lịch trình", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         } else {
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
+                modifier = Modifier.fillMaxSize().padding(innerPadding),
                 contentPadding = PaddingValues(bottom = 32.dp)
             ) {
                 if (clusters.isEmpty()) {
@@ -251,17 +265,24 @@ fun ItineraryScreen(
                             onAddActivity = {
                                 sheetDayId = day.id
                                 editingActivity = null
+                                insertAfterIndex = -1
+                                showSheet = true
+                            },
+                            onInsertAfter = { idx ->
+                                sheetDayId = day.id
+                                editingActivity = null
+                                insertAfterIndex = idx
                                 showSheet = true
                             },
                             onEditActivity = { act ->
                                 sheetDayId = day.id
                                 editingActivity = act
+                                insertAfterIndex = -1
                                 showSheet = true
                             },
                             onDeleteActivity = { act -> deleteTarget = act },
-                            onStatusChange = { act, status ->
-                                viewModel.updateActivityStatus(act.id, status)
-                            }
+                            onStatusChange = { act, status -> viewModel.updateActivityStatus(act.id, status) },
+                            onReorder = { from, to -> viewModel.reorderActivities(day.id, from, to) }
                         )
                     }
                 } else {
@@ -270,8 +291,7 @@ fun ItineraryScreen(
                         val clusterDays = days.filter { it.clusterId == cluster.id }.sortedBy { it.dayNumber }
                         if (clusterDays.isNotEmpty()) {
                             val isClusterExpanded = expandedClusters.contains(cluster.id)
-                            
-                            // Cluster Header
+
                             item(key = "cluster_${cluster.id}") {
                                 ClusterHeader(
                                     cluster = cluster,
@@ -280,8 +300,7 @@ fun ItineraryScreen(
                                     onToggle = { viewModel.toggleClusterExpanded(cluster.id) }
                                 )
                             }
-                            
-                            // Days in Cluster (if expanded)
+
                             if (isClusterExpanded) {
                                 items(clusterDays, key = { it.id }) { day ->
                                     val activities = activitiesMap[day.id] ?: emptyList()
@@ -295,17 +314,24 @@ fun ItineraryScreen(
                                         onAddActivity = {
                                             sheetDayId = day.id
                                             editingActivity = null
+                                            insertAfterIndex = -1
+                                            showSheet = true
+                                        },
+                                        onInsertAfter = { idx ->
+                                            sheetDayId = day.id
+                                            editingActivity = null
+                                            insertAfterIndex = idx
                                             showSheet = true
                                         },
                                         onEditActivity = { act ->
                                             sheetDayId = day.id
                                             editingActivity = act
+                                            insertAfterIndex = -1
                                             showSheet = true
                                         },
                                         onDeleteActivity = { act -> deleteTarget = act },
-                                        onStatusChange = { act, status ->
-                                            viewModel.updateActivityStatus(act.id, status)
-                                        }
+                                        onStatusChange = { act, status -> viewModel.updateActivityStatus(act.id, status) },
+                                        onReorder = { from, to -> viewModel.reorderActivities(day.id, from, to) }
                                     )
                                 }
                             }
@@ -320,34 +346,23 @@ fun ItineraryScreen(
     if (deleteTarget != null) {
         AlertDialog(
             onDismissRequest = { deleteTarget = null },
+            icon = { Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error) },
             title = { Text("Xoá hoạt động?") },
-            text = {
-                Text("Bạn có chắc muốn xoá \"${deleteTarget?.name}\" không? Hành động này không thể hoàn tác.")
-            },
+            text = { Text("Bạn có chắc muốn xoá \"${deleteTarget?.name}\" không?") },
             confirmButton = {
                 Button(
-                    onClick = {
-                        deleteTarget?.let { viewModel.deleteActivity(it) }
-                        deleteTarget = null
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
-                    )
+                    onClick = { deleteTarget?.let { viewModel.deleteActivity(it) }; deleteTarget = null },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) { Text("Xoá") }
             },
-            dismissButton = {
-                TextButton(onClick = { deleteTarget = null }) { Text("Huỷ") }
-            }
+            dismissButton = { TextButton(onClick = { deleteTarget = null }) { Text("Huỷ") } }
         )
     }
 
     // ── Add / Edit bottom sheet ───────────────────────────────────────
     if (showSheet) {
         ModalBottomSheet(
-            onDismissRequest = {
-                scope.launch { sheetState.hide() }
-                showSheet = false
-            },
+            onDismissRequest = { scope.launch { sheetState.hide() }; showSheet = false },
             sheetState = sheetState,
             dragHandle = null,
             shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
@@ -355,25 +370,28 @@ fun ItineraryScreen(
             ActivityEditSheet(
                 dayId = sheetDayId,
                 existingActivity = editingActivity,
+                insertAfterIndex = insertAfterIndex,
                 onSave = { activity ->
                     if (editingActivity == null) {
-                        viewModel.addActivity(activity)
+                        if (insertAfterIndex >= 0) {
+                            viewModel.insertActivityAfter(activity, insertAfterIndex)
+                        } else {
+                            viewModel.addActivity(activity)
+                        }
                     } else {
                         viewModel.updateActivity(activity)
                     }
                     scope.launch { sheetState.hide() }
                     showSheet = false
                 },
-                onDismiss = {
-                    scope.launch { sheetState.hide() }
-                    showSheet = false
-                }
+                onDismiss = { scope.launch { sheetState.hide() }; showSheet = false }
             )
         }
     }
 }
 
 // ─── Day section ──────────────────────────────────────────────────────────────
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun DaySection(
     day: Day,
@@ -381,113 +399,79 @@ private fun DaySection(
     isExpanded: Boolean,
     onToggleExpand: () -> Unit,
     onAddActivity: () -> Unit,
+    onInsertAfter: (Int) -> Unit,
     onEditActivity: (Activity) -> Unit,
     onDeleteActivity: (Activity) -> Unit,
-    onStatusChange: (Activity, ActivityStatus) -> Unit
+    onStatusChange: (Activity, ActivityStatus) -> Unit,
+    onReorder: (Int, Int) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         // Day header card
         Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 6.dp)
-                .clickable { onToggleExpand() },
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp).clickable { onToggleExpand() },
             shape = RoundedCornerShape(16.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainer
-            )
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Colored circle with day number
                 Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
-                        .background(dayColor(day.dayNumber)),
+                    modifier = Modifier.size(44.dp).clip(CircleShape).background(dayColor(day.dayNumber)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "N${day.dayNumber}",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
-                    )
+                    Text("N${day.dayNumber}", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 }
-
                 Spacer(modifier = Modifier.width(14.dp))
-
-                // Date and title
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Ngày ${day.dayNumber} — ${DateUtils.formatFull(day.date)}",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Text("Ngày ${day.dayNumber} — ${DateUtils.formatFull(day.date)}", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                     if (day.title.isNotBlank()) {
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = day.title,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
+                        Text(day.title, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = "${activities.size} hoạt động",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Text("${activities.size} hoạt động", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-
-                // Expand / collapse chevron
                 Icon(
-                    imageVector = if (isExpanded) Icons.Filled.KeyboardArrowUp
-                    else Icons.Filled.KeyboardArrowDown,
-                    contentDescription = if (isExpanded) "Thu gọn" else "Mở rộng",
+                    imageVector = if (isExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                    contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
         }
 
-        // Expanded activities
-        AnimatedVisibility(
-            visible = isExpanded,
-            enter = expandVertically(),
-            exit = shrinkVertically()
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 28.dp, end = 16.dp, bottom = 4.dp)
-            ) {
-                activities.forEach { activity ->
+        // Expanded activities list
+        AnimatedVisibility(visible = isExpanded, enter = expandVertically(), exit = shrinkVertically()) {
+            val sortedActivities = activities.sortedBy { it.orderIndex }
+
+            Column(modifier = Modifier.fillMaxWidth().padding(start = 28.dp, end = 16.dp, bottom = 4.dp)) {
+                sortedActivities.forEachIndexed { idx, activity ->
+                    // "Insert here" divider button above first item or between items
+                    InsertBetweenButton(onClick = { onInsertAfter(idx - 1) })
+
                     ActivityRow(
                         activity = activity,
+                        isDragging = false,
+                        isFirst = idx == 0,
+                        isLast = idx == sortedActivities.size - 1,
                         onEdit = { onEditActivity(activity) },
                         onDelete = { onDeleteActivity(activity) },
-                        onStatusChange = { status -> onStatusChange(activity, status) }
+                        onStatusChange = { status -> onStatusChange(activity, status) },
+                        onMoveUp = { if (idx > 0) onReorder(idx, idx - 1) },
+                        onMoveDown = { if (idx < sortedActivities.size - 1) onReorder(idx, idx + 1) }
                     )
                 }
 
-                // Add activity button
+                // Insert button after last item
+                if (sortedActivities.isNotEmpty()) {
+                    InsertBetweenButton(onClick = { onInsertAfter(sortedActivities.size - 1) })
+                }
+
+                // Add activity button at bottom
                 TextButton(
                     onClick = onAddActivity,
-                    modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
+                    modifier = Modifier.padding(top = 2.dp, bottom = 8.dp)
                 ) {
-                    Icon(
-                        Icons.Filled.Add,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
+                    Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(6.dp))
                     Text("Thêm hoạt động")
                 }
@@ -496,223 +480,175 @@ private fun DaySection(
     }
 }
 
+// ─── Insert between button ────────────────────────────────────────────────────
+@Composable
+private fun InsertBetweenButton(onClick: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Box(modifier = Modifier.weight(1f).height(1.dp).background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)))
+        Surface(
+            onClick = onClick,
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.secondaryContainer,
+            modifier = Modifier.padding(horizontal = 8.dp)
+        ) {
+            Icon(
+                Icons.Default.Add,
+                contentDescription = "Thêm vào đây",
+                modifier = Modifier.padding(4.dp).size(14.dp),
+                tint = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        }
+        Box(modifier = Modifier.weight(1f).height(1.dp).background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)))
+    }
+}
+
 // ─── Activity row ─────────────────────────────────────────────────────────────
 @OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
 private fun ActivityRow(
     activity: Activity,
+    isDragging: Boolean = false,
+    isFirst: Boolean = false,
+    isLast: Boolean = false,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
-    onStatusChange: (ActivityStatus) -> Unit
+    onStatusChange: (ActivityStatus) -> Unit,
+    onMoveUp: () -> Unit = {},
+    onMoveDown: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    var showStatusMenu by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
-            .combinedClickable(
-                onClick = {},
-                onLongClick = { onDelete() }
-            ),
+            .padding(vertical = 3.dp)
+            .combinedClickable(onClick = {}, onLongClick = { onDelete() }),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = if (isDragging) MaterialTheme.colorScheme.surfaceVariant
+                             else MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isDragging) 8.dp else 1.dp)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.Top
         ) {
-            // Time column
+            // Move up/down buttons
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.width(52.dp)
+                modifier = Modifier.padding(end = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
-                if (activity.departureTime.isNotBlank()) {
-                    Text(
-                        text = activity.departureTime,
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                FilledTonalIconButton(
+                    onClick = onMoveUp,
+                    enabled = !isFirst,
+                    modifier = Modifier.size(26.dp)
+                ) {
+                    Icon(Icons.Filled.KeyboardArrowUp, null, modifier = Modifier.size(14.dp))
                 }
-                if (activity.departureTime.isNotBlank() && activity.arrivalTime.isNotBlank()) {
-                    Box(
-                        modifier = Modifier
-                            .width(1.dp)
-                            .height(10.dp)
-                            .background(MaterialTheme.colorScheme.outlineVariant)
-                    )
-                }
-                if (activity.arrivalTime.isNotBlank()) {
-                    Text(
-                        text = activity.arrivalTime,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                FilledTonalIconButton(
+                    onClick = onMoveDown,
+                    enabled = !isLast,
+                    modifier = Modifier.size(26.dp)
+                ) {
+                    Icon(Icons.Filled.KeyboardArrowDown, null, modifier = Modifier.size(14.dp))
                 }
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            // Activity type icon
+            Text(activity.activityType.icon, fontSize = 16.sp, modifier = Modifier.padding(end = 6.dp, top = 2.dp))
+
+            // Time column
+            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(48.dp)) {
+                if (activity.departureTime.isNotBlank()) {
+                    Text(activity.departureTime, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+                }
+                if (activity.departureTime.isNotBlank() && activity.arrivalTime.isNotBlank()) {
+                    Box(modifier = Modifier.width(1.dp).height(8.dp).background(MaterialTheme.colorScheme.outlineVariant))
+                }
+                if (activity.arrivalTime.isNotBlank()) {
+                    Text(activity.arrivalTime, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+
+            Spacer(modifier = Modifier.width(10.dp))
 
             // Main content
             Column(modifier = Modifier.weight(1f)) {
-                // Activity name
-                Text(
-                    text = activity.name,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-
-                // Hotel
+                Text(activity.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                 if (activity.hotelName.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(3.dp))
+                    Spacer(modifier = Modifier.height(2.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "🏨 ${activity.hotelName}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Text("🏨 ${activity.hotelName}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         if (activity.hotelPricePlanned > 0) {
-                            Text(
-                                text = "  •  ${MoneyUtils.formatShort(MoneyUtils.inputToVnd(activity.hotelPricePlanned))}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.tertiary
-                            )
+                            Text("  •  ${MoneyUtils.formatShort(MoneyUtils.inputToVnd(activity.hotelPricePlanned))}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
                         }
                     }
                 }
-
-                // Distance
                 if (activity.distanceKm > 0) {
                     Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = "📍 ${"%.1f".format(activity.distanceKm)} km",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Text("📍 ${"%.1f".format(activity.distanceKm)} km", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-
-                // Check-in spots
                 val spots = parseSpots(activity.checkInSpots)
                 if (spots.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         spots.forEach { spot ->
-                            Surface(
-                                shape = RoundedCornerShape(50),
-                                color = MaterialTheme.colorScheme.secondaryContainer,
-                                modifier = Modifier.padding(bottom = 4.dp)
-                            ) {
-                                Text(
-                                    text = "📷 $spot",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                                )
+                            Surface(shape = RoundedCornerShape(50), color = MaterialTheme.colorScheme.secondaryContainer, modifier = Modifier.padding(bottom = 3.dp)) {
+                                Text("📷 $spot", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp))
                             }
                         }
                     }
                 }
-
-                // Notes
                 if (activity.notes.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(3.dp))
-                    Text(
-                        text = activity.notes,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(activity.notes, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
-
-                // Maps link
                 if (activity.mapsLink.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(3.dp))
                     TextButton(
-                        onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(activity.mapsLink))
-                            context.startActivity(intent)
-                        },
-                        contentPadding = PaddingValues(0.dp),
-                        modifier = Modifier.height(24.dp)
+                        onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(activity.mapsLink))) },
+                        contentPadding = PaddingValues(0.dp), modifier = Modifier.height(22.dp)
                     ) {
-                        Icon(
-                            Icons.Filled.OpenInNew,
-                            contentDescription = null,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "Xem bản đồ",
-                            style = MaterialTheme.typography.labelSmall
-                        )
+                        Icon(Icons.Filled.OpenInNew, null, modifier = Modifier.size(13.dp))
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Text("Xem bản đồ", style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
 
-            // Right side: status dot + edit button
+            // Right: status dot + edit button
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                // Status dot (clickable to cycle)
                 Box(
-                    modifier = Modifier
-                        .size(10.dp)
-                        .clip(CircleShape)
-                        .background(statusColor(activity.status))
-                        .clickable {
-                            val next = when (activity.status) {
-                                ActivityStatus.PENDING -> ActivityStatus.DONE
-                                ActivityStatus.DONE    -> ActivityStatus.SKIPPED
-                                ActivityStatus.SKIPPED -> ActivityStatus.CHANGED
-                                ActivityStatus.CHANGED -> ActivityStatus.PENDING
-                            }
-                            onStatusChange(next)
+                    modifier = Modifier.size(10.dp).clip(CircleShape).background(statusColor(activity.status)).clickable {
+                        val next = when (activity.status) {
+                            ActivityStatus.PENDING -> ActivityStatus.DONE
+                            ActivityStatus.DONE    -> ActivityStatus.SKIPPED
+                            ActivityStatus.SKIPPED -> ActivityStatus.CHANGED
+                            ActivityStatus.CHANGED -> ActivityStatus.PENDING
                         }
+                        onStatusChange(next)
+                    }
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                FilledTonalIconButton(
-                    onClick = onEdit,
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        Icons.Filled.Edit,
-                        contentDescription = "Chỉnh sửa",
-                        modifier = Modifier.size(16.dp)
-                    )
+                Spacer(modifier = Modifier.height(6.dp))
+                FilledTonalIconButton(onClick = onEdit, modifier = Modifier.size(30.dp)) {
+                    Icon(Icons.Filled.Edit, contentDescription = "Chỉnh sửa", modifier = Modifier.size(15.dp))
                 }
             }
         }
 
-        // Status label at bottom
         if (activity.status != ActivityStatus.PENDING) {
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(statusColor(activity.status).copy(alpha = 0.08f))
-                    .padding(horizontal = 14.dp, vertical = 4.dp)
+                modifier = Modifier.fillMaxWidth().background(statusColor(activity.status).copy(alpha = 0.08f)).padding(horizontal = 14.dp, vertical = 3.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .align(Alignment.CenterVertically)
-                        .clip(CircleShape)
-                        .background(statusColor(activity.status))
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = activity.status.label,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = statusColor(activity.status),
-                    fontWeight = FontWeight.SemiBold
-                )
+                Box(modifier = Modifier.size(7.dp).align(Alignment.CenterVertically).clip(CircleShape).background(statusColor(activity.status)))
+                Spacer(modifier = Modifier.width(5.dp))
+                Text(activity.status.label, style = MaterialTheme.typography.labelSmall, color = statusColor(activity.status), fontWeight = FontWeight.SemiBold)
             }
         }
     }
@@ -724,37 +660,40 @@ private fun ActivityRow(
 private fun ActivityEditSheet(
     dayId: Long,
     existingActivity: Activity?,
+    insertAfterIndex: Int,
     onSave: (Activity) -> Unit,
     onDismiss: () -> Unit
 ) {
     val focusManager = LocalFocusManager.current
     val context = LocalContext.current
 
-    // Form state
+    // Activity type selection
+    var selectedType by rememberSaveable { mutableStateOf(existingActivity?.activityType ?: ActivityType.TRANSIT) }
+
+    // Common fields
     var name by rememberSaveable { mutableStateOf(existingActivity?.name ?: "") }
+    var notes by rememberSaveable { mutableStateOf(existingActivity?.notes ?: "") }
+    var nameError by rememberSaveable { mutableStateOf(false) }
+
+    // Time fields (TRANSIT, SIGHTSEEING, ACCOMMODATION, ACTIVITY)
     var departureTime by rememberSaveable { mutableStateOf(existingActivity?.departureTime ?: "") }
     var arrivalTime by rememberSaveable { mutableStateOf(existingActivity?.arrivalTime ?: "") }
+
+    // TRANSIT fields
     var distanceText by rememberSaveable {
-        mutableStateOf(
-            if ((existingActivity?.distanceKm ?: 0.0) > 0) "%.1f".format(existingActivity?.distanceKm) else ""
-        )
+        mutableStateOf(if ((existingActivity?.distanceKm ?: 0.0) > 0) "%.1f".format(existingActivity?.distanceKm) else "")
     }
+    var mapsLink by rememberSaveable { mutableStateOf(existingActivity?.mapsLink ?: "") }
+
+    // SIGHTSEEING fields
+    var checkInSpots by rememberSaveable { mutableStateOf(parseSpots(existingActivity?.checkInSpots ?: "")) }
+    var spotInput by rememberSaveable { mutableStateOf("") }
+
+    // ACCOMMODATION fields
     var hotelName by rememberSaveable { mutableStateOf(existingActivity?.hotelName ?: "") }
     var hotelPriceText by rememberSaveable {
-        mutableStateOf(
-            if ((existingActivity?.hotelPricePlanned ?: 0L) > 0L)
-                existingActivity!!.hotelPricePlanned.toString()
-            else ""
-        )
+        mutableStateOf(if ((existingActivity?.hotelPricePlanned ?: 0L) > 0L) existingActivity!!.hotelPricePlanned.toString() else "")
     }
-    var checkInSpots by rememberSaveable {
-        mutableStateOf(parseSpots(existingActivity?.checkInSpots ?: ""))
-    }
-    var spotInput by rememberSaveable { mutableStateOf("") }
-    var mapsLink by rememberSaveable { mutableStateOf(existingActivity?.mapsLink ?: "") }
-    var notes by rememberSaveable { mutableStateOf(existingActivity?.notes ?: "") }
-
-    var nameError by rememberSaveable { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -765,209 +704,206 @@ private fun ActivityEditSheet(
             .padding(horizontal = 20.dp, vertical = 16.dp)
     ) {
         // Sheet handle
-        Box(
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .width(40.dp)
-                .height(4.dp)
-                .clip(RoundedCornerShape(2.dp))
-                .background(MaterialTheme.colorScheme.outlineVariant)
+        Box(modifier = Modifier.align(Alignment.CenterHorizontally).width(40.dp).height(4.dp).clip(RoundedCornerShape(2.dp)).background(MaterialTheme.colorScheme.outlineVariant))
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        Text(
+            text = if (existingActivity == null) {
+                if (insertAfterIndex >= 0) "Chèn hoạt động mới" else "Thêm hoạt động"
+            } else "Chỉnh sửa hoạt động",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(
-            text = if (existingActivity == null) "Thêm hoạt động" else "Chỉnh sửa hoạt động",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
+        // ── Loại hoạt động ────────────────────────────────────────────
+        Text("Loại hoạt động", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp))
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 16.dp)) {
+            ActivityType.values().forEach { type ->
+                FilterChip(
+                    selected = selectedType == type,
+                    onClick = {
+                        selectedType = type
+                        name = "" // reset name suggestions on type change
+                    },
+                    label = { Text("${type.icon} ${type.label}") }
+                )
+            }
+        }
 
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // ── Tên địa điểm ─────────────────────────────────────────────
+        // ── Tên hoạt động ─────────────────────────────────────────────
         OutlinedTextField(
             value = name,
             onValueChange = { name = it; nameError = false },
-            label = { Text("Tên địa điểm *") },
+            label = { Text("${selectedType.icon} Tên ${selectedType.label} *") },
             isError = nameError,
-            supportingText = if (nameError) {
-                { Text("Vui lòng nhập tên địa điểm") }
-            } else null,
+            supportingText = if (nameError) {{ Text("Vui lòng nhập tên") }} else null,
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // ── Times ─────────────────────────────────────────────────────
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            OutlinedTextField(
-                value = departureTime,
-                onValueChange = { departureTime = it },
-                label = { Text("Giờ xuất phát") },
-                placeholder = { Text("HH:mm") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                singleLine = true,
-                modifier = Modifier.weight(1f)
-            )
-            OutlinedTextField(
-                value = arrivalTime,
-                onValueChange = { arrivalTime = it },
-                label = { Text("Giờ đến nơi") },
-                placeholder = { Text("HH:mm") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                singleLine = true,
-                modifier = Modifier.weight(1f)
-            )
+        // Gợi ý tên
+        val suggestions = suggestionsFor(selectedType)
+        Spacer(modifier = Modifier.height(6.dp))
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            suggestions.forEach { s ->
+                SuggestionChip(onClick = { name = s }, label = { Text(s, style = MaterialTheme.typography.labelSmall) })
+            }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // ── Distance ──────────────────────────────────────────────────
-        OutlinedTextField(
-            value = distanceText,
-            onValueChange = { distanceText = it },
-            label = { Text("Khoảng cách (km)") },
-            placeholder = { Text("0.0") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
+        // ── Fields theo loại ──────────────────────────────────────────
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // ── Hotel name ────────────────────────────────────────────────
-        OutlinedTextField(
-            value = hotelName,
-            onValueChange = { hotelName = it },
-            label = { Text("Tên khách sạn / nơi nghỉ") },
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // ── Hotel price ───────────────────────────────────────────────
-        OutlinedTextField(
-            value = hotelPriceText,
-            onValueChange = { hotelPriceText = it },
-            label = { Text("Giá phòng dự kiến (nghìn ₫)") },
-            placeholder = { Text("VD: 500 = 500.000 ₫") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            singleLine = true,
-            supportingText = {
-                val v = hotelPriceText.toLongOrNull() ?: 0L
-                if (v > 0) Text(MoneyUtils.formatVnd(MoneyUtils.inputToVnd(v)))
-            },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        // Hotel price shortcuts
-        Spacer(modifier = Modifier.height(8.dp))
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            hotelShortcuts.forEach { sc ->
-                SuggestionChip(
-                    onClick = { hotelPriceText = sc.valueK.toString() },
-                    label = { Text(sc.label, style = MaterialTheme.typography.labelSmall) }
+        // Giờ – show for all except MEAL
+        if (selectedType != ActivityType.MEAL) {
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedTextField(
+                    value = departureTime,
+                    onValueChange = { departureTime = it },
+                    label = { Text(if (selectedType == ActivityType.ACCOMMODATION) "Giờ check-in" else "Giờ xuất phát") },
+                    placeholder = { Text("HH:mm") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    modifier = Modifier.weight(1f)
+                )
+                OutlinedTextField(
+                    value = arrivalTime,
+                    onValueChange = { arrivalTime = it },
+                    label = { Text(if (selectedType == ActivityType.ACCOMMODATION) "Giờ check-out" else "Giờ đến nơi") },
+                    placeholder = { Text("HH:mm") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    modifier = Modifier.weight(1f)
                 )
             }
+            Spacer(modifier = Modifier.height(12.dp))
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // ── Check-in spots ────────────────────────────────────────────
-        Text(
-            text = "Điểm check-in cần ghé",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(bottom = 6.dp)
-        )
-
-        if (checkInSpots.isNotEmpty()) {
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(bottom = 8.dp)
-            ) {
-                checkInSpots.forEach { spot ->
-                    InputChip(
-                        selected = false,
-                        onClick = {},
-                        label = { Text(spot, style = MaterialTheme.typography.labelSmall) },
-                        trailingIcon = {
-                            Icon(
-                                Icons.Filled.Close,
-                                contentDescription = "Xoá $spot",
-                                modifier = Modifier
-                                    .size(16.dp)
-                                    .clickable {
-                                        checkInSpots = checkInSpots.filter { it != spot }
-                                    }
-                            )
+        // TRANSIT: khoảng cách + maps
+        if (selectedType == ActivityType.TRANSIT) {
+            OutlinedTextField(
+                value = distanceText,
+                onValueChange = { distanceText = it },
+                label = { Text("Khoảng cách (km)") },
+                placeholder = { Text("0.0") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            OutlinedTextField(
+                value = mapsLink,
+                onValueChange = { mapsLink = it },
+                label = { Text("Link Google Maps") },
+                placeholder = { Text("https://maps.google.com/...") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+                singleLine = true,
+                trailingIcon = {
+                    if (mapsLink.isNotBlank()) {
+                        IconButton(onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(mapsLink))) }) {
+                            Icon(Icons.Filled.OpenInNew, null, tint = MaterialTheme.colorScheme.primary)
                         }
-                    )
-                }
-            }
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(12.dp))
         }
 
-        OutlinedTextField(
-            value = spotInput,
-            onValueChange = { spotInput = it },
-            label = { Text("Thêm điểm check-in") },
-            placeholder = { Text("Nhập tên rồi nhấn Enter") },
-            keyboardOptions = KeyboardOptions(
-                capitalization = KeyboardCapitalization.Words,
-                imeAction = ImeAction.Done
-            ),
-            keyboardActions = KeyboardActions(
-                onDone = {
-                    val trimmed = spotInput.trim()
-                    if (trimmed.isNotBlank() && !checkInSpots.contains(trimmed)) {
-                        checkInSpots = checkInSpots + trimmed
-                    }
-                    spotInput = ""
-                }
-            ),
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // ── Maps link ─────────────────────────────────────────────────
-        OutlinedTextField(
-            value = mapsLink,
-            onValueChange = { mapsLink = it },
-            label = { Text("Link Google Maps") },
-            placeholder = { Text("https://maps.google.com/...") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-            singleLine = true,
-            trailingIcon = {
-                if (mapsLink.isNotBlank()) {
-                    IconButton(onClick = {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(mapsLink))
-                        context.startActivity(intent)
-                    }) {
-                        Icon(
-                            Icons.Filled.OpenInNew,
-                            contentDescription = "Mở bản đồ",
-                            tint = MaterialTheme.colorScheme.primary
+        // SIGHTSEEING: check-in spots + maps
+        if (selectedType == ActivityType.SIGHTSEEING) {
+            Text("Điểm check-in cần ghé", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
+            if (checkInSpots.isNotEmpty()) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 6.dp)) {
+                    checkInSpots.forEach { spot ->
+                        InputChip(
+                            selected = false, onClick = {},
+                            label = { Text(spot, style = MaterialTheme.typography.labelSmall) },
+                            trailingIcon = {
+                                Icon(Icons.Filled.Close, null, modifier = Modifier.size(14.dp).clickable { checkInSpots = checkInSpots.filter { it != spot } })
+                            }
                         )
                     }
                 }
-            },
-            modifier = Modifier.fillMaxWidth()
-        )
+            }
+            OutlinedTextField(
+                value = spotInput,
+                onValueChange = { spotInput = it },
+                label = { Text("Thêm điểm check-in") },
+                placeholder = { Text("Nhập tên rồi nhấn Enter") },
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = {
+                    val t = spotInput.trim()
+                    if (t.isNotBlank() && !checkInSpots.contains(t)) checkInSpots = checkInSpots + t
+                    spotInput = ""
+                }),
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            OutlinedTextField(
+                value = mapsLink,
+                onValueChange = { mapsLink = it },
+                label = { Text("Link Google Maps") },
+                placeholder = { Text("https://maps.google.com/...") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+        }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        // ACCOMMODATION: khách sạn + giá
+        if (selectedType == ActivityType.ACCOMMODATION) {
+            OutlinedTextField(
+                value = hotelName,
+                onValueChange = { hotelName = it },
+                label = { Text("Tên khách sạn / nơi nghỉ") },
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            OutlinedTextField(
+                value = hotelPriceText,
+                onValueChange = { hotelPriceText = it },
+                label = { Text("Giá phòng dự kiến (nghìn ₫)") },
+                placeholder = { Text("VD: 500 = 500.000 ₫") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true,
+                supportingText = { val v = hotelPriceText.toLongOrNull() ?: 0L; if (v > 0) Text(MoneyUtils.formatVnd(MoneyUtils.inputToVnd(v))) },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                hotelShortcuts.forEach { sc ->
+                    SuggestionChip(onClick = { hotelPriceText = sc.valueK.toString() }, label = { Text(sc.label, style = MaterialTheme.typography.labelSmall) })
+                }
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            OutlinedTextField(
+                value = mapsLink,
+                onValueChange = { mapsLink = it },
+                label = { Text("Link Google Maps khách sạn") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+        }
 
-        // ── Notes ─────────────────────────────────────────────────────
+        // MEAL: chỉ có tên + ghi chú
+        // ACTIVITY: chỉ có tên + giờ + ghi chú (giờ đã hiện ở trên)
+
+        // Ghi chú – always shown
         OutlinedTextField(
             value = notes,
             onValueChange = { notes = it },
-            label = { Text("Ghi chú") },
+            label = { Text("Ghi chú thêm") },
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
             minLines = 2,
             maxLines = 4,
@@ -976,27 +912,18 @@ private fun ActivityEditSheet(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // ── Action buttons ────────────────────────────────────────────
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            FilledTonalButton(
-                onClick = onDismiss,
-                modifier = Modifier.weight(1f)
-            ) { Text("Huỷ") }
-
+        // Action buttons
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            FilledTonalButton(onClick = onDismiss, modifier = Modifier.weight(1f)) { Text("Huỷ") }
             Button(
                 onClick = {
-                    if (name.isBlank()) {
-                        nameError = true
-                        return@Button
-                    }
+                    if (name.isBlank()) { nameError = true; return@Button }
                     focusManager.clearFocus()
                     val activity = Activity(
                         id = existingActivity?.id ?: 0L,
                         dayId = dayId,
                         orderIndex = existingActivity?.orderIndex ?: 0,
+                        activityType = selectedType,
                         name = name.trim(),
                         departureTime = departureTime.trim(),
                         arrivalTime = arrivalTime.trim(),
@@ -1023,50 +950,25 @@ private fun ActivityEditSheet(
 
 // ─── Cluster header ──────────────────────────────────────────────────────────
 @Composable
-private fun ClusterHeader(
-    cluster: Cluster,
-    daysCount: Int,
-    isExpanded: Boolean,
-    onToggle: () -> Unit
-) {
+private fun ClusterHeader(cluster: Cluster, daysCount: Int, isExpanded: Boolean, onToggle: () -> Unit) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .clickable { onToggle() },
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp).clickable { onToggle() },
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer
-        ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "📦",
-                fontSize = 20.sp,
-                modifier = Modifier.padding(end = 12.dp)
-            )
+            Text("📦", fontSize = 20.sp, modifier = Modifier.padding(end = 12.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = cluster.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-                Text(
-                    text = "Gồm $daysCount ngày • ${if (isExpanded) "Chạm để ẩn" else "Chạm để xem chi tiết"}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
-                )
+                Text(cluster.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                Text("Gồm $daysCount ngày • ${if (isExpanded) "Chạm để ẩn" else "Chạm để xem chi tiết"}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f))
             }
             Icon(
                 imageVector = if (isExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
-                contentDescription = if (isExpanded) "Thu gọn cụm" else "Mở rộng cụm",
+                contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSecondaryContainer
             )
         }

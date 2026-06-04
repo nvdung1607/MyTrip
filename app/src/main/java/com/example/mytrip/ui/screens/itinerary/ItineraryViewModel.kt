@@ -12,11 +12,11 @@ import com.example.mytrip.data.db.entities.Cluster
 import com.example.mytrip.data.db.entities.Trip
 import com.example.mytrip.data.repository.TripRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
@@ -51,10 +51,13 @@ class ItineraryViewModel(application: Application) : AndroidViewModel(applicatio
     val expandedDays = MutableStateFlow<Set<Long>>(emptySet())
     val expandedClusters = MutableStateFlow<Set<Long>>(emptySet())
 
+    // ── Snackbar events ───────────────────────────────────────────────
+    val snackbarEvent = MutableSharedFlow<String>(extraBufferCapacity = 1)
+
     // ── Load data ─────────────────────────────────────────────────────
     fun loadData(tripId: Long) {
         _tripId.value = tripId
-        
+
         // Observe clusters and initialize expanded state
         viewModelScope.launch {
             clusters.collect { clusterList ->
@@ -114,6 +117,27 @@ class ItineraryViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
+    /**
+     * Insert activity after a specific index in the day's list.
+     * Activities after insertAfterIndex get their orderIndex bumped up.
+     */
+    fun insertActivityAfter(activity: Activity, insertAfterIndex: Int) {
+        viewModelScope.launch {
+            val dayActivities = (_activitiesMap.value[activity.dayId] ?: emptyList())
+                .sortedBy { it.orderIndex }
+                .toMutableList()
+
+            val newIndex = (insertAfterIndex + 1).coerceIn(0, dayActivities.size)
+            // Shift existing activities
+            val toUpdate = dayActivities.mapIndexed { idx, act ->
+                if (idx >= newIndex) act.copy(orderIndex = idx + 1) else act
+            }
+            toUpdate.forEach { repository.updateActivity(it) }
+            // Insert new one
+            repository.insertActivity(activity.copy(orderIndex = newIndex))
+        }
+    }
+
     fun updateActivity(activity: Activity) {
         viewModelScope.launch {
             repository.updateActivity(activity)
@@ -134,12 +158,15 @@ class ItineraryViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun reorderActivities(dayId: Long, fromIndex: Int, toIndex: Int) {
         viewModelScope.launch {
-            val list = (_activitiesMap.value[dayId] ?: return@launch).toMutableList()
+            val list = (_activitiesMap.value[dayId] ?: return@launch)
+                .sortedBy { it.orderIndex }.toMutableList()
             if (fromIndex !in list.indices || toIndex !in list.indices) return@launch
             val item = list.removeAt(fromIndex)
             list.add(toIndex, item)
             val reordered = list.mapIndexed { idx, act -> act.copy(orderIndex = idx) }
             reordered.forEach { repository.updateActivity(it) }
+            // Notify UI about potential time conflicts
+            snackbarEvent.tryEmit("Đã sắp xếp lại! Vui lòng kiểm tra lại giờ giấc của các hoạt động.")
         }
     }
 

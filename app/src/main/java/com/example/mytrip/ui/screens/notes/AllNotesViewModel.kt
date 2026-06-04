@@ -46,13 +46,42 @@ class AllNotesViewModel(application: Application) : AndroidViewModel(application
 
     // Filtered notes derived from combining notes, days list, and current filter state
     val filteredNotes: StateFlow<List<Note>> = combine(_allNotes, days, _currentFilter) { notes, dayList, filter ->
-        val dayIdToNum = dayList.associate { it.id to it.dayNumber }
-        
+        val sortedDays = dayList.sortedBy { it.date }
+
+        // Helper: resolve dayNumber for a note, falling back to timestamp if dayId is null
+        fun resolveDayNumber(note: Note): Int? {
+            if (note.dayId != null) {
+                return dayList.find { it.id == note.dayId }?.dayNumber
+            }
+            // Fallback: find the day whose date range covers the note's timestamp
+            for (day in sortedDays) {
+                val dayStart = day.date
+                val dayEnd = dayStart + 86_399_999L
+                if (note.timestamp in dayStart..dayEnd) {
+                    return day.dayNumber
+                }
+            }
+            return null
+        }
+
+        // Helper: find day by timestamp match
+        fun resolveDayId(note: Note): Long? {
+            if (note.dayId != null) return note.dayId
+            for (day in sortedDays) {
+                val dayStart = day.date
+                val dayEnd = dayStart + 86_399_999L
+                if (note.timestamp in dayStart..dayEnd) {
+                    return day.id
+                }
+            }
+            return null
+        }
+
         when (filter) {
             is NoteFilter.All -> notes
-            is NoteFilter.ByDay -> notes.filter { it.dayId == filter.dayId }
+            is NoteFilter.ByDay -> notes.filter { resolveDayId(it) == filter.dayId }
             is NoteFilter.ByWeek -> notes.filter { note ->
-                val dayNum = dayIdToNum[note.dayId]
+                val dayNum = resolveDayNumber(note)
                 if (dayNum != null) {
                     val w = ((dayNum - 1) / 7) + 1
                     w == filter.weekNumber

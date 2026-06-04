@@ -77,6 +77,7 @@ import com.example.mytrip.data.db.entities.Note
 import com.example.mytrip.navigation.Screen
 import com.example.mytrip.util.DateUtils
 import com.example.mytrip.util.MoneyUtils
+import com.example.mytrip.ui.components.DraggableFab
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -152,26 +153,17 @@ fun TodayScreen(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
             )
-        },
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = {
-                    navController.navigate(
-                        Screen.AddNote.createRoute(tripId, todayDay?.id)
-                    )
-                },
-                icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                text = { Text("Thêm note") },
-                containerColor = MaterialTheme.colorScheme.primary
-            )
         }
     ) { innerPadding ->
-        LazyColumn(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
-            contentPadding = PaddingValues(bottom = 88.dp)
+                .padding(innerPadding)
         ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 88.dp)
+            ) {
             // ── Day navigator ────────────────────────────────────────────
             item {
                 DayNavigatorRow(
@@ -257,9 +249,18 @@ fun TodayScreen(
                         }
                     }
                 }
-            }
         }
+        }
+        DraggableFab(
+            onClick = {
+                navController.navigate(
+                    Screen.AddNote.createRoute(tripId, todayDay?.id)
+                )
+            },
+            modifier = Modifier.fillMaxSize()
+        )
     }
+}
 }
 
 // ── Day navigator ────────────────────────────────────────────────────────────

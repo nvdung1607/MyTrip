@@ -1,12 +1,15 @@
 package com.example.mytrip.ui.screens.trip
 
 import android.app.Application
+import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mytrip.MyTripApplication
 import com.example.mytrip.data.db.entities.Trip
 import com.example.mytrip.data.db.entities.TripStatus
 import com.example.mytrip.data.repository.TripRepository
+import com.example.mytrip.util.CsvImportUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,6 +36,13 @@ class TripViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _totalPlanned = MutableStateFlow(0L)
     val totalPlanned: StateFlow<Long> = _totalPlanned.asStateFlow()
+
+    // CSV import state
+    private val _importedTripId = MutableStateFlow<Long?>(null)
+    val importedTripId: StateFlow<Long?> = _importedTripId.asStateFlow()
+
+    private val _importError = MutableStateFlow<String?>(null)
+    val importError: StateFlow<String?> = _importError.asStateFlow()
 
     fun loadTrip(id: Long) {
         viewModelScope.launch {
@@ -87,4 +97,55 @@ class TripViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
+
+    /** Import trip from a user-picked CSV file URI */
+    fun importFromCsvUri(context: Context, uri: Uri) {
+        viewModelScope.launch {
+            _uiState.value = TripUiState.Loading
+            when (val result = CsvImportUtils.parseFromUri(context, uri)) {
+                is CsvImportUtils.ImportResult.Error -> {
+                    _importError.value = result.message
+                    _uiState.value = TripUiState.Success
+                }
+                is CsvImportUtils.ImportResult.Success -> {
+                    try {
+                        val tripId = repository.importFromCsv(result.data)
+                        _importedTripId.value = tripId
+                        _uiState.value = TripUiState.Success
+                    } catch (e: Exception) {
+                        _importError.value = "Lỗi lưu dữ liệu: ${e.message}"
+                        _uiState.value = TripUiState.Success
+                    }
+                }
+            }
+        }
+    }
+
+    /** Save the template CSV to Downloads folder so user can open/edit it */
+    fun downloadTemplateCsv(context: Context): String? {
+        return try {
+            val assetContent = context.assets.open("trip_template.csv").use { it.readBytes() }
+            val fileName = "MyTrip_Mau_Lich_Trinh.csv"
+
+            // Save to Downloads via MediaStore
+            val values = android.content.ContentValues().apply {
+                put(android.provider.MediaStore.Downloads.DISPLAY_NAME, fileName)
+                put(android.provider.MediaStore.Downloads.MIME_TYPE, "text/csv")
+                put(android.provider.MediaStore.Downloads.IS_PENDING, 1)
+            }
+            val resolver = context.contentResolver
+            val uri = resolver.insert(android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+            if (uri != null) {
+                resolver.openOutputStream(uri)?.use { it.write(assetContent) }
+                values.clear()
+                values.put(android.provider.MediaStore.Downloads.IS_PENDING, 0)
+                resolver.update(uri, values, null, null)
+                fileName
+            } else null
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    fun clearImportError() { _importError.value = null }
 }

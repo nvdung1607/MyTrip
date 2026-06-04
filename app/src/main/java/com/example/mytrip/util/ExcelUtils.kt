@@ -2,172 +2,465 @@ package com.example.mytrip.util
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.core.content.FileProvider
 import com.example.mytrip.data.db.entities.*
-import com.example.mytrip.util.DateUtils
-import com.example.mytrip.util.MoneyUtils
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.ss.util.CellRangeAddress
+import org.apache.poi.xssf.usermodel.XSSFCellStyle
+import org.apache.poi.xssf.usermodel.XSSFClientAnchor
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 
 object ExcelUtils {
 
-    /**
-     * Export trip itinerary and expenses to Excel (.xlsx)
-     * Returns Uri of the created file (FileProvider)
-     */
+    // ─── Style helpers ────────────────────────────────────────────────────────
+
+    private fun headerStyle(wb: XSSFWorkbook, bgColor: IndexedColors = IndexedColors.TEAL): XSSFCellStyle =
+        wb.createCellStyle().apply {
+            fillForegroundColor = bgColor.index
+            fillPattern = FillPatternType.SOLID_FOREGROUND
+            alignment = HorizontalAlignment.CENTER
+            val f = wb.createFont().apply { bold = true; color = IndexedColors.WHITE.index }
+            setFont(f)
+            borderBottom = BorderStyle.THIN
+            borderTop = BorderStyle.THIN
+            borderLeft = BorderStyle.THIN
+            borderRight = BorderStyle.THIN
+        }
+
+    private fun titleStyle(wb: XSSFWorkbook): XSSFCellStyle =
+        wb.createCellStyle().apply {
+            fillForegroundColor = IndexedColors.LIGHT_CORNFLOWER_BLUE.index
+            fillPattern = FillPatternType.SOLID_FOREGROUND
+            val f = wb.createFont().apply { bold = true; fontHeightInPoints = 14 }
+            setFont(f)
+        }
+
+    private fun dayHeaderStyle(wb: XSSFWorkbook): XSSFCellStyle =
+        wb.createCellStyle().apply {
+            fillForegroundColor = IndexedColors.LIGHT_TURQUOISE.index
+            fillPattern = FillPatternType.SOLID_FOREGROUND
+            val f = wb.createFont().apply { bold = true }
+            setFont(f)
+        }
+
+    private fun totalStyle(wb: XSSFWorkbook): XSSFCellStyle =
+        wb.createCellStyle().apply {
+            fillForegroundColor = IndexedColors.DARK_TEAL.index
+            fillPattern = FillPatternType.SOLID_FOREGROUND
+            alignment = HorizontalAlignment.CENTER
+            val f = wb.createFont().apply { bold = true; color = IndexedColors.WHITE.index }
+            setFont(f)
+        }
+
+    private fun subtitleStyle(wb: XSSFWorkbook): XSSFCellStyle =
+        wb.createCellStyle().apply {
+            fillForegroundColor = IndexedColors.GREY_25_PERCENT.index
+            fillPattern = FillPatternType.SOLID_FOREGROUND
+            val f = wb.createFont().apply { bold = true; fontHeightInPoints = 11 }
+            setFont(f)
+        }
+
+    private fun goodStyle(wb: XSSFWorkbook): XSSFCellStyle =
+        wb.createCellStyle().apply {
+            fillForegroundColor = IndexedColors.LIGHT_GREEN.index
+            fillPattern = FillPatternType.SOLID_FOREGROUND
+            val f = wb.createFont().apply { bold = true; color = IndexedColors.DARK_GREEN.index }
+            setFont(f)
+        }
+
+    private fun badStyle(wb: XSSFWorkbook): XSSFCellStyle =
+        wb.createCellStyle().apply {
+            fillForegroundColor = IndexedColors.ROSE.index
+            fillPattern = FillPatternType.SOLID_FOREGROUND
+            val f = wb.createFont().apply { bold = true; color = IndexedColors.RED.index }
+            setFont(f)
+        }
+
+    private fun wrapStyle(wb: XSSFWorkbook): XSSFCellStyle =
+        wb.createCellStyle().apply { wrapText = true }
+
+    private fun Row.cell(col: Int, value: String, style: XSSFCellStyle? = null) {
+        val c = createCell(col)
+        c.setCellValue(value)
+        style?.let { c.cellStyle = it }
+    }
+
+    private fun Row.cell(col: Int, value: Double, style: XSSFCellStyle? = null) {
+        val c = createCell(col)
+        c.setCellValue(value)
+        style?.let { c.cellStyle = it }
+    }
+
+    // ─── Main export function ─────────────────────────────────────────────────
+
     fun exportTripToExcel(
         context: Context,
         trip: Trip,
         days: List<Day>,
         activitiesMap: Map<Long, List<Activity>>,
         expenses: List<Expense>,
-        records: List<ExpenseRecord>
+        records: List<ExpenseRecord>,
+        notes: List<Note>,
+        memberNames: List<String>
     ): Uri {
-        val workbook = XSSFWorkbook()
+        val wb = XSSFWorkbook()
 
-        // ── Sheet 1: Lịch trình ─────────────────────────────────────
-        val itinSheet = workbook.createSheet("Lịch trình")
-        itinSheet.setColumnWidth(0, 4000)
-        itinSheet.setColumnWidth(1, 4000)
-        itinSheet.setColumnWidth(2, 6000)
-        itinSheet.setColumnWidth(3, 4000)
-        itinSheet.setColumnWidth(4, 6000)
-        itinSheet.setColumnWidth(5, 4000)
-        itinSheet.setColumnWidth(6, 8000)
+        val hdr = headerStyle(wb)
+        val title = titleStyle(wb)
+        val dayHdr = dayHeaderStyle(wb)
+        val totalSt = totalStyle(wb)
+        val subSt = subtitleStyle(wb)
+        val goodSt = goodStyle(wb)
+        val badSt = badStyle(wb)
+        val wrapSt = wrapStyle(wb)
 
-        // Header row styles
-        val headerStyle = workbook.createCellStyle().apply {
-            fillForegroundColor = IndexedColors.TEAL.index
-            fillPattern = FillPatternType.SOLID_FOREGROUND
-            alignment = HorizontalAlignment.CENTER
-            val font = workbook.createFont().apply {
-                bold = true
-                color = IndexedColors.WHITE.index
-            }
-            setFont(font)
-        }
+        buildPlannedSheet(wb, trip, days, activitiesMap, hdr, title, dayHdr)
+        buildActualSheet(wb, trip, days, activitiesMap, hdr, title, dayHdr)
+        buildExpenseSheet(wb, trip, expenses, records, memberNames, hdr, title, totalSt, subSt, goodSt, badSt)
+        buildNoteSheet(wb, trip, days, notes, hdr, title, dayHdr, wrapSt, context)
 
-        val titleStyle = workbook.createCellStyle().apply {
-            fillForegroundColor = IndexedColors.LIGHT_CORNFLOWER_BLUE.index
-            fillPattern = FillPatternType.SOLID_FOREGROUND
-            val font = workbook.createFont().apply { bold = true; fontHeightInPoints = 14 }
-            setFont(font)
-        }
-
-        // Title row
-        var rowIdx = 0
-        itinSheet.createRow(rowIdx++).apply {
-            createCell(0).apply {
-                setCellValue("[Ô tô] ${trip.name}")
-                cellStyle = titleStyle
-            }
-            createCell(1).setCellValue("Từ: ${DateUtils.formatDate(trip.startDate)}")
-            createCell(2).setCellValue("Đến: ${DateUtils.formatDate(trip.endDate)}")
-            createCell(3).setCellValue("Số người: ${trip.numPeople}")
-        }
-        itinSheet.addMergedRegion(CellRangeAddress(0, 0, 0, 6))
-
-        rowIdx++ // blank row
-
-        // Column headers
-        itinSheet.createRow(rowIdx++).apply {
-            listOf("Ngày", "Thời gian", "Địa điểm", "Khoảng cách", "Khách sạn", "Giá phòng (k)", "Điểm check-in")
-                .forEachIndexed { i, title ->
-                    createCell(i).apply {
-                        setCellValue(title)
-                        cellStyle = headerStyle
-                    }
-                }
-        }
-
-        // Data rows
-        val dayStyle = workbook.createCellStyle().apply {
-            fillForegroundColor = IndexedColors.LIGHT_TURQUOISE.index
-            fillPattern = FillPatternType.SOLID_FOREGROUND
-            val font = workbook.createFont().apply { bold = true }
-            setFont(font)
-        }
-
-        for (day in days.sortedBy { it.dayNumber }) {
-            // Day header
-            itinSheet.createRow(rowIdx++).apply {
-                createCell(0).apply {
-                    setCellValue("Ngày ${day.dayNumber} - ${DateUtils.formatDate(day.date)}")
-                    cellStyle = dayStyle
-                }
-                (1..6).forEach { createCell(it).cellStyle = dayStyle }
-            }
-
-            val activities = activitiesMap[day.id] ?: emptyList()
-            for (act in activities.sortedBy { it.orderIndex }) {
-                itinSheet.createRow(rowIdx++).apply {
-                    createCell(0).setCellValue("")
-                    createCell(1).setCellValue(
-                        if (act.departureTime.isNotEmpty()) "${act.departureTime}→${act.arrivalTime}" else ""
-                    )
-                    createCell(2).setCellValue(act.name)
-                    createCell(3).setCellValue(if (act.distanceKm > 0) "${act.distanceKm} km" else "")
-                    createCell(4).setCellValue(act.hotelName)
-                    createCell(5).setCellValue(
-                        if (act.hotelPricePlanned > 0) MoneyUtils.vndToInput(act.hotelPricePlanned).toString() else ""
-                    )
-                    createCell(6).setCellValue(act.checkInSpots)
-                }
-            }
-        }
-
-        // ── Sheet 2: Chi phí ────────────────────────────────────────
-        val expSheet = workbook.createSheet("Chi phí")
-        expSheet.setColumnWidth(0, 5000)
-        expSheet.setColumnWidth(1, 4000)
-        expSheet.setColumnWidth(2, 4000)
-        expSheet.setColumnWidth(3, 4000)
-
-        expSheet.createRow(0).apply {
-            listOf("Hạng mục", "Dự kiến (k)", "Thực tế (k)", "Chênh lệch").forEachIndexed { i, t ->
-                createCell(i).apply { setCellValue(t); cellStyle = headerStyle }
-            }
-        }
-
-        var eRow = 1
-        for (exp in expenses) {
-            val actual = records.filter { it.category == exp.category }.sumOf { it.amount }
-            val diff = actual - exp.planned
-            expSheet.createRow(eRow++).apply {
-                createCell(0).setCellValue(exp.category.label)
-                createCell(1).setCellValue(MoneyUtils.vndToInput(exp.planned).toDouble())
-                createCell(2).setCellValue(MoneyUtils.vndToInput(actual).toDouble())
-                createCell(3).setCellValue(MoneyUtils.vndToInput(diff).toDouble())
-            }
-        }
-
-        // Total row
-        val totalPlanned = expenses.sumOf { it.planned }
-        val totalActual  = records.sumOf { it.amount }
-        expSheet.createRow(eRow).apply {
-            createCell(0).apply { setCellValue("TỔNG"); cellStyle = headerStyle }
-            createCell(1).apply { setCellValue(MoneyUtils.vndToInput(totalPlanned).toDouble()); cellStyle = headerStyle }
-            createCell(2).apply { setCellValue(MoneyUtils.vndToInput(totalActual).toDouble()); cellStyle = headerStyle }
-            createCell(3).apply { setCellValue(MoneyUtils.vndToInput(totalActual - totalPlanned).toDouble()); cellStyle = headerStyle }
-        }
-
-        // Save and return URI
         val fileName = "MyTrip_${trip.name.replace(" ", "_")}_${DateUtils.formatDate(System.currentTimeMillis()).replace("/", "-")}.xlsx"
         val file = File(context.getExternalFilesDir("Exports"), fileName)
         file.parentFile?.mkdirs()
-        FileOutputStream(file).use { workbook.write(it) }
-        workbook.close()
+        FileOutputStream(file).use { wb.write(it) }
+        wb.close()
 
         return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
     }
 
-    /**
-     * Share the exported Excel file via Android Share Sheet
-     */
+    // ─── Sheet 1: Lịch trình dự kiến ─────────────────────────────────────────
+
+    private fun buildPlannedSheet(
+        wb: XSSFWorkbook, trip: Trip, days: List<Day>,
+        activitiesMap: Map<Long, List<Activity>>,
+        hdr: XSSFCellStyle, title: XSSFCellStyle, dayHdr: XSSFCellStyle
+    ) {
+        val sheet = wb.createSheet("Lịch trình dự kiến")
+        val cols = listOf(3800, 3000, 3000, 6500, 3500, 5000, 3500, 5000, 8000, 6000)
+        cols.forEachIndexed { i, w -> sheet.setColumnWidth(i, w) }
+
+        var r = 0
+        sheet.createRow(r++).apply {
+            cell(0, "${trip.type.icon} ${trip.name} – Lịch trình dự kiến", title)
+            cell(1, "Từ: ${DateUtils.formatDate(trip.startDate)}")
+            cell(2, "Đến: ${DateUtils.formatDate(trip.endDate)}")
+            cell(3, "Số người: ${trip.numPeople}")
+        }
+        sheet.addMergedRegion(CellRangeAddress(0, 0, 0, 9))
+        r++ // blank
+
+        sheet.createRow(r++).apply {
+            listOf("Ngày","Loại","Giờ xuất","Địa điểm / Hoạt động","Khoảng cách","Khách sạn","Giá phòng (k)","Điểm check-in","Link Maps","Ghi chú")
+                .forEachIndexed { i, t -> cell(i, t, hdr) }
+        }
+
+        for (day in days.sortedBy { it.dayNumber }) {
+            sheet.createRow(r++).apply {
+                cell(0, "Ngày ${day.dayNumber} – ${DateUtils.formatDate(day.date)}", dayHdr)
+                (1..9).forEach { createCell(it).cellStyle = dayHdr }
+            }
+            val acts = activitiesMap[day.id] ?: emptyList()
+            for (act in acts.sortedBy { it.orderIndex }) {
+                sheet.createRow(r++).apply {
+                    cell(0, "")
+                    cell(1, "${act.activityType.icon} ${act.activityType.label}")
+                    cell(2, if (act.departureTime.isNotEmpty()) "${act.departureTime}→${act.arrivalTime}" else "")
+                    cell(3, act.name)
+                    cell(4, if (act.distanceKm > 0) "${act.distanceKm} km" else "")
+                    cell(5, act.hotelName)
+                    cell(6, if (act.hotelPricePlanned > 0) act.hotelPricePlanned.toDouble() else Double.NaN)
+                    // checkInSpots JSON → plain text
+                    val spots = try {
+                        val arr = org.json.JSONArray(act.checkInSpots)
+                        (0 until arr.length()).joinToString(", ") { arr.getString(it) }
+                    } catch (_: Exception) { "" }
+                    cell(7, spots)
+                    cell(8, act.mapsLink)
+                    cell(9, act.notes)
+                }
+            }
+        }
+    }
+
+    // ─── Sheet 2: Lịch trình thực tế ─────────────────────────────────────────
+
+    private fun buildActualSheet(
+        wb: XSSFWorkbook, trip: Trip, days: List<Day>,
+        activitiesMap: Map<Long, List<Activity>>,
+        hdr: XSSFCellStyle, title: XSSFCellStyle, dayHdr: XSSFCellStyle
+    ) {
+        val sheet = wb.createSheet("Lịch trình thực tế")
+        listOf(3800, 3000, 3000, 3000, 6500, 4000, 7000).forEachIndexed { i, w ->
+            sheet.setColumnWidth(i, w)
+        }
+
+        var r = 0
+        sheet.createRow(r++).apply {
+            cell(0, "${trip.type.icon} ${trip.name} – Lịch trình thực tế", title)
+        }
+        sheet.addMergedRegion(CellRangeAddress(0, 0, 0, 6))
+        r++
+
+        sheet.createRow(r++).apply {
+            listOf("Ngày","Loại","Giờ xuất TT","Giờ đến TT","Địa điểm","Trạng thái","Ghi chú thực tế")
+                .forEachIndexed { i, t -> cell(i, t, hdr) }
+        }
+
+        for (day in days.sortedBy { it.dayNumber }) {
+            val acts = (activitiesMap[day.id] ?: emptyList())
+                .filter { it.status != ActivityStatus.PENDING }
+                .sortedBy { it.orderIndex }
+            if (acts.isEmpty()) continue
+
+            sheet.createRow(r++).apply {
+                cell(0, "Ngày ${day.dayNumber} – ${DateUtils.formatDate(day.date)}", dayHdr)
+                (1..6).forEach { createCell(it).cellStyle = dayHdr }
+            }
+            for (act in acts) {
+                sheet.createRow(r++).apply {
+                    cell(0, "")
+                    cell(1, "${act.activityType.icon} ${act.activityType.label}")
+                    cell(2, act.actualDepartureTime.ifBlank { act.departureTime })
+                    cell(3, act.actualArrivalTime.ifBlank { act.arrivalTime })
+                    cell(4, act.name)
+                    cell(5, act.status.label)
+                    cell(6, act.actualNotes.ifBlank { act.notes })
+                }
+            }
+        }
+
+        if (r == 3) { // no data
+            sheet.createRow(r).cell(0, "Chưa có hoạt động nào được thực hiện")
+        }
+    }
+
+    // ─── Sheet 3: Chi phí ────────────────────────────────────────────────────
+
+    private fun buildExpenseSheet(
+        wb: XSSFWorkbook, trip: Trip,
+        expenses: List<Expense>, records: List<ExpenseRecord>,
+        memberNames: List<String>,
+        hdr: XSSFCellStyle, title: XSSFCellStyle, totalSt: XSSFCellStyle,
+        subSt: XSSFCellStyle, goodSt: XSSFCellStyle, badSt: XSSFCellStyle
+    ) {
+        val sheet = wb.createSheet("Chi phí")
+        listOf(5500, 4500, 4500, 4500, 6000).forEachIndexed { i, w -> sheet.setColumnWidth(i, w) }
+
+        var r = 0
+        sheet.createRow(r++).apply {
+            cell(0, "💰 ${trip.name} – Tổng kết Chi phí", title)
+        }
+        sheet.addMergedRegion(CellRangeAddress(0, 0, 0, 4))
+        r++
+
+        // ── Phần A: Bảng hạng mục ────────────────────────────────────────────
+        sheet.createRow(r++).apply { cell(0, "A. BẢNG CHI PHÍ THEO HẠNG MỤC", subSt); (1..4).forEach { createCell(it).cellStyle = subSt } }
+        sheet.addMergedRegion(CellRangeAddress(r - 1, r - 1, 0, 4))
+
+        sheet.createRow(r++).apply {
+            listOf("Hạng mục", "Dự kiến (VND)", "Thực tế (VND)", "Chênh lệch", "Ghi chú")
+                .forEachIndexed { i, t -> cell(i, t, hdr) }
+        }
+
+        var totalPlanned = 0L
+        var totalActual = 0L
+
+        for (exp in expenses) {
+            val actual = records.filter { it.category == exp.category }.sumOf { it.amount }
+            val diff = actual - exp.planned
+            totalPlanned += exp.planned
+            totalActual += actual
+            sheet.createRow(r++).apply {
+                cell(0, "${exp.category.icon} ${exp.category.label}")
+                cell(1, MoneyUtils.formatVnd(exp.planned))
+                cell(2, MoneyUtils.formatVnd(actual))
+                val diffStyle = if (diff > 0) badSt else if (diff < 0) goodSt else null
+                cell(3, if (diff >= 0) "+${MoneyUtils.formatShort(diff)}" else MoneyUtils.formatShort(diff), diffStyle)
+                cell(4, exp.description)
+            }
+        }
+
+        val diffTotal = totalActual - totalPlanned
+        sheet.createRow(r++).apply {
+            cell(0, "TỔNG", totalSt)
+            cell(1, MoneyUtils.formatVnd(totalPlanned), totalSt)
+            cell(2, MoneyUtils.formatVnd(totalActual), totalSt)
+            cell(3, if (diffTotal >= 0) "+${MoneyUtils.formatShort(diffTotal)}" else MoneyUtils.formatShort(diffTotal), totalSt)
+            cell(4, "", totalSt)
+        }
+
+        r++ // blank row
+
+        // ── Phần B: Chia chi phí ─────────────────────────────────────────────
+        sheet.createRow(r++).apply {
+            cell(0, "B. CHIA & QUYẾT TOÁN CHI PHÍ", subSt); (1..4).forEach { createCell(it).cellStyle = subSt }
+        }
+        sheet.addMergedRegion(CellRangeAddress(r - 1, r - 1, 0, 4))
+
+        val numPeople = trip.numPeople.coerceAtLeast(1)
+        val perPerson = totalActual / numPeople
+
+        sheet.createRow(r++).apply {
+            cell(0, "Tổng chi phí thực tế:")
+            cell(1, MoneyUtils.formatVnd(totalActual))
+        }
+        sheet.createRow(r++).apply {
+            cell(0, "Số người:")
+            cell(1, numPeople.toString())
+        }
+        sheet.createRow(r++).apply {
+            cell(0, "Mỗi người phải trả:")
+            cell(1, MoneyUtils.formatVnd(perPerson))
+        }
+        r++
+
+        sheet.createRow(r++).apply {
+            listOf("Tên", "Đã trả", "Phần bằng nhau", "Số dư", "Kết quả quyết toán")
+                .forEachIndexed { i, t -> cell(i, t, hdr) }
+        }
+
+        val paidByPerson = records.groupBy { it.paidBy }.mapValues { (_, list) -> list.sumOf { it.amount } }
+
+        for (name in memberNames) {
+            val paid = paidByPerson[name] ?: 0L
+            val balance = paid - perPerson
+            val result = if (balance >= 0) "✅ Được hoàn ${MoneyUtils.formatShort(balance)}"
+                         else "❗ Cần trả ${MoneyUtils.formatShort(-balance)}"
+            val resultStyle = if (balance >= 0) goodSt else badSt
+            sheet.createRow(r++).apply {
+                cell(0, name)
+                cell(1, MoneyUtils.formatVnd(paid))
+                cell(2, MoneyUtils.formatVnd(perPerson))
+                cell(3, if (balance >= 0) "+${MoneyUtils.formatShort(balance)}" else MoneyUtils.formatShort(balance),
+                    if (balance >= 0) goodSt else badSt)
+                cell(4, result, resultStyle)
+            }
+        }
+
+        r++ // blank row
+
+        // ── Phần C: Chi tiết giao dịch ───────────────────────────────────────
+        sheet.createRow(r++).apply {
+            cell(0, "C. CHI TIẾT GIAO DỊCH", subSt); (1..4).forEach { createCell(it).cellStyle = subSt }
+        }
+        sheet.addMergedRegion(CellRangeAddress(r - 1, r - 1, 0, 4))
+
+        sheet.createRow(r++).apply {
+            listOf("Thời gian", "Hạng mục", "Mô tả", "Người trả", "Số tiền")
+                .forEachIndexed { i, t -> cell(i, t, hdr) }
+        }
+
+        for (rec in records.sortedBy { it.timestamp }) {
+            sheet.createRow(r++).apply {
+                cell(0, DateUtils.formatFull(rec.timestamp))
+                cell(1, "${rec.category.icon} ${rec.category.label}")
+                cell(2, rec.description)
+                cell(3, rec.paidBy)
+                cell(4, MoneyUtils.formatVnd(rec.amount))
+            }
+        }
+    }
+
+    // ─── Sheet 4: Nhật ký (Notes) ─────────────────────────────────────────────
+
+    private fun buildNoteSheet(
+        wb: XSSFWorkbook, trip: Trip, days: List<Day>, notes: List<Note>,
+        hdr: XSSFCellStyle, title: XSSFCellStyle, dayHdr: XSSFCellStyle, wrapSt: XSSFCellStyle,
+        context: Context
+    ) {
+        val sheet = wb.createSheet("Nhật ký")
+        // Columns: Ngày, Thời gian, Loại, Tên, Nhận xét, Đánh giá, Chi phí, Người trả, Ảnh
+        listOf(3800, 3500, 3000, 5000, 8000, 2500, 3500, 3000, 4000)
+            .forEachIndexed { i, w -> sheet.setColumnWidth(i, w) }
+
+        // Drawing for images
+        val drawing = sheet.createDrawingPatriarch()
+
+        var r = 0
+        sheet.createRow(r++).apply {
+            cell(0, "📖 ${trip.name} – Nhật ký & Ghi chú", title)
+        }
+        sheet.addMergedRegion(CellRangeAddress(0, 0, 0, 8))
+        r++
+
+        sheet.createRow(r++).apply {
+            listOf("Ngày","Thời gian","Loại","Tên / Địa điểm","Nhận xét","Sao","Chi phí","Người trả","Ảnh")
+                .forEachIndexed { i, t -> cell(i, t, hdr) }
+        }
+
+        val dayMap = days.associateBy { it.id }
+        val sortedNotes = notes.sortedBy { it.timestamp }
+
+        for (note in sortedNotes) {
+            val dayLabel = note.dayId?.let { dayMap[it]?.let { d -> "Ngày ${d.dayNumber}" } } ?: ""
+            val rowHeight = 80 // points for image row
+
+            val row = sheet.createRow(r)
+            row.heightInPoints = if (note.photoPath != null) rowHeight.toFloat() else 15f
+
+            row.cell(0, dayLabel)
+            row.cell(1, DateUtils.formatFull(note.timestamp))
+            row.cell(2, "${note.tag.icon} ${note.tag.label}")
+            row.cell(3, note.name)
+            row.cell(4, note.comment, wrapSt)
+            row.cell(5, "★".repeat(note.rating))
+            row.cell(6, if (note.cost > 0) MoneyUtils.formatVnd(note.cost) else "")
+            row.cell(7, note.paidBy)
+
+            // Embed thumbnail image if available
+            if (note.photoPath != null) {
+                try {
+                    val imgBytes = loadThumbnail(note.photoPath, 120, 80)
+                    if (imgBytes != null) {
+                        val picIdx = wb.addPicture(imgBytes, Workbook.PICTURE_TYPE_JPEG)
+                        val anchor = XSSFClientAnchor(0, 0, 0, 0, 8, r, 9, r + 1)
+                        anchor.anchorType = ClientAnchor.AnchorType.MOVE_AND_RESIZE
+                        drawing.createPicture(anchor, picIdx)
+                        row.cell(8, "") // cell exists but picture floats above
+                    } else {
+                        row.cell(8, File(note.photoPath).name)
+                    }
+                } catch (_: Exception) {
+                    row.cell(8, File(note.photoPath).name)
+                }
+            } else {
+                row.cell(8, "")
+            }
+
+            r++
+        }
+
+        if (sortedNotes.isEmpty()) {
+            sheet.createRow(r).cell(0, "Chưa có ghi chú nào")
+        }
+    }
+
+    // ─── Thumbnail helper ─────────────────────────────────────────────────────
+
+    private fun loadThumbnail(path: String, maxW: Int, maxH: Int): ByteArray? {
+        return try {
+            val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeFile(path, opts)
+            val scaleW = (opts.outWidth / maxW).coerceAtLeast(1)
+            val scaleH = (opts.outHeight / maxH).coerceAtLeast(1)
+            val scale = maxOf(scaleW, scaleH)
+            val opts2 = BitmapFactory.Options().apply { inSampleSize = scale }
+            val bmp = BitmapFactory.decodeFile(path, opts2) ?: return null
+            val scaled = Bitmap.createScaledBitmap(bmp, maxW, maxH, true)
+            val bos = ByteArrayOutputStream()
+            scaled.compress(Bitmap.CompressFormat.JPEG, 80, bos)
+            bos.toByteArray()
+        } catch (_: Exception) { null }
+    }
+
+    // ─── Share Excel ──────────────────────────────────────────────────────────
+
     fun shareExcelFile(context: Context, uri: Uri) {
         val shareIntent = Intent(Intent.ACTION_SEND).apply {
             type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -175,47 +468,5 @@ object ExcelUtils {
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         context.startActivity(Intent.createChooser(shareIntent, "Chia sẻ kế hoạch chuyến đi"))
-    }
-
-    /**
-     * Generate a simple expense report as plain text for sharing via Zalo/Messenger
-     */
-    fun generateTextReport(
-        trip: Trip,
-        expenses: List<Expense>,
-        records: List<ExpenseRecord>,
-        memberNames: List<String>
-    ): String {
-        val sb = StringBuilder()
-        sb.appendLine("🗺️ BÁO CÁO CHI PHÍ: ${trip.name}")
-        sb.appendLine("📅 ${DateUtils.formatDate(trip.startDate)} → ${DateUtils.formatDate(trip.endDate)}")
-        sb.appendLine("👥 ${trip.numPeople} người")
-        sb.appendLine("━".repeat(30))
-        sb.appendLine()
-        sb.appendLine("📊 NGÂN SÁCH:")
-        for (exp in expenses) {
-            val actual = records.filter { it.category == exp.category }.sumOf { it.amount }
-            sb.appendLine("  ${exp.category.icon} ${exp.category.label}: " +
-                    "DK ${MoneyUtils.formatShort(exp.planned)} | " +
-                    "TT ${MoneyUtils.formatShort(actual)}")
-        }
-        sb.appendLine()
-        val totalPlanned = expenses.sumOf { it.planned }
-        val totalActual = records.sumOf { it.amount }
-        sb.appendLine("💰 TỔNG DỰ KIẾN: ${MoneyUtils.formatVnd(totalPlanned)}")
-        sb.appendLine("💳 TỔNG THỰC TẾ: ${MoneyUtils.formatVnd(totalActual)}")
-        sb.appendLine("💵 MỖI NGƯỜI: ${MoneyUtils.formatVnd(totalActual / trip.numPeople)}")
-        sb.appendLine()
-        sb.appendLine("👤 AI TRẢ GÌ:")
-        val paidByPerson = records.groupBy { it.paidBy }
-            .mapValues { (_, list) -> list.sumOf { it.amount } }
-        val perPerson = totalActual / trip.numPeople
-        for (name in memberNames) {
-            val paid = paidByPerson[name] ?: 0L
-            val balance = paid - perPerson
-            val sign = if (balance >= 0) "✅ được hoàn" else "❗ cần trả thêm"
-            sb.appendLine("  $name: đã trả ${MoneyUtils.formatShort(paid)} → $sign ${MoneyUtils.formatShort(kotlin.math.abs(balance))}")
-        }
-        return sb.toString()
     }
 }

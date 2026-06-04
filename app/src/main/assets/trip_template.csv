@@ -1,0 +1,47 @@
+﻿# FILE MẪU NHẬP LỊCH TRÌNH - MyTrip App
+# Hướng dẫn:
+#   - Dòng bắt đầu bằng # là ghi chú, sẽ bị bỏ qua
+#   - Phần [TRIP] khai báo thông tin chuyến đi (BẮT BUỘC)
+#   - Phần [DAYS] khai báo từng ngày và các chặng (TÙY CHỌN)
+#   - Không xóa dòng tiêu đề (dòng bắt đầu bằng FIELD: hoặc tên cột)
+#   - Ngày tháng định dạng: DD/MM/YYYY
+
+[TRIP]
+TEN_CHUYEN_DI,LOAI_HINH,NGAY_BAT_DAU,NGAY_KET_THUC,SO_NGUOI,TEN_THANH_VIEN,MO_TA
+Chuyến Xuyên Việt 2026,OTO,01/08/2026,30/08/2026,3,"Tao,Bố,Mẹ",Hành trình tự lái 30 ngày
+
+# LOAI_HINH: OTO / MOTORBIKE / CONG_CONG / TREKKING / CAM_TRAI / KHAC
+# TEN_THANH_VIEN: phân cách bằng dấu phẩy, đặt trong dấu nháy kép nếu có dấu phẩy
+
+[DAYS]
+NGAY,CUM,TEN_CHUYEN,KM,THANH_PHO,DIEM_THAM_QUAN,GHI_CHU
+1,Bắc Trung Bộ,Phú Thọ → Vinh (Nghệ An),380,TP. Vinh,"Quê Bác,Biển Cửa Lò,Đảo Lan Châu,Đền Cuông",Đường HCM vắng - chú ý sương mù sáng sớm
+2,Bắc Trung Bộ,Vinh → Đà Nẵng,470,TP. Đà Nẵng,"Biển Mỹ Khê,Bán đảo Sơn Trà,Chùa Linh Ứng,Cầu Rồng,Ngũ Hành Sơn",Ưu tiên đi hầm Hải Vân
+3,Bắc Trung Bộ,Đà Nẵng (Nghỉ hoàn toàn),0,TP. Đà Nẵng,"Bà Nà Hills,Chợ Cồn/Hàn,Công viên Châu Á,Phố cổ Hội An",Ngày nghỉ - tham quan tự do
+4,Nam Trung Bộ,Đà Nẵng → Quảng Ngãi,130,TP. Quảng Ngãi,"Tượng đài Mẹ Thứ,Làng bích họa Tam Thanh,Chứng tích Sơn Mỹ,Biển Mỹ Khê",Chặng ngắn khởi hành muộn
+5,Nam Trung Bộ,Quảng Ngãi → Quy Nhơn,175,TP. Quy Nhơn,"Đồng muối Sa Huỳnh,Tháp Đôi,Ghềnh Ráng - Tiên Sa",
+6,Nam Trung Bộ,Quy Nhơn (Nghỉ hoàn toàn),0,TP. Quy Nhơn,"Eo Gió,Kỳ Co,Surf Bar",
+7,Nam Trung Bộ,Quy Nhơn → Nha Trang,210,TP. Nha Trang,"Gành Đá Đĩa,Bãi Xép,Hải đăng Đại Lãnh,Tháp Bà Ponagar",
+8,Nam Trung Bộ,Nha Trang (Nghỉ hoàn toàn),0,TP. Nha Trang,"Viện Hải dương học,Tắm bùn khoáng,VinWonders,Nhà thờ Đá",
+9,Nam Trung Bộ,Nha Trang → Mũi Né,220,Mũi Né,"Tháp Po Klong Garai,Cung đường Bàu Trắng,Đồi Cát Hồng",
+10,Đông Nam Bộ,Mũi Né → Vũng Tàu,160,TP. Vũng Tàu,"Suối Tiên,Hải đăng Kê Gà,Tượng Chúa Ki-tô",
+11,Đông Nam Bộ,Vũng Tàu → TP. HCM,100,TP. HCM,"Dinh Độc Lập,Nhà thờ Đức Bà,Bưu điện TP,Phố đi bộ Nguyễn Huệ",
+12,Đông Nam Bộ,TP. HCM (Nghỉ hoàn toàn),0,TP. HCM,"Chợ Bến Thành","Kết hợp đi bảo dưỡng xe tổng thể"
+13,Đông Nam Bộ,TP. HCM → Củ Chi → Tây Ninh,100,TP. Tây Ninh,"Địa đạo Củ Chi,KDL Núi Bà Đen",
+14,Miền Tây,Tây Ninh → Cần Thơ,210,TP. Cần Thơ,"Nhà cổ Bình Thủy,Bến Ninh Kiều",
+15,Miền Tây,Cần Thơ (Nghỉ hoàn toàn),0,TP. Cần Thơ,"Chợ nổi Cái Răng",
+16,Miền Tây,Cần Thơ → TP. Cà Mau,150,TP. Cà Mau,"Quảng trường Cà Mau",
+17,Miền Tây,TP. Cà Mau → Đất Mũi → TP. Cà Mau,220,TP. Cà Mau,"VQG Mũi Cà Mau,Cột mốc GPS 0001",
+18,Miền Tây,TP. Cà Mau → Bạc Liêu → Sóc Trăng,120,TP. Sóc Trăng,"Nhà Công tử Bạc Liêu,Chùa Dơi / Chùa Som Rong",
+19,Miền Tây,Sóc Trăng → Bình Dương,240,Bình Dương,"Ăn nghỉ thong thả","Thưởng thức đặc sản Bình Dương"
+20,Miền Tây,Bình Dương → Đại Nam → Bảo Lộc,150,TP. Bảo Lộc,"Khu du lịch Đại Nam",
+21,Tây Nguyên,Bảo Lộc → Đà Lạt,110,TP. Đà Lạt,"Thác Pongour,Hồ Xuân Hương",
+22,Tây Nguyên,Đà Lạt (Nghỉ hoàn toàn),0,TP. Đà Lạt,"Ga Đà Lạt,Dinh Bảo Đại,Chợ đêm Đà Lạt",
+23,Tây Nguyên,Đà Lạt → Buôn Ma Thuột,210,TP. Buôn Ma Thuột,"Hồ Lắk",
+24,Tây Nguyên,Buôn Ma Thuột → Pleiku,180,TP. Pleiku,"Bảo tàng Thế giới Cà phê,Biển Hồ Tơ Nưng",
+25,Tây Nguyên,Pleiku → Kon Tum → Măng Đen,110,Măng Đen,"Nhà thờ Gỗ Kon Tum,Thác Pa Sỹ,Hồ Đăk Ke",
+26,Tây Nguyên,Măng Đen (Nghỉ hoàn toàn),0,Măng Đen,"Tản bộ Rừng thông Măng Đen",
+27,Hồi Hương,Măng Đen → Đà Nẵng,250,TP. Đà Nẵng,"Đổ đèo Lò Xo","Tắm biển giải nhiệt tại Mỹ Khê"
+28,Hồi Hương,Đà Nẵng → Đồng Hới,270,TP. Đồng Hới,"Tượng đài Mẹ Suốt,Biển Nhật Lệ",
+29,Hồi Hương,Đồng Hới → Vinh,200,TP. Vinh,,Nghỉ ngơi hồi sức sớm
+30,Hồi Hương,Vinh → Thanh Sơn (Phú Thọ),380,Thanh Sơn (Đích),,Tập trung lái xe về đích
