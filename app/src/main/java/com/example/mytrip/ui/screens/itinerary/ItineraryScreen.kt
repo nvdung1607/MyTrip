@@ -64,6 +64,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -117,8 +118,7 @@ import com.example.mytrip.util.DateUtils
 import com.example.mytrip.util.MoneyUtils
 import kotlinx.coroutines.launch
 import org.json.JSONArray
-import sh.calvin.reorderable.ReorderableItem
-import sh.calvin.reorderable.rememberReorderableLazyListState
+import com.example.mytrip.ui.components.ScheduleTimelineList
 
 // ─── Palette for day number circles ───────────────────────────────────────────
 private val dayColors = listOf(
@@ -277,12 +277,6 @@ fun ItineraryScreen(
                                 insertAfterIndex = -1
                                 showSheet = true
                             },
-                            onInsertAfter = { idx ->
-                                sheetDayId = day.id
-                                editingActivity = null
-                                insertAfterIndex = idx
-                                showSheet = true
-                            },
                             onEditActivity = { act ->
                                 sheetDayId = day.id
                                 editingActivity = act
@@ -291,7 +285,7 @@ fun ItineraryScreen(
                             },
                             onDeleteActivity = { act -> deleteTarget = act },
                             onStatusChange = { act, status -> viewModel.updateActivityStatus(act.id, status) },
-                            onReorder = { from, to -> viewModel.reorderActivities(day.id, from, to) }
+                            onReorder = { activities -> viewModel.reorderActivities(day.id, activities) }
                         )
                     }
                 } else {
@@ -326,12 +320,6 @@ fun ItineraryScreen(
                                             insertAfterIndex = -1
                                             showSheet = true
                                         },
-                                        onInsertAfter = { idx ->
-                                            sheetDayId = day.id
-                                            editingActivity = null
-                                            insertAfterIndex = idx
-                                            showSheet = true
-                                        },
                                         onEditActivity = { act ->
                                             sheetDayId = day.id
                                             editingActivity = act
@@ -340,7 +328,7 @@ fun ItineraryScreen(
                                         },
                                         onDeleteActivity = { act -> deleteTarget = act },
                                         onStatusChange = { act, status -> viewModel.updateActivityStatus(act.id, status) },
-                                        onReorder = { from, to -> viewModel.reorderActivities(day.id, from, to) }
+                                        onReorder = { activities -> viewModel.reorderActivities(day.id, activities) }
                                     )
                                 }
                             }
@@ -408,11 +396,10 @@ private fun DaySection(
     isExpanded: Boolean,
     onToggleExpand: () -> Unit,
     onAddActivity: () -> Unit,
-    onInsertAfter: (Int) -> Unit,
     onEditActivity: (Activity) -> Unit,
     onDeleteActivity: (Activity) -> Unit,
     onStatusChange: (Activity, ActivityStatus) -> Unit,
-    onReorder: (Int, Int) -> Unit
+    onReorder: (List<Activity>) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         // Day header card
@@ -423,7 +410,7 @@ private fun DaySection(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
@@ -452,223 +439,61 @@ private fun DaySection(
         AnimatedVisibility(visible = isExpanded, enter = expandVertically(), exit = shrinkVertically()) {
             val sortedActivities = activities.sortedBy { it.orderIndex }
 
-            Column(modifier = Modifier.fillMaxWidth().padding(start = 28.dp, end = 16.dp, bottom = 4.dp)) {
-                sortedActivities.forEachIndexed { idx, activity ->
-                    // "Insert here" divider button above first item or between items
-                    InsertBetweenButton(onClick = { onInsertAfter(idx - 1) })
-
-                    ActivityRow(
-                        activity = activity,
-                        isDragging = false,
-                        isFirst = idx == 0,
-                        isLast = idx == sortedActivities.size - 1,
-                        onEdit = { onEditActivity(activity) },
-                        onDelete = { onDeleteActivity(activity) },
-                        onStatusChange = { status -> onStatusChange(activity, status) },
-                        onMoveUp = { if (idx > 0) onReorder(idx, idx - 1) },
-                        onMoveDown = { if (idx < sortedActivities.size - 1) onReorder(idx, idx + 1) }
+            Column(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
+                if (sortedActivities.isNotEmpty()) {
+                    ScheduleTimelineList(
+                        activities = sortedActivities,
+                        onReorder = onReorder,
+                        onEdit = onEditActivity,
+                        onDelete = onDeleteActivity,
+                        onStatusChange = onStatusChange,
+                        modifier = Modifier.padding(start = 12.dp, end = 0.dp)
                     )
                 }
 
-                // Insert button after last item
-                if (sortedActivities.isNotEmpty()) {
-                    InsertBetweenButton(onClick = { onInsertAfter(sortedActivities.size - 1) })
-                }
-
-                // Add activity button at bottom (only show if list is empty, otherwise the insert button above is sufficient)
-                if (sortedActivities.isEmpty()) {
-                    TextButton(
-                        onClick = onAddActivity,
-                        modifier = Modifier.padding(top = 2.dp, bottom = 8.dp)
+                // Add activity button at bottom
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 28.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.width(32.dp)
                     ) {
-                        Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Thêm hoạt động")
-                    }
-                }
-            }
-        }
-    }
-}
-
-// ─── Insert between button ────────────────────────────────────────────────────
-@Composable
-private fun InsertBetweenButton(onClick: () -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
-    ) {
-        Box(modifier = Modifier.weight(1f).height(1.dp).background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)))
-        Surface(
-            onClick = onClick,
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.surface,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)),
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .size(20.dp)
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Thêm vào đây",
-                    modifier = Modifier.size(11.dp),
-                    tint = MaterialTheme.colorScheme.outline
-                )
-            }
-        }
-        Box(modifier = Modifier.weight(1f).height(1.dp).background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)))
-    }
-}
-
-// ─── Activity row ─────────────────────────────────────────────────────────────
-@OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
-@Composable
-private fun ActivityRow(
-    activity: Activity,
-    isDragging: Boolean = false,
-    isFirst: Boolean = false,
-    isLast: Boolean = false,
-    onEdit: () -> Unit,
-    onDelete: () -> Unit,
-    onStatusChange: (ActivityStatus) -> Unit,
-    onMoveUp: () -> Unit = {},
-    onMoveDown: () -> Unit = {}
-) {
-    val context = LocalContext.current
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 3.dp)
-            .combinedClickable(onClick = {}, onLongClick = { onDelete() }),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isDragging) MaterialTheme.colorScheme.surfaceVariant
-                             else MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isDragging) 8.dp else 1.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
-            verticalAlignment = Alignment.Top
-        ) {
-            // Move up/down buttons
-            Column(
-                modifier = Modifier.padding(end = 4.dp),
-                verticalArrangement = Arrangement.spacedBy(0.dp)
-            ) {
-                FilledTonalIconButton(
-                    onClick = onMoveUp,
-                    enabled = !isFirst,
-                    modifier = Modifier.size(26.dp)
-                ) {
-                    Icon(Icons.Filled.KeyboardArrowUp, null, modifier = Modifier.size(14.dp))
-                }
-                FilledTonalIconButton(
-                    onClick = onMoveDown,
-                    enabled = !isLast,
-                    modifier = Modifier.size(26.dp)
-                ) {
-                    Icon(Icons.Filled.KeyboardArrowDown, null, modifier = Modifier.size(14.dp))
-                }
-            }
-
-            // Activity type icon
-            Text(activity.activityType.icon, fontSize = 16.sp, modifier = Modifier.padding(end = 6.dp, top = 2.dp))
-
-            // Time column
-            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(48.dp)) {
-                if (activity.departureTime.isNotBlank()) {
-                    Text(activity.departureTime, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
-                }
-                if (activity.departureTime.isNotBlank() && activity.arrivalTime.isNotBlank()) {
-                    Box(modifier = Modifier.width(1.dp).height(8.dp).background(MaterialTheme.colorScheme.outlineVariant))
-                }
-                if (activity.arrivalTime.isNotBlank()) {
-                    Text(activity.arrivalTime, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-
-            Spacer(modifier = Modifier.width(10.dp))
-
-            // Main content
-            Column(modifier = Modifier.weight(1f)) {
-                Text(activity.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                if (activity.hotelName.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("🏨 ${activity.hotelName}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        if (activity.hotelPricePlanned > 0) {
-                            Text("  •  ${MoneyUtils.formatShort(MoneyUtils.inputToVnd(activity.hotelPricePlanned))}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
-                        }
-                    }
-                }
-                if (activity.distanceKm > 0) {
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text("📍 ${"%.1f".format(activity.distanceKm)} km", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                val spots = parseSpots(activity.checkInSpots)
-                if (spots.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        spots.forEach { spot ->
-                            Surface(shape = RoundedCornerShape(50), color = MaterialTheme.colorScheme.secondaryContainer, modifier = Modifier.padding(bottom = 3.dp)) {
-                                Text("📷 $spot", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp))
+                        Surface(
+                            onClick = onAddActivity,
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.surface,
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)),
+                            modifier = Modifier.size(20.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = "Thêm hoạt động",
+                                    modifier = Modifier.size(11.dp),
+                                    tint = MaterialTheme.colorScheme.outline
+                                )
                             }
                         }
                     }
-                }
-                if (activity.notes.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(activity.notes, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                }
-                if (activity.mapsLink.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(3.dp))
+                    Spacer(Modifier.width(8.dp))
                     TextButton(
-                        onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(activity.mapsLink))) },
-                        contentPadding = PaddingValues(0.dp), modifier = Modifier.height(22.dp)
+                        onClick = onAddActivity,
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                        modifier = Modifier.height(28.dp)
                     ) {
-                        Icon(Icons.Filled.OpenInNew, null, modifier = Modifier.size(13.dp))
-                        Spacer(modifier = Modifier.width(3.dp))
-                        Text("Xem bản đồ", style = MaterialTheme.typography.labelSmall)
+                        Text("+ Thêm hoạt động", style = MaterialTheme.typography.labelMedium)
                     }
                 }
-            }
-
-            // Right: status dot + edit button
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Box(
-                    modifier = Modifier.size(10.dp).clip(CircleShape).background(statusColor(activity.status)).clickable {
-                        val next = when (activity.status) {
-                            ActivityStatus.PENDING -> ActivityStatus.DONE
-                            ActivityStatus.DONE    -> ActivityStatus.SKIPPED
-                            ActivityStatus.SKIPPED -> ActivityStatus.CHANGED
-                            ActivityStatus.CHANGED -> ActivityStatus.PENDING
-                        }
-                        onStatusChange(next)
-                    }
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                FilledTonalIconButton(onClick = onEdit, modifier = Modifier.size(30.dp)) {
-                    Icon(Icons.Filled.Edit, contentDescription = "Chỉnh sửa", modifier = Modifier.size(15.dp))
-                }
-            }
-        }
-
-        if (activity.status != ActivityStatus.PENDING) {
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-            Row(
-                modifier = Modifier.fillMaxWidth().background(statusColor(activity.status).copy(alpha = 0.08f)).padding(horizontal = 14.dp, vertical = 3.dp)
-            ) {
-                Box(modifier = Modifier.size(7.dp).align(Alignment.CenterVertically).clip(CircleShape).background(statusColor(activity.status)))
-                Spacer(modifier = Modifier.width(5.dp))
-                Text(activity.status.label, style = MaterialTheme.typography.labelSmall, color = statusColor(activity.status), fontWeight = FontWeight.SemiBold)
             }
         }
     }
 }
+
+
 
 // ─── Add / Edit Activity bottom sheet ────────────────────────────────────────
 @OptIn(ExperimentalLayoutApi::class)
@@ -806,7 +631,15 @@ private fun ActivityEditSheet(
                         selectedType = type
                         name = "" // reset name suggestions on type change
                     },
-                    label = { Text("${type.icon} ${type.label}") }
+                    label = { Text("${type.icon} ${type.label}") },
+                    border = FilterChipDefaults.filterChipBorder(
+                        enabled = true,
+                        selected = selectedType == type,
+                        borderColor = MaterialTheme.colorScheme.outline,
+                        selectedBorderColor = MaterialTheme.colorScheme.outline,
+                        borderWidth = 1.dp,
+                        selectedBorderWidth = 1.dp
+                    )
                 )
             }
         }
@@ -1116,7 +949,7 @@ private fun ClusterHeader(cluster: Cluster, daysCount: Int, isExpanded: Boolean,
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text("📦", fontSize = 20.sp, modifier = Modifier.padding(end = 12.dp))

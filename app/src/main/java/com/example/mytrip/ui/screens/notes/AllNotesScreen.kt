@@ -230,8 +230,14 @@ private fun ScrollableFilterCategories(
             FilterChip(
                 selected = activeGroup == "ALL",
                 onClick = { onGroupSelected("ALL") },
-                label = { Text("Tất cả Note") },
-                shape = RoundedCornerShape(50)
+                label = { Text("Tất cả") },
+                shape = RoundedCornerShape(50),
+                border = FilterChipDefaults.filterChipBorder(
+                    borderColor = MaterialTheme.colorScheme.outline,
+                    selectedBorderColor = MaterialTheme.colorScheme.outline,
+                    borderWidth = 1.dp,
+                    selectedBorderWidth = 1.dp
+                )
             )
         }
         item {
@@ -239,7 +245,13 @@ private fun ScrollableFilterCategories(
                 selected = activeGroup == "DAY",
                 onClick = { onGroupSelected("DAY") },
                 label = { Text("Lọc theo ngày") },
-                shape = RoundedCornerShape(50)
+                shape = RoundedCornerShape(50),
+                border = FilterChipDefaults.filterChipBorder(
+                    borderColor = MaterialTheme.colorScheme.outline,
+                    selectedBorderColor = MaterialTheme.colorScheme.outline,
+                    borderWidth = 1.dp,
+                    selectedBorderWidth = 1.dp
+                )
             )
         }
         item {
@@ -247,7 +259,13 @@ private fun ScrollableFilterCategories(
                 selected = activeGroup == "WEEK",
                 onClick = { onGroupSelected("WEEK") },
                 label = { Text("Lọc theo tuần") },
-                shape = RoundedCornerShape(50)
+                shape = RoundedCornerShape(50),
+                border = FilterChipDefaults.filterChipBorder(
+                    borderColor = MaterialTheme.colorScheme.outline,
+                    selectedBorderColor = MaterialTheme.colorScheme.outline,
+                    borderWidth = 1.dp,
+                    selectedBorderWidth = 1.dp
+                )
             )
         }
         item {
@@ -255,7 +273,13 @@ private fun ScrollableFilterCategories(
                 selected = activeGroup == "TAG",
                 onClick = { onGroupSelected("TAG") },
                 label = { Text("Lọc theo loại") },
-                shape = RoundedCornerShape(50)
+                shape = RoundedCornerShape(50),
+                border = FilterChipDefaults.filterChipBorder(
+                    borderColor = MaterialTheme.colorScheme.outline,
+                    selectedBorderColor = MaterialTheme.colorScheme.outline,
+                    borderWidth = 1.dp,
+                    selectedBorderWidth = 1.dp
+                )
             )
         }
     }
@@ -286,8 +310,14 @@ private fun AnimatedSubFilters(
                             FilterChip(
                                 selected = selected,
                                 onClick = { onFilterSelected(NoteFilter.ByDay(day.id)) },
-                                label = { Text("Ngày ${day.dayNumber}") },
-                                shape = RoundedCornerShape(50)
+                                label = { Text("Ngày ${day.dayNumber} (${DateUtils.formatDate(day.date)})") },
+                                shape = RoundedCornerShape(50),
+                                border = FilterChipDefaults.filterChipBorder(
+                                    borderColor = MaterialTheme.colorScheme.outline,
+                                    selectedBorderColor = MaterialTheme.colorScheme.outline,
+                                    borderWidth = 1.dp,
+                                    selectedBorderWidth = 1.dp
+                                )
                             )
                         }
                     }
@@ -301,11 +331,27 @@ private fun AnimatedSubFilters(
                     ) {
                         items((1..totalWeeks).toList()) { week ->
                             val selected = currentFilter is NoteFilter.ByWeek && currentFilter.weekNumber == week
+                            val weekDays = days.filter { it.dayNumber in ((week - 1) * 7 + 1)..(week * 7) }
+                            val labelText = if (weekDays.isNotEmpty()) {
+                                val startDay = weekDays.minBy { it.dayNumber }
+                                val endDay = weekDays.maxBy { it.dayNumber }
+                                val startStr = DateUtils.formatDate(startDay.date).substring(0, 5) // dd/MM
+                                val endStr = DateUtils.formatDate(endDay.date).substring(0, 5) // dd/MM
+                                "Tuần $week ($startStr - $endStr)"
+                            } else {
+                                "Tuần $week"
+                            }
                             FilterChip(
                                 selected = selected,
                                 onClick = { onFilterSelected(NoteFilter.ByWeek(week)) },
-                                label = { Text("Tuần $week") },
-                                shape = RoundedCornerShape(50)
+                                label = { Text(labelText) },
+                                shape = RoundedCornerShape(50),
+                                border = FilterChipDefaults.filterChipBorder(
+                                    borderColor = MaterialTheme.colorScheme.outline,
+                                    selectedBorderColor = MaterialTheme.colorScheme.outline,
+                                    borderWidth = 1.dp,
+                                    selectedBorderWidth = 1.dp
+                                )
                             )
                         }
                     }
@@ -321,7 +367,13 @@ private fun AnimatedSubFilters(
                                 selected = selected,
                                 onClick = { onFilterSelected(NoteFilter.ByTag(tag)) },
                                 label = { Text("${tag.icon} ${tag.label}") },
-                                shape = RoundedCornerShape(50)
+                                shape = RoundedCornerShape(50),
+                                border = FilterChipDefaults.filterChipBorder(
+                                    borderColor = MaterialTheme.colorScheme.outline,
+                                    selectedBorderColor = MaterialTheme.colorScheme.outline,
+                                    borderWidth = 1.dp,
+                                    selectedBorderWidth = 1.dp
+                                )
                             )
                         }
                     }

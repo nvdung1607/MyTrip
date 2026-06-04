@@ -14,6 +14,8 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -54,7 +56,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executors
 
-@OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddNoteScreen(
     navController: NavController,
@@ -156,7 +158,7 @@ fun AddNoteScreen(
                 )
             },
             bottomBar = {
-                Box(Modifier.fillMaxWidth().padding(16.dp)) {
+                Box(Modifier.fillMaxWidth().navigationBarsPadding().padding(16.dp)) {
                     val cost = MoneyUtils.inputToVnd(MoneyUtils.parseInput(costInput))
                     Button(
                         onClick = {
@@ -193,12 +195,12 @@ fun AddNoteScreen(
                     .imePadding()
                     .verticalScroll(rememberScrollState())
                     .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // Photo layout (horizontal list if not empty, otherwise action card)
                 if (photoPaths.isNotEmpty()) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("📷 Hình ảnh (${photoPaths.size})", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        Text("Hình ảnh (${photoPaths.size})", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                         LazyRow(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             modifier = Modifier.fillMaxWidth()
@@ -266,7 +268,7 @@ fun AddNoteScreen(
                                     ) {
                                         Icon(Icons.Default.Image, null, tint = MaterialTheme.colorScheme.primary)
                                         Spacer(Modifier.height(4.dp))
-                                        Text("Chọn từ máy", style = MaterialTheme.typography.labelSmall)
+                                        Text("Chọn ảnh", style = MaterialTheme.typography.labelSmall)
                                     }
                                 }
                             }
@@ -283,7 +285,7 @@ fun AddNoteScreen(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Text("📸 Thêm hình ảnh kỷ niệm", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                            Text("Thêm hình ảnh kỷ niệm", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -304,7 +306,7 @@ fun AddNoteScreen(
                                 ) {
                                     Icon(Icons.Default.Image, null)
                                     Spacer(Modifier.width(8.dp))
-                                    Text("Chọn từ máy")
+                                    Text("Chọn ảnh")
                                 }
                             }
                         }
@@ -351,15 +353,24 @@ fun AddNoteScreen(
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("🏷️ Loại *", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            items(NoteTag.values()) { tag ->
-                                FilterChip(
-                                    selected = selectedTag == tag,
-                                    onClick = { selectedTag = tag },
-                                    label = { Text("${tag.icon} ${tag.label}") }
-                                )
-                            }
-                        }
+                        FlowRow(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    NoteTag.values().forEach { tag ->
+                                        FilterChip(
+                                            selected = selectedTag == tag,
+                                            onClick = { selectedTag = tag },
+                                            label = { Text("${tag.icon} ${tag.label}") },
+                                            border = FilterChipDefaults.filterChipBorder(
+                                                borderColor = MaterialTheme.colorScheme.outline,
+                                                selectedBorderColor = MaterialTheme.colorScheme.outline,
+                                                borderWidth = 1.dp,
+                                                selectedBorderWidth = 1.dp
+                                            )
+                                        )
+                                    }
+                                }
                     }
                 }
 
@@ -401,15 +412,24 @@ fun AddNoteScreen(
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("👤 Ai trả *", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            items(memberNames) { member ->
-                                FilterChip(
-                                    selected = paidBy == member,
-                                    onClick = { paidBy = member },
-                                    label = { Text(member) }
-                                )
-                            }
-                        }
+                        FlowRow(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    memberNames.forEach { member ->
+                                        FilterChip(
+                                            selected = paidBy == member,
+                                            onClick = { paidBy = member },
+                                            label = { Text(member) },
+                                            border = FilterChipDefaults.filterChipBorder(
+                                                borderColor = MaterialTheme.colorScheme.outline,
+                                                selectedBorderColor = MaterialTheme.colorScheme.outline,
+                                                borderWidth = 1.dp,
+                                                selectedBorderWidth = 1.dp
+                                            )
+                                        )
+                                    }
+                                }
                     }
                 }
 
@@ -420,7 +440,7 @@ fun AddNoteScreen(
                 ) {
                     Icon(if (showOptional) Icons.Default.ExpandLess else Icons.Default.ExpandMore, null)
                     Spacer(Modifier.width(8.dp))
-                    Text(if (showOptional) "Ẩn bớt thông tin" else "+ Thêm thông tin")
+                    Text(if (showOptional) "Ẩn bớt thông tin" else "Thêm thông tin")
                 }
 
                 AnimatedVisibility(visible = showOptional, enter = expandVertically(), exit = shrinkVertically()) {

@@ -242,6 +242,14 @@ private fun FilterChipsRow(
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                     selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                ),
+                border = FilterChipDefaults.filterChipBorder(
+                    enabled = true,
+                    selected = selected,
+                    borderColor = MaterialTheme.colorScheme.outline,
+                    selectedBorderColor = MaterialTheme.colorScheme.outline,
+                    borderWidth = 1.dp,
+                    selectedBorderWidth = 1.dp
                 )
             )
         }
@@ -357,7 +365,7 @@ fun TripCard(
                     .height(90.dp)
                     .background(brush = tripGradient(trip.type), shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
                     .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .padding(16.dp)
             ) {
                 // Trip name
                 Column(modifier = Modifier.align(Alignment.CenterStart)) {
@@ -401,7 +409,7 @@ fun TripCard(
             }
 
             // ── Info section ──────────────────────────────────────────────
-            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 // Dates & duration row
                 Row(
                     verticalAlignment = Alignment.CenterVertically,

@@ -77,7 +77,7 @@ class AllNotesViewModel(application: Application) : AndroidViewModel(application
             return null
         }
 
-        when (filter) {
+        val resultList = when (filter) {
             is NoteFilter.All -> notes
             is NoteFilter.ByDay -> notes.filter { resolveDayId(it) == filter.dayId }
             is NoteFilter.ByWeek -> notes.filter { note ->
@@ -89,6 +89,7 @@ class AllNotesViewModel(application: Application) : AndroidViewModel(application
             }
             is NoteFilter.ByTag -> notes.filter { it.tag == filter.tag }
         }
+        resultList.sortedBy { it.timestamp }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     fun loadTrip(tripId: Long) {

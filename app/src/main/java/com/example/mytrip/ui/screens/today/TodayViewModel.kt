@@ -156,6 +156,13 @@ class TodayViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun reorderActivities(activities: List<Activity>) {
+        viewModelScope.launch {
+            val reordered = activities.mapIndexed { idx, act -> act.copy(orderIndex = idx) }
+            reordered.forEach { repository.updateActivity(it) }
+        }
+    }
+
     fun deleteActivity(activity: Activity) {
         viewModelScope.launch {
             repository.deleteActivity(activity)

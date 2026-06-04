@@ -156,16 +156,10 @@ class ItineraryViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    fun reorderActivities(dayId: Long, fromIndex: Int, toIndex: Int) {
+    fun reorderActivities(dayId: Long, activities: List<Activity>) {
         viewModelScope.launch {
-            val list = (_activitiesMap.value[dayId] ?: return@launch)
-                .sortedBy { it.orderIndex }.toMutableList()
-            if (fromIndex !in list.indices || toIndex !in list.indices) return@launch
-            val item = list.removeAt(fromIndex)
-            list.add(toIndex, item)
-            val reordered = list.mapIndexed { idx, act -> act.copy(orderIndex = idx) }
+            val reordered = activities.mapIndexed { idx, act -> act.copy(orderIndex = idx) }
             reordered.forEach { repository.updateActivity(it) }
-            // Notify UI about potential time conflicts
             snackbarEvent.tryEmit("Đã sắp xếp lại! Vui lòng kiểm tra lại giờ giấc của các hoạt động.")
         }
     }

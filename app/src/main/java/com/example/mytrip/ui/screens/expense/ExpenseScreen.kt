@@ -190,12 +190,28 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
                         FilterChip(
                             selected = !isDetailedMode,
                             onClick = { isDetailedMode = false },
-                            label = { Text("Nhập nhanh") }
+                            label = { Text("Nhập nhanh") },
+                            border = FilterChipDefaults.filterChipBorder(
+                                enabled = true,
+                                selected = !isDetailedMode,
+                                borderColor = MaterialTheme.colorScheme.outline,
+                                selectedBorderColor = MaterialTheme.colorScheme.outline,
+                                borderWidth = 1.dp,
+                                selectedBorderWidth = 1.dp
+                            )
                         )
                         FilterChip(
                             selected = isDetailedMode,
                             onClick = { isDetailedMode = true },
-                            label = { Text("🧮 Tính chi tiết") }
+                            label = { Text("🧮 Tính chi tiết") },
+                            border = FilterChipDefaults.filterChipBorder(
+                                enabled = true,
+                                selected = isDetailedMode,
+                                borderColor = MaterialTheme.colorScheme.outline,
+                                selectedBorderColor = MaterialTheme.colorScheme.outline,
+                                borderWidth = 1.dp,
+                                selectedBorderWidth = 1.dp
+                            )
                         )
                     }
 
@@ -411,7 +427,7 @@ private fun BudgetTab(
                     onCategoryClick(exp.category)
                 }
             ) {
-                Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                Row(Modifier.fillMaxWidth().padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically) {
                     Text(exp.category.icon, fontSize = 28.sp)
                     Spacer(Modifier.width(12.dp))
@@ -561,7 +577,7 @@ private fun AddExpenseRecordSheet(
                 .navigationBarsPadding()
                 .imePadding()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text("Thêm chi tiêu", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
@@ -569,8 +585,19 @@ private fun AddExpenseRecordSheet(
             Text("Hạng mục", style = MaterialTheme.typography.labelLarge)
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(ExpenseCategory.values()) { cat ->
-                    FilterChip(selected = category == cat, onClick = { category = cat },
-                        label = { Text("${cat.icon} ${cat.label}") })
+                    FilterChip(
+                        selected = category == cat,
+                        onClick = { category = cat },
+                        label = { Text("${cat.icon} ${cat.label}") },
+                        border = FilterChipDefaults.filterChipBorder(
+                            enabled = true,
+                            selected = category == cat,
+                            borderColor = MaterialTheme.colorScheme.outline,
+                            selectedBorderColor = MaterialTheme.colorScheme.outline,
+                            borderWidth = 1.dp,
+                            selectedBorderWidth = 1.dp
+                        )
+                    )
                 }
             }
 
@@ -598,7 +625,19 @@ private fun AddExpenseRecordSheet(
             Text("Ai trả", style = MaterialTheme.typography.labelLarge)
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(memberNames) { m ->
-                    FilterChip(selected = paidBy == m, onClick = { paidBy = m }, label = { Text(m) })
+                    FilterChip(
+                        selected = paidBy == m,
+                        onClick = { paidBy = m },
+                        label = { Text(m) },
+                        border = FilterChipDefaults.filterChipBorder(
+                            enabled = true,
+                            selected = paidBy == m,
+                            borderColor = MaterialTheme.colorScheme.outline,
+                            selectedBorderColor = MaterialTheme.colorScheme.outline,
+                            borderWidth = 1.dp,
+                            selectedBorderWidth = 1.dp
+                        )
+                    )
                 }
             }
 

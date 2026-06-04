@@ -13,6 +13,10 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.Alignment
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -41,7 +45,7 @@ fun DraggableFab(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     icon: ImageVector = Icons.Default.Add,
-    containerColor: Color = MaterialTheme.colorScheme.primary.copy(alpha = 0.65f),
+    containerColor: Color = MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
     contentColor: Color = MaterialTheme.colorScheme.onPrimary
 ) {
     val fabSizeDp = 56.dp
@@ -78,11 +82,13 @@ fun DraggableFab(
         }
 
         Box(modifier = Modifier.fillMaxSize()) {
-            FloatingActionButton(
-                onClick = onClick,
+            Box(
                 modifier = Modifier
                     .offset { IntOffset(animX.value.roundToInt(), animY.value.roundToInt()) }
                     .size(fabSizeDp)
+                    .clip(CircleShape)
+                    .background(containerColor)
+                    .clickable { onClick() }
                     .pointerInput(maxWidthPx, maxHeightPx, fabSizePx, marginPx) {
                         detectDragGestures(
                             onDragEnd = {
@@ -116,13 +122,12 @@ fun DraggableFab(
                             }
                         )
                     },
-                containerColor = containerColor,
-                contentColor = contentColor,
-                shape = CircleShape
+                contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
-                    contentDescription = "Thêm"
+                    contentDescription = "Thêm",
+                    tint = contentColor
                 )
             }
         }

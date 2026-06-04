@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -23,6 +25,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -82,6 +87,7 @@ import com.example.mytrip.util.DateUtils
 import com.example.mytrip.util.MoneyUtils
 import com.example.mytrip.ui.components.DraggableFab
 import com.example.mytrip.ui.components.NoteDetailDialog
+import com.example.mytrip.ui.components.ScheduleTimelineList
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -136,6 +142,13 @@ fun TodayScreen(
     var activityToEdit by remember { mutableStateOf<Activity?>(null) }
     var activityToDelete by remember { mutableStateOf<Activity?>(null) }
     var showAddSheet by remember { mutableStateOf(false) }
+
+    val lazyListState = rememberLazyListState()
+    var dragActivities by remember(activities) { mutableStateOf(activities) }
+
+    // val reorderableState = rememberReorderableLazyListState(lazyListState) { from, to -> ... }
+    // val draggingKey = reorderableState.draggingItemKey
+    // LaunchedEffect(draggingKey) { ... }
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
@@ -242,6 +255,7 @@ fun TodayScreen(
                 .padding(innerPadding)
         ) {
             LazyColumn(
+                state = lazyListState,
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 88.dp)
             ) {
@@ -290,13 +304,52 @@ fun TodayScreen(
                         )
                     }
                     item {
-                        TimelineView(
+                        ScheduleTimelineList(
                             activities = activities,
+                            onReorder = { viewModel.reorderActivities(it) },
                             onEdit = { activityToEdit = it },
                             onDelete = { activityToDelete = it },
-                            onAdd = { showAddSheet = true },
-                            modifier = Modifier.padding(horizontal = 16.dp)
+                            onStatusChange = { act, next -> viewModel.updateActivityStatus(act.id, next) }
                         )
+                    }
+                    item {
+                        // Draw bottom connector to add button
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.width(32.dp)
+                            ) {
+                                Surface(
+                                    onClick = { showAddSheet = true },
+                                    shape = CircleShape,
+                                    color = MaterialTheme.colorScheme.surface,
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)),
+                                    modifier = Modifier.size(20.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = Icons.Default.Add,
+                                            contentDescription = "Thêm hoạt động",
+                                            modifier = Modifier.size(11.dp),
+                                            tint = MaterialTheme.colorScheme.outline
+                                        )
+                                    }
+                                }
+                            }
+                            Spacer(Modifier.width(8.dp))
+                            TextButton(
+                                onClick = { showAddSheet = true },
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                modifier = Modifier.height(28.dp)
+                            ) {
+                                Text("+ Thêm hoạt động", style = MaterialTheme.typography.labelMedium)
+                            }
+                        }
                     }
                 } else {
                     item {
@@ -515,258 +568,6 @@ private fun DateHeaderCard(
     }
 }
 
-@Composable
-private fun TimelineView(
-    activities: List<Activity>,
-    onEdit: (Activity) -> Unit,
-    onDelete: (Activity) -> Unit,
-    onAdd: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(modifier = modifier) {
-        activities.forEach { activity ->
-            TimelineItem(
-                activity = activity,
-                isLast = false,
-                onEdit = onEdit,
-                onDelete = onDelete
-            )
-        }
-        // Draw bottom connector to add button
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.width(32.dp)
-            ) {
-                Surface(
-                    onClick = onAdd,
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.surface,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)),
-                    modifier = Modifier.size(20.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Thêm hoạt động",
-                            modifier = Modifier.size(11.dp),
-                            tint = MaterialTheme.colorScheme.outline
-                        )
-                    }
-                }
-            }
-            Spacer(Modifier.width(8.dp))
-            TextButton(
-                onClick = onAdd,
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
-                modifier = Modifier.height(28.dp)
-            ) {
-                Text("+ Thêm hoạt động", style = MaterialTheme.typography.labelMedium)
-            }
-        }
-    }
-}
-
-@Composable
-private fun TimelineItem(
-    activity: Activity,
-    isLast: Boolean,
-    onEdit: (Activity) -> Unit,
-    onDelete: (Activity) -> Unit
-) {
-    val statusColor = when (activity.status) {
-        ActivityStatus.DONE -> Color(0xFF2E7D32)
-        ActivityStatus.SKIPPED -> Color(0xFFC62828)
-        ActivityStatus.CHANGED -> Color(0xFFE65100)
-        ActivityStatus.PENDING -> MaterialTheme.colorScheme.primary
-    }
-
-    Row(modifier = Modifier.fillMaxWidth()) {
-        // Timeline line + dot
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.width(32.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(14.dp)
-                    .clip(CircleShape)
-                    .background(statusColor)
-            )
-            if (!isLast) {
-                Box(
-                    modifier = Modifier
-                        .width(2.dp)
-                        .height(160.dp)
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(statusColor.copy(alpha = 0.6f), Color.Transparent)
-                            )
-                        )
-                )
-            }
-        }
-
-        Spacer(Modifier.width(8.dp))
-
-        // Activity card
-        ActivityTimelineCard(
-            activity = activity,
-            statusColor = statusColor,
-            onEdit = onEdit,
-            onDelete = onDelete,
-            modifier = Modifier
-                .weight(1f)
-                .padding(bottom = 12.dp)
-        )
-    }
-}
-
-@Composable
-private fun ActivityTimelineCard(
-    activity: Activity,
-    statusColor: Color,
-    onEdit: (Activity) -> Unit,
-    onDelete: (Activity) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier
-            .border(
-                width = 1.5.dp,
-                color = statusColor.copy(alpha = 0.4f),
-                shape = RoundedCornerShape(16.dp)
-            ),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp)
-        ) {
-            // Time & status badge
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                if (activity.departureTime.isNotBlank()) {
-                    Text(
-                        text = "🕐 ${activity.departureTime}",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                } else {
-                    Spacer(Modifier.width(1.dp))
-                }
-                StatusBadge(status = activity.status, color = statusColor)
-            }
-
-            Spacer(Modifier.height(6.dp))
-
-            Text(
-                text = activity.name,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            if (activity.notes.isNotBlank()) {
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = activity.notes,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            // Actual notes for CHANGED
-            if (activity.status == ActivityStatus.CHANGED && activity.actualNotes.isNotBlank()) {
-                Spacer(Modifier.height(6.dp))
-                Surface(
-                    color = Color(0xFFFFF3E0),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(
-                        text = "🔀 ${activity.actualNotes}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFFE65100),
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(10.dp))
-
-            // Action buttons (Sửa và Xóa)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedButton(
-                    onClick = { onEdit(activity) },
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                    modifier = Modifier.height(32.dp),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Icon(Icons.Default.Edit, null, modifier = Modifier.size(14.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text("Sửa", style = MaterialTheme.typography.labelMedium)
-                }
-                Spacer(Modifier.width(8.dp))
-                OutlinedButton(
-                    onClick = { onDelete(activity) },
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    ),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f)),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                    modifier = Modifier.height(32.dp),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Icon(Icons.Default.Delete, null, modifier = Modifier.size(14.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text("Xóa", style = MaterialTheme.typography.labelMedium)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun StatusBadge(status: ActivityStatus, color: Color) {
-    val (emoji, label) = when (status) {
-        ActivityStatus.PENDING -> Pair("⏳", "Chờ")
-        ActivityStatus.DONE -> Pair("✅", "Xong")
-        ActivityStatus.SKIPPED -> Pair("⏭️", "Bỏ qua")
-        ActivityStatus.CHANGED -> Pair("🔀", "Đổi")
-    }
-    Surface(
-        color = color.copy(alpha = 0.12f),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Text(
-            text = "$emoji $label",
-            style = MaterialTheme.typography.labelSmall,
-            color = color,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-        )
-    }
-}
 
 @Composable
 private fun StatusActionButton(
@@ -1214,7 +1015,13 @@ private fun ActivityEditSheet(
                         selectedType = type
                         name = "" // reset name suggestions on type change
                     },
-                    label = { Text("${type.icon} ${type.label}") }
+                    label = { Text("${type.icon} ${type.label}") },
+                    border = FilterChipDefaults.filterChipBorder(
+                        borderColor = MaterialTheme.colorScheme.outline,
+                        selectedBorderColor = MaterialTheme.colorScheme.outline,
+                        borderWidth = 1.dp,
+                        selectedBorderWidth = 1.dp
+                    )
                 )
             }
         }
