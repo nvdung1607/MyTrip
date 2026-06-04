@@ -11,55 +11,59 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
-    primary          = Primary80,
-    onPrimary        = Primary20,
-    primaryContainer = Primary30,
-    onPrimaryContainer = Primary90,
-    secondary        = Secondary80,
-    onSecondary      = Secondary20,
-    secondaryContainer = Secondary30,
+    primary              = Primary80,
+    onPrimary            = Primary20,
+    primaryContainer     = Primary30,
+    onPrimaryContainer   = Primary90,
+    secondary            = Secondary80,
+    onSecondary          = Secondary20,
+    secondaryContainer   = Secondary30,
     onSecondaryContainer = Secondary90,
-    tertiary         = Tertiary80,
-    onTertiary       = Tertiary40,
-    tertiaryContainer = Color(0xFF57395C),
-    onTertiaryContainer = Tertiary90,
-    error            = Error80,
-    onError          = Error40,
-    errorContainer   = Color(0xFF93000A),
-    onErrorContainer = Error90,
-    background       = Neutral10,
-    onBackground     = Neutral90,
-    surface          = Neutral10,
-    onSurface        = Neutral90,
-    surfaceVariant   = NeutralVariant30,
-    onSurfaceVariant = NeutralVariant80,
-    outline          = NeutralVariant60,
+    tertiary             = Tertiary80,
+    onTertiary           = Tertiary40,
+    tertiaryContainer    = Color(0xFF003060),
+    onTertiaryContainer  = Tertiary90,
+    error                = Error80,
+    onError              = Error40,
+    errorContainer       = Color(0xFF8C1D18),
+    onErrorContainer     = Error90,
+    background           = Neutral10,
+    onBackground         = Neutral90,
+    surface              = Neutral10,
+    onSurface            = Neutral90,
+    surfaceVariant       = NeutralVariant30,
+    onSurfaceVariant     = NeutralVariant80,
+    outline              = NeutralVariant60,
+    surfaceContainer     = Color(0xFF28272C),
+    surfaceContainerHigh = Color(0xFF33323A),
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary          = Primary40,
-    onPrimary        = Color.White,
-    primaryContainer = Primary90,
-    onPrimaryContainer = Primary10,
-    secondary        = Secondary40,
-    onSecondary      = Color.White,
-    secondaryContainer = Secondary90,
+    primary              = Primary40,
+    onPrimary            = Color.White,
+    primaryContainer     = Primary90,
+    onPrimaryContainer   = Primary10,
+    secondary            = Secondary40,
+    onSecondary          = Color.White,
+    secondaryContainer   = Secondary90,
     onSecondaryContainer = Secondary10,
-    tertiary         = Tertiary40,
-    onTertiary       = Color.White,
-    tertiaryContainer = Tertiary90,
-    onTertiaryContainer = Color(0xFF29132E),
-    error            = Error40,
-    onError          = Color.White,
-    errorContainer   = Error90,
-    onErrorContainer = Color(0xFF410002),
-    background       = Neutral99,
-    onBackground     = Neutral10,
-    surface          = Neutral99,
-    onSurface        = Neutral10,
-    surfaceVariant   = NeutralVariant90,
-    onSurfaceVariant = NeutralVariant30,
-    outline          = NeutralVariant50,
+    tertiary             = Tertiary40,
+    onTertiary           = Color.White,
+    tertiaryContainer    = Tertiary90,
+    onTertiaryContainer  = Color(0xFF001849),
+    error                = Error40,
+    onError              = Color.White,
+    errorContainer       = Error90,
+    onErrorContainer     = Color(0xFF410002),
+    background           = Neutral99,
+    onBackground         = Neutral10,
+    surface              = Neutral99,
+    onSurface            = Neutral10,
+    surfaceVariant       = NeutralVariant90,
+    onSurfaceVariant     = NeutralVariant30,
+    outline              = NeutralVariant50,
+    surfaceContainer     = Color(0xFFF3EDF7),
+    surfaceContainerHigh = Color(0xFFECE6F0),
 )
 
 @Composable
@@ -73,14 +77,16 @@ fun MyTripTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.primary.toArgb()
+            // Edge-to-edge: transparent status bar
+            window.statusBarColor = android.graphics.Color.TRANSPARENT
+            WindowCompat.setDecorFitsSystemWindows(window, false)
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = MyTripTypography,
-        content = content
+        typography  = MyTripTypography,
+        content     = content
     )
 }

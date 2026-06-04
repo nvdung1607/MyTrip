@@ -65,12 +65,21 @@ fun SummaryScreen(navController: NavController, tripId: Long) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("📊 Tổng kết chuyến đi") },
+                title = {
+                    Text(
+                        "Tổng kết chuyến đi",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, null)
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             )
         }
     ) { padding ->
@@ -334,16 +343,16 @@ private fun NoteHighlightCard(note: Note) {
 }
 
 private fun tripGradient(type: TripType): List<Color> = when (type) {
-    TripType.CAR       -> listOf(Color(0xFF1565C0), Color(0xFF42A5F5))
-    TripType.MOTORBIKE -> listOf(Color(0xFFE65100), Color(0xFFFF9800))
-    TripType.PUBLIC    -> listOf(Color(0xFF2E7D32), Color(0xFF66BB6A))
-    TripType.TREKKING  -> listOf(Color(0xFF6A1B9A), Color(0xFFAB47BC))
+    TripType.CAR       -> listOf(Color(0xFF1A73E8), Color(0xFF4DABF7))
+    TripType.MOTORBIKE -> listOf(Color(0xFFE8710A), Color(0xFFFFB347))
+    TripType.PUBLIC    -> listOf(Color(0xFF137333), Color(0xFF34A853))
+    TripType.TREKKING  -> listOf(Color(0xFF7B1FA2), Color(0xFFAB47BC))
     TripType.CAMPING   -> listOf(Color(0xFF00695C), Color(0xFF26A69A))
-    TripType.OTHER     -> listOf(Color(0xFF37474F), Color(0xFF78909C))
+    TripType.OTHER     -> listOf(Color(0xFF5F6368), Color(0xFF9AA0A6))
 }
 
 private fun statusColor(status: TripStatus): Color = when (status) {
-    TripStatus.PLANNING -> Color(0xFF1976D2)
-    TripStatus.ONGOING  -> Color(0xFF388E3C)
-    TripStatus.DONE     -> Color(0xFF757575)
+    TripStatus.PLANNING -> Color(0xFF1A73E8)
+    TripStatus.ONGOING  -> Color(0xFF137333)
+    TripStatus.DONE     -> Color(0xFF79747E)
 }

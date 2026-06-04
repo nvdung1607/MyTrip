@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -27,9 +28,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Group
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.MonetizationOn
 import androidx.compose.material.icons.filled.Today
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.AlertDialog
@@ -38,21 +40,20 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SuggestionChip
-import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -64,7 +65,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -76,33 +79,21 @@ import com.example.mytrip.data.db.entities.TripType
 import com.example.mytrip.navigation.Screen
 import com.example.mytrip.util.DateUtils
 
-// ─── Gradient colors per trip type ───────────────────────────────────────────
+// ─── Gradient per trip type ───────────────────────────────────────────────────
 
 private fun tripGradient(type: TripType): Brush = when (type) {
-    TripType.CAR -> Brush.linearGradient(
-        listOf(Color(0xFF1565C0), Color(0xFF42A5F5))
-    )
-    TripType.MOTORBIKE -> Brush.linearGradient(
-        listOf(Color(0xFFE65100), Color(0xFFFF9800))
-    )
-    TripType.PUBLIC -> Brush.linearGradient(
-        listOf(Color(0xFF2E7D32), Color(0xFF66BB6A))
-    )
-    TripType.TREKKING -> Brush.linearGradient(
-        listOf(Color(0xFF6A1B9A), Color(0xFFAB47BC))
-    )
-    TripType.CAMPING -> Brush.linearGradient(
-        listOf(Color(0xFF00695C), Color(0xFF26A69A))
-    )
-    TripType.OTHER -> Brush.linearGradient(
-        listOf(Color(0xFF37474F), Color(0xFF78909C))
-    )
+    TripType.CAR       -> Brush.linearGradient(listOf(Color(0xFF1A73E8), Color(0xFF4DABF7)))
+    TripType.MOTORBIKE -> Brush.linearGradient(listOf(Color(0xFFE8710A), Color(0xFFFFB347)))
+    TripType.PUBLIC    -> Brush.linearGradient(listOf(Color(0xFF137333), Color(0xFF34A853)))
+    TripType.TREKKING  -> Brush.linearGradient(listOf(Color(0xFF7B1FA2), Color(0xFFAB47BC)))
+    TripType.CAMPING   -> Brush.linearGradient(listOf(Color(0xFF00695C), Color(0xFF26A69A)))
+    TripType.OTHER     -> Brush.linearGradient(listOf(Color(0xFF5F6368), Color(0xFF9AA0A6)))
 }
 
-private fun statusChipColors(status: TripStatus): Pair<Color, Color> = when (status) {
-    TripStatus.PLANNING -> Pair(Color(0xFF1565C0), Color(0xFFE3F2FD))
-    TripStatus.ONGOING  -> Pair(Color(0xFF2E7D32), Color(0xFFE8F5E9))
-    TripStatus.DONE     -> Pair(Color(0xFF546E7A), Color(0xFFECEFF1))
+private fun statusInfo(status: TripStatus): Triple<String, Color, Color> = when (status) {
+    TripStatus.PLANNING -> Triple("Sắp đi",    Color(0xFF1A73E8), Color(0xFFD2E3FC))
+    TripStatus.ONGOING  -> Triple("Đang đi",   Color(0xFF137333), Color(0xFFB7F1C5))
+    TripStatus.DONE     -> Triple("Hoàn thành",Color(0xFF5F6368), Color(0xFFE8EAED))
 }
 
 // ─── HomeScreen ───────────────────────────────────────────────────────────────
@@ -115,14 +106,16 @@ fun HomeScreen(
 ) {
     val trips by viewModel.allTrips.collectAsState()
     val activeFilter by viewModel.filter.collectAsState()
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TopAppBar(
+            LargeTopAppBar(
                 title = {
                     Text(
-                        text = "🗺️ MyTrip",
-                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
+                        text = "MyTrip",
+                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
                     )
                 },
                 actions = {
@@ -132,28 +125,28 @@ fun HomeScreen(
                             contentColor = MaterialTheme.colorScheme.primary
                         )
                     ) {
-                        Text(
-                            text = "Tải mẫu 🗺️",
-                            fontWeight = FontWeight.Bold
-                        )
+                        Text("Tải mẫu", fontWeight = FontWeight.SemiBold)
                     }
-
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface
-                )
+                colors = TopAppBarDefaults.largeTopAppBarColors(
+                    containerColor      = MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    titleContentColor   = MaterialTheme.colorScheme.onSurface
+                ),
+                scrollBehavior = scrollBehavior
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
+            FloatingActionButton(
                 onClick = { navController.navigate(Screen.CreateTrip.route) },
-                icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-                text = { Text("Tạo chuyến đi") },
                 containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            )
-        }
+                contentColor   = MaterialTheme.colorScheme.onPrimary,
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Icon(Icons.Filled.Add, contentDescription = "Tạo chuyến đi", modifier = Modifier.size(24.dp))
+            }
+        },
+        containerColor = MaterialTheme.colorScheme.surface
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -162,7 +155,7 @@ fun HomeScreen(
         ) {
             // ── Filter chips ──────────────────────────────────────────────
             FilterChipsRow(
-                activeFilter = activeFilter,
+                activeFilter     = activeFilter,
                 onFilterSelected = { viewModel.filterByStatus(it) }
             )
 
@@ -170,14 +163,15 @@ fun HomeScreen(
             if (trips.isEmpty()) {
                 EmptyState(
                     onImportSampleClick = { viewModel.importSampleTrip() },
-                    modifier = Modifier.fillMaxSize()
+                    onCreateClick       = { navController.navigate(Screen.CreateTrip.route) },
+                    modifier            = Modifier.fillMaxSize()
                 )
             } else {
                 LazyColumn(
                     contentPadding = PaddingValues(
-                        start = 16.dp,
-                        end = 16.dp,
-                        top = 8.dp,
+                        start  = 16.dp,
+                        end    = 16.dp,
+                        top    = 8.dp,
                         bottom = 96.dp
                     ),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -186,23 +180,15 @@ fun HomeScreen(
                     items(trips, key = { it.id }) { trip ->
                         AnimatedVisibility(
                             visible = true,
-                            enter = fadeIn(tween(300)) + slideInVertically(tween(300)) { it / 4 },
-                            exit = fadeOut(tween(300))
+                            enter   = fadeIn(tween(300)) + slideInVertically(tween(300)) { it / 4 },
+                            exit    = fadeOut(tween(300))
                         ) {
                             TripCard(
-                                trip = trip,
-                                onCardClick = {
-                                    navController.navigate(Screen.TripDetail.createRoute(trip.id))
-                                },
-                                onItineraryClick = {
-                                    navController.navigate(Screen.Itinerary.createRoute(trip.id))
-                                },
-                                onTodayClick = {
-                                    navController.navigate(Screen.Today.createRoute(trip.id))
-                                },
-                                onExpenseClick = {
-                                    navController.navigate(Screen.Expense.createRoute(trip.id))
-                                },
+                                trip            = trip,
+                                onCardClick     = { navController.navigate(Screen.TripDetail.createRoute(trip.id)) },
+                                onItineraryClick= { navController.navigate(Screen.Itinerary.createRoute(trip.id)) },
+                                onTodayClick    = { navController.navigate(Screen.Today.createRoute(trip.id)) },
+                                onExpenseClick  = { navController.navigate(Screen.Expense.createRoute(trip.id)) },
                                 onDeleteConfirmed = { viewModel.deleteTrip(trip) }
                             )
                         }
@@ -223,25 +209,31 @@ private fun FilterChipsRow(
     data class FilterOption(val label: String, val status: TripStatus?)
 
     val options = listOf(
-        FilterOption("Tất cả", null),
-        FilterOption("Sắp đi", TripStatus.PLANNING),
-        FilterOption("Đang đi", TripStatus.ONGOING),
-        FilterOption("Đã kết thúc", TripStatus.DONE)
+        FilterOption("Tất cả",     null),
+        FilterOption("Sắp đi",     TripStatus.PLANNING),
+        FilterOption("Đang đi",    TripStatus.ONGOING),
+        FilterOption("Hoàn thành", TripStatus.DONE)
     )
 
     LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        contentPadding        = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(options) { option ->
             val selected = activeFilter == option.status
             FilterChip(
-                selected = selected,
-                onClick = { onFilterSelected(option.status) },
-                label = { Text(option.label) },
-                colors = FilterChipDefaults.filterChipColors(
+                selected  = selected,
+                onClick   = { onFilterSelected(option.status) },
+                label     = { Text(option.label, style = MaterialTheme.typography.labelLarge) },
+                colors    = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    selectedLabelColor     = MaterialTheme.colorScheme.onPrimaryContainer
+                ),
+                border = FilterChipDefaults.filterChipBorder(
+                    enabled          = true,
+                    selected         = selected,
+                    selectedBorderColor = MaterialTheme.colorScheme.primary,
+                    selectedBorderWidth = 1.dp
                 )
             )
         }
@@ -253,59 +245,53 @@ private fun FilterChipsRow(
 @Composable
 private fun EmptyState(
     onImportSampleClick: () -> Unit,
+    onCreateClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = modifier.padding(24.dp),
-        contentAlignment = Alignment.Center
+        modifier          = modifier.padding(24.dp),
+        contentAlignment  = Alignment.Center
     ) {
-        Card(
-            shape = RoundedCornerShape(24.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-            ),
-            modifier = Modifier.fillMaxWidth().padding(16.dp)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(24.dp).fillMaxWidth()
+            Text(text = "🗺️", fontSize = 72.sp)
+
+            Text(
+                text  = "Chưa có chuyến đi nào",
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text      = "Tạo chuyến đi mới hoặc tải lịch trình mẫu Xuyên Việt 30 ngày để khám phá đầy đủ tính năng.",
+                style     = MaterialTheme.typography.bodyMedium,
+                color     = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(Modifier.height(4.dp))
+
+            Button(
+                onClick  = onCreateClick,
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+                shape    = RoundedCornerShape(14.dp),
+                colors   = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
             ) {
-                Text(
-                    text = "🗺️",
-                    fontSize = 80.sp
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "Chưa có chuyến đi nào",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Hãy tạo một hành trình mới hoặc tải chuyến đi mẫu Xuyên Việt 30 ngày tự lái bằng Xforce để trải nghiệm đầy đủ tính năng!",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 8.dp)
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                Button(
-                    onClick = onImportSampleClick,
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    ),
-                    modifier = Modifier.fillMaxWidth().height(48.dp)
-                ) {
-                    Text(
-                        text = "🚀 Tải lịch trình Xuyên Việt mẫu",
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                }
+                Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Tạo chuyến đi mới", fontWeight = FontWeight.Bold)
+            }
+
+            OutlinedButton(
+                onClick  = onImportSampleClick,
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+                shape    = RoundedCornerShape(14.dp)
+            ) {
+                Text("Tải lịch trình Xuyên Việt mẫu", fontWeight = FontWeight.SemiBold)
             }
         }
     }
@@ -327,11 +313,8 @@ fun TripCard(
 
     if (showDeleteDialog) {
         DeleteConfirmDialog(
-            tripName = trip.name,
-            onConfirm = {
-                showDeleteDialog = false
-                onDeleteConfirmed()
-            },
+            tripName  = trip.name,
+            onConfirm = { showDeleteDialog = false; onDeleteConfirmed() },
             onDismiss = { showDeleteDialog = false }
         )
     }
@@ -340,13 +323,13 @@ fun TripCard(
         modifier = Modifier
             .fillMaxWidth()
             .combinedClickable(
-                onClick = onCardClick,
+                onClick    = onCardClick,
                 onLongClick = { showDeleteDialog = true }
             ),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+        shape     = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        colors    = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
         )
     ) {
         Column {
@@ -354,107 +337,95 @@ fun TripCard(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(90.dp)
-                    .background(brush = tripGradient(trip.type), shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .height(100.dp)
+                    .background(
+                        brush = tripGradient(trip.type),
+                        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+                    )
+                    .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+                    .padding(horizontal = 16.dp, vertical = 14.dp)
             ) {
-                // Trip name
-                Column(modifier = Modifier.align(Alignment.CenterStart)) {
+                Column(modifier = Modifier.align(Alignment.BottomStart)) {
                     Text(
-                        text = trip.name,
-                        style = MaterialTheme.typography.titleLarge.copy(
+                        text     = trip.name,
+                        style    = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color      = Color.White
                         ),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "${trip.type.icon} ${trip.type.label}",
-                            style = MaterialTheme.typography.bodySmall.copy(color = Color.White.copy(alpha = 0.9f))
-                        )
-                    }
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text  = "${trip.type.icon} ${trip.type.label}",
+                        style = MaterialTheme.typography.bodySmall.copy(color = Color.White.copy(alpha = 0.9f))
+                    )
                 }
 
-                // Status chip
-                val (chipText, chipFg, chipBg) = run {
-                    val (fg, bg) = statusChipColors(trip.status)
-                    Triple(trip.status.label, fg, bg)
-                }
+                // Status chip — top right
+                val (statusLabel, statusFg, statusBg) = statusInfo(trip.status)
                 Surface(
                     modifier = Modifier.align(Alignment.TopEnd),
-                    shape = RoundedCornerShape(50),
-                    color = chipBg
+                    shape    = RoundedCornerShape(50),
+                    color    = statusBg
                 ) {
                     Text(
-                        text = chipText,
+                        text     = statusLabel,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                        style = MaterialTheme.typography.labelSmall.copy(
+                        style    = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
-                            color = chipFg
+                            color      = statusFg
                         )
                     )
                 }
             }
 
             // ── Info section ──────────────────────────────────────────────
-            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
-                // Dates & duration row
+            Row(
+                modifier             = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment    = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Left: dates
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Filled.DateRange,
+                        contentDescription = null,
+                        modifier    = Modifier.size(15.dp),
+                        tint        = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(Modifier.width(5.dp))
+                    Text(
+                        text  = "${DateUtils.formatDate(trip.startDate)} – ${DateUtils.formatDate(trip.endDate)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                // Right: duration + people
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
+                    verticalAlignment    = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    val numDays = DateUtils.countDays(trip.startDate, trip.endDate)
+                    InfoChip("$numDays ngày")
+
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = Icons.Filled.CalendarMonth,
+                            imageVector = Icons.Filled.Group,
                             contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                            tint = MaterialTheme.colorScheme.primary
+                            modifier    = Modifier.size(14.dp),
+                            tint        = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(Modifier.width(3.dp))
                         Text(
-                            text = "${DateUtils.formatDate(trip.startDate)} → ${DateUtils.formatDate(trip.endDate)}",
+                            text  = "${trip.numPeople}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    // Num days
-                    val numDays = DateUtils.countDays(trip.startDate, trip.endDate)
-                    Surface(
-                        shape = RoundedCornerShape(50),
-                        color = MaterialTheme.colorScheme.secondaryContainer
-                    ) {
-                        Text(
-                            text = "$numDays ngày",
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                fontWeight = FontWeight.Medium
-                            )
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                // Num people row
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Filled.Group,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "${trip.numPeople} người",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
                 }
             }
 
@@ -463,74 +434,75 @@ fun TripCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(1.dp)
-                    .background(MaterialTheme.colorScheme.outlineVariant)
+                    .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
             )
 
             // ── Action buttons ────────────────────────────────────────────
             Row(
-                modifier = Modifier
+                modifier              = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                    .padding(horizontal = 4.dp, vertical = 4.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                // Lịch trình
-                TextButton(
-                    onClick = onItineraryClick,
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.primary
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.CalendarMonth,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "Lịch trình",
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                }
-
-                // Hôm nay
-                TextButton(
-                    onClick = onTodayClick,
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.tertiary
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.WbSunny,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "Hôm nay",
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                }
-
-                // Chi phí
-                TextButton(
-                    onClick = onExpenseClick,
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = Color(0xFF2E7D32)
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Today,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "Chi phí",
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                }
+                TripActionButton(
+                    icon  = Icons.Filled.CalendarMonth,
+                    label = "Lịch trình",
+                    tint  = MaterialTheme.colorScheme.primary,
+                    onClick = onItineraryClick
+                )
+                TripActionButton(
+                    icon  = Icons.Filled.WbSunny,
+                    label = "Hôm nay",
+                    tint  = MaterialTheme.colorScheme.tertiary,
+                    onClick = onTodayClick
+                )
+                TripActionButton(
+                    icon  = Icons.Filled.MonetizationOn,
+                    label = "Chi phí",
+                    tint  = Color(0xFF137333),
+                    onClick = onExpenseClick
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun InfoChip(text: String) {
+    Surface(
+        shape = RoundedCornerShape(50),
+        color = MaterialTheme.colorScheme.secondaryContainer
+    ) {
+        Text(
+            text     = text,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+            style    = MaterialTheme.typography.labelSmall.copy(
+                color      = MaterialTheme.colorScheme.onSecondaryContainer,
+                fontWeight = FontWeight.Medium
+            )
+        )
+    }
+}
+
+@Composable
+private fun TripActionButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    tint: Color,
+    onClick: () -> Unit
+) {
+    TextButton(
+        onClick = onClick,
+        colors  = ButtonDefaults.textButtonColors(contentColor = tint),
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier    = Modifier.size(16.dp)
+        )
+        Spacer(Modifier.width(5.dp))
+        Text(label, style = MaterialTheme.typography.labelMedium)
     }
 }
 
@@ -544,7 +516,7 @@ private fun DeleteConfirmDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        icon = {
+        icon  = {
             Icon(
                 imageVector = Icons.Filled.Delete,
                 contentDescription = null,
@@ -553,31 +525,27 @@ private fun DeleteConfirmDialog(
         },
         title = {
             Text(
-                text = "Xóa chuyến đi",
+                text  = "Xóa chuyến đi",
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
             )
         },
-        text = {
+        text  = {
             Text(
-                text = "Bạn có chắc muốn xóa \"$tripName\"? Hành động này không thể hoàn tác.",
+                text  = "Bạn có chắc muốn xóa \"$tripName\"? Hành động này không thể hoàn tác.",
                 style = MaterialTheme.typography.bodyMedium
             )
         },
         confirmButton = {
             Button(
                 onClick = onConfirm,
-                colors = ButtonDefaults.buttonColors(
+                colors  = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.error,
-                    contentColor = MaterialTheme.colorScheme.onError
+                    contentColor   = MaterialTheme.colorScheme.onError
                 )
-            ) {
-                Text("Xóa")
-            }
+            ) { Text("Xóa") }
         },
         dismissButton = {
-            OutlinedButton(onClick = onDismiss) {
-                Text("Hủy")
-            }
+            OutlinedButton(onClick = onDismiss) { Text("Hủy") }
         }
     )
 }
