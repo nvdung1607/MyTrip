@@ -215,8 +215,6 @@ fun TripDetailScreen(
                 onClick = {
                     navController.navigate(Screen.AddNote.createRoute(tripId, null))
                 },
-                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.65f),
-                contentColor = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
@@ -235,6 +233,7 @@ private fun TripDetailContent(
     onStatusChange: (TripStatus) -> Unit
 ) {
     val numDays = DateUtils.countDays(trip.startDate, trip.endDate)
+    var showStatusDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -376,7 +375,20 @@ private fun TripDetailContent(
                         onClick = { navController.navigate(Screen.Today.createRoute(trip.id)) }
                     )
                 } else {
-                    Spacer(Modifier.weight(1f))
+                    val statusLabel = when (trip.status) {
+                        TripStatus.PLANNING -> "Sắp đi"
+                        TripStatus.DONE -> "Hoàn thành"
+                        else -> ""
+                    }
+                    ActionCard(
+                        modifier = Modifier.weight(1f),
+                        emoji = "🔄",
+                        title = "Trạng thái",
+                        subtitle = statusLabel,
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                        onClick = { showStatusDialog = true }
+                    )
                 }
             }
 
@@ -419,6 +431,73 @@ private fun TripDetailContent(
         }
 
         Spacer(Modifier.height(16.dp))
+    }
+
+    if (showStatusDialog) {
+        AlertDialog(
+            onDismissRequest = { showStatusDialog = false },
+            title = { Text("Chuyển trạng thái chuyến đi", fontWeight = FontWeight.Bold) },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Chọn trạng thái mới cho chuyến đi của bạn:")
+                    Spacer(modifier = Modifier.height(4.dp))
+                    
+                    // Planning option
+                    Button(
+                        onClick = {
+                            onStatusChange(TripStatus.PLANNING)
+                            showStatusDialog = false
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (trip.status == TripStatus.PLANNING) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = if (trip.status == TripStatus.PLANNING) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    ) {
+                        Text("🔵 Sắp đi")
+                    }
+                    
+                    // Ongoing option
+                    Button(
+                        onClick = {
+                            onStatusChange(TripStatus.ONGOING)
+                            showStatusDialog = false
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (trip.status == TripStatus.ONGOING) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = if (trip.status == TripStatus.ONGOING) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    ) {
+                        Text("🟢 Đang đi")
+                    }
+                    
+                    // Done option
+                    Button(
+                        onClick = {
+                            onStatusChange(TripStatus.DONE)
+                            showStatusDialog = false
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (trip.status == TripStatus.DONE) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = if (trip.status == TripStatus.DONE) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    ) {
+                        Text("⚫ Hoàn thành")
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showStatusDialog = false }) {
+                    Text("Đóng")
+                }
+            }
+        )
     }
 }
 

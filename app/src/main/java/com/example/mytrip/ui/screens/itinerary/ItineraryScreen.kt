@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -725,22 +726,14 @@ private fun ActivityEditSheet(
         return when (digits.length) {
             0 -> ""
             1 -> digits
-            2 -> "$digits:"
+            2 -> digits
             3 -> "${digits.substring(0, 2)}:${digits.substring(2)}"
             else -> "${digits.substring(0, 2)}:${digits.substring(2, 4)}"
         }
     }
 
-    fun onTimeValueChange(newVal: String, oldVal: String): String {
-        val cleanNew = newVal.filter { it.isDigit() }
-        val cleanOld = oldVal.filter { it.isDigit() }
-        if (newVal.length < oldVal.length) {
-            if (oldVal.endsWith(":") && !newVal.contains(":")) {
-                return if (cleanNew.isNotEmpty()) cleanNew.dropLast(1) else ""
-            }
-            return formatDigitsToTime(cleanNew)
-        }
-        val digits = cleanNew.take(4)
+    fun onTimeValueChange(newVal: String): String {
+        val digits = newVal.filter { it.isDigit() }.take(4)
         return formatDigitsToTime(digits)
     }
 
@@ -839,7 +832,7 @@ private fun ActivityEditSheet(
                 OutlinedTextField(
                     value = departureTime,
                     onValueChange = { 
-                        departureTime = onTimeValueChange(it, departureTime)
+                        departureTime = onTimeValueChange(it)
                         departureTimeError = false 
                     },
                     label = { Text(if (selectedType == ActivityType.ACCOMMODATION) "Check-in" else "Giờ đi", maxLines = 1, overflow = TextOverflow.Ellipsis) },
@@ -861,7 +854,7 @@ private fun ActivityEditSheet(
                 OutlinedTextField(
                     value = arrivalTime,
                     onValueChange = { 
-                        arrivalTime = onTimeValueChange(it, arrivalTime)
+                        arrivalTime = onTimeValueChange(it)
                         arrivalTimeError = false 
                     },
                     label = { Text(if (selectedType == ActivityType.ACCOMMODATION) "Check-out" else "Giờ đến", maxLines = 1, overflow = TextOverflow.Ellipsis) },
@@ -885,19 +878,21 @@ private fun ActivityEditSheet(
             // Smart time offset suggestion chips
             if (isValidTime(departureTime) && departureTime.isNotBlank()) {
                 Spacer(modifier = Modifier.height(6.dp))
-                Row(
+                LazyRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Gợi ý giờ đến:", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    listOf(
+                    item {
+                        Text("Gợi ý giờ đến: ", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    items(listOf(
                         "+30p" to 30,
                         "+1h" to 60,
                         "+2h" to 120,
                         "+3h" to 180,
                         "+4h" to 240
-                    ).forEach { (label, mins) ->
+                    )) { (label, mins) ->
                         SuggestionChip(
                             onClick = {
                                 val suggested = addTimeToFormatted(departureTime, mins)
@@ -940,7 +935,7 @@ private fun ActivityEditSheet(
                     contentDescription = null
                 )
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(if (showMoreDetails) "Ẩn bớt thông tin chi tiết" else "Thêm thông tin chi tiết (Google Maps, chi phí, ghi chú...)")
+                Text(if (showMoreDetails) "Ẩn bớt thông tin chi tiết" else "Thêm thông tin chi tiết")
             }
         }
         Spacer(modifier = Modifier.height(8.dp))

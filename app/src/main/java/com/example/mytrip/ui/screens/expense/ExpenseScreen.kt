@@ -70,7 +70,7 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
             )
         },
         floatingActionButton = {
-            if (selectedTab == 1 || trip?.status == TripStatus.ONGOING) {
+            if (trip?.status == TripStatus.ONGOING) {
                 ExtendedFloatingActionButton(
                     onClick = {
                         selectedCategoryForNewRecord = ExpenseCategory.FOOD
@@ -110,6 +110,7 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
                     records = records,
                     memberBalances = memberBalances,
                     memberNames = memberNames,
+                    isEditable = trip?.status == TripStatus.ONGOING,
                     onDeleteRecord = { vm.deleteRecord(it) }
                 )
             }
@@ -454,6 +455,7 @@ private fun ActualTab(
     records: List<ExpenseRecord>,
     memberBalances: Map<String, Long>,
     memberNames: List<String>,
+    isEditable: Boolean,
     onDeleteRecord: (ExpenseRecord) -> Unit
 ) {
     var deleteTarget by remember { mutableStateOf<ExpenseRecord?>(null) }
@@ -491,8 +493,10 @@ private fun ActualTab(
                         Column(horizontalAlignment = Alignment.End) {
                             Text(MoneyUtils.formatShort(rec.amount), fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp, color = MaterialTheme.colorScheme.primary)
-                            IconButton(onClick = { deleteTarget = rec }, modifier = Modifier.size(24.dp)) {
-                                Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(16.dp))
+                            if (isEditable) {
+                                IconButton(onClick = { deleteTarget = rec }, modifier = Modifier.size(24.dp)) {
+                                    Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(16.dp))
+                                }
                             }
                         }
                     }

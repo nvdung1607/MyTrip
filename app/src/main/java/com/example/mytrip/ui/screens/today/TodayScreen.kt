@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -41,6 +42,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
@@ -86,6 +88,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.InputChip
@@ -130,6 +133,7 @@ fun TodayScreen(
     var showEditDayDialog by remember { mutableStateOf(false) }
     var activityToEdit by remember { mutableStateOf<Activity?>(null) }
     var activityToDelete by remember { mutableStateOf<Activity?>(null) }
+    var showAddSheet by remember { mutableStateOf(false) }
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
@@ -145,9 +149,13 @@ fun TodayScreen(
         )
     }
 
-    if (activityToEdit != null) {
+    if (activityToEdit != null || showAddSheet) {
         ModalBottomSheet(
-            onDismissRequest = { scope.launch { sheetState.hide() }; activityToEdit = null },
+            onDismissRequest = { 
+                scope.launch { sheetState.hide() }
+                activityToEdit = null
+                showAddSheet = false
+            },
             sheetState = sheetState,
             dragHandle = null,
             shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
@@ -155,13 +163,22 @@ fun TodayScreen(
             ActivityEditSheet(
                 dayId = todayDay?.id ?: 0L,
                 existingActivity = activityToEdit,
-                insertAfterIndex = 0,
+                insertAfterIndex = if (activityToEdit == null) activities.size - 1 else 0,
                 onSave = { activity ->
-                    viewModel.updateActivity(activity)
+                    if (activityToEdit == null) {
+                        viewModel.insertActivityAfter(activity, activities.size - 1)
+                    } else {
+                        viewModel.updateActivity(activity)
+                    }
                     scope.launch { sheetState.hide() }
                     activityToEdit = null
+                    showAddSheet = false
                 },
-                onDismiss = { scope.launch { sheetState.hide() }; activityToEdit = null }
+                onDismiss = { 
+                    scope.launch { sheetState.hide() }
+                    activityToEdit = null
+                    showAddSheet = false
+                }
             )
         }
     }
@@ -256,6 +273,17 @@ fun TodayScreen(
                     item {
                         SectionHeader(
                             title = "📋 Lịch trình",
+                            action = {
+                                TextButton(
+                                    onClick = { showAddSheet = true },
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                    modifier = Modifier.height(28.dp)
+                                ) {
+                                    Icon(Icons.Default.Add, null, modifier = Modifier.size(16.dp))
+                                    Spacer(Modifier.width(4.dp))
+                                    Text("Thêm", style = MaterialTheme.typography.labelLarge)
+                                }
+                            },
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                         )
                     }
@@ -264,12 +292,14 @@ fun TodayScreen(
                             activities = activities,
                             onEdit = { activityToEdit = it },
                             onDelete = { activityToDelete = it },
+                            onAdd = { showAddSheet = true },
                             modifier = Modifier.padding(horizontal = 16.dp)
                         )
                     }
                 } else {
                     item {
                         EmptyActivitiesState(
+                            onAddClick = { showAddSheet = true },
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                         )
                     }
@@ -316,8 +346,6 @@ fun TodayScreen(
                     Screen.AddNote.createRoute(tripId, todayDay?.id)
                 )
             },
-            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.65f),
-            contentColor = MaterialTheme.colorScheme.onPrimary,
             modifier = Modifier.fillMaxSize()
         )
     }
@@ -490,16 +518,52 @@ private fun TimelineView(
     activities: List<Activity>,
     onEdit: (Activity) -> Unit,
     onDelete: (Activity) -> Unit,
+    onAdd: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
-        activities.forEachIndexed { idx, activity ->
+        activities.forEach { activity ->
             TimelineItem(
                 activity = activity,
-                isLast = idx == activities.lastIndex,
+                isLast = false,
                 onEdit = onEdit,
                 onDelete = onDelete
             )
+        }
+        // Draw bottom connector to add button
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.width(32.dp)
+            ) {
+                Surface(
+                    onClick = onAdd,
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surface,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)),
+                    modifier = Modifier.size(20.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Thêm hoạt động",
+                            modifier = Modifier.size(11.dp),
+                            tint = MaterialTheme.colorScheme.outline
+                        )
+                    }
+                }
+            }
+            Spacer(Modifier.width(8.dp))
+            TextButton(
+                onClick = onAdd,
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                modifier = Modifier.height(28.dp)
+            ) {
+                Text("+ Thêm hoạt động", style = MaterialTheme.typography.labelMedium)
+            }
         }
     }
 }
@@ -646,29 +710,34 @@ private fun ActivityTimelineCard(
             // Action buttons (Sửa và Xóa)
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                FilledTonalButton(
+                OutlinedButton(
                     onClick = { onEdit(activity) },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp)
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                    modifier = Modifier.height(32.dp),
+                    shape = RoundedCornerShape(8.dp)
                 ) {
-                    Icon(Icons.Default.Edit, null, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text("Sửa", fontWeight = FontWeight.Bold)
+                    Icon(Icons.Default.Edit, null, modifier = Modifier.size(14.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text("Sửa", style = MaterialTheme.typography.labelMedium)
                 }
-                Button(
+                Spacer(Modifier.width(8.dp))
+                OutlinedButton(
                     onClick = { onDelete(activity) },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer,
-                        contentColor = MaterialTheme.colorScheme.onErrorContainer
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
                     ),
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp)
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f)),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                    modifier = Modifier.height(32.dp),
+                    shape = RoundedCornerShape(8.dp)
                 ) {
-                    Icon(Icons.Default.Delete, null, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text("Xóa", fontWeight = FontWeight.Bold)
+                    Icon(Icons.Default.Delete, null, modifier = Modifier.size(14.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text("Xóa", style = MaterialTheme.typography.labelMedium)
                 }
             }
         }
@@ -825,14 +894,23 @@ private fun NoteCard(
 // ── Section header ────────────────────────────────────────────────────────────
 
 @Composable
-private fun SectionHeader(title: String, modifier: Modifier = Modifier) {
-    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+private fun SectionHeader(
+    title: String,
+    modifier: Modifier = Modifier,
+    action: @Composable (RowScope.() -> Unit)? = null
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
         Text(
             text = title,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface
         )
+        action?.invoke(this)
     }
 }
 
@@ -863,7 +941,10 @@ private fun EmptyDayState(selectedIndex: Int) {
 }
 
 @Composable
-private fun EmptyActivitiesState(modifier: Modifier = Modifier) {
+private fun EmptyActivitiesState(
+    onAddClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -883,6 +964,15 @@ private fun EmptyActivitiesState(modifier: Modifier = Modifier) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
+            Spacer(Modifier.height(10.dp))
+            OutlinedButton(
+                onClick = onAddClick,
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(Icons.Default.Add, null, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Thêm hoạt động")
+            }
         }
     }
 }
@@ -1044,22 +1134,14 @@ private fun ActivityEditSheet(
         return when (digits.length) {
             0 -> ""
             1 -> digits
-            2 -> "$digits:"
+            2 -> digits
             3 -> "${digits.substring(0, 2)}:${digits.substring(2)}"
             else -> "${digits.substring(0, 2)}:${digits.substring(2, 4)}"
         }
     }
 
-    fun onTimeValueChange(newVal: String, oldVal: String): String {
-        val cleanNew = newVal.filter { it.isDigit() }
-        val cleanOld = oldVal.filter { it.isDigit() }
-        if (newVal.length < oldVal.length) {
-            if (oldVal.endsWith(":") && !newVal.contains(":")) {
-                return if (cleanNew.isNotEmpty()) cleanNew.dropLast(1) else ""
-            }
-            return formatDigitsToTime(cleanNew)
-        }
-        val digits = cleanNew.take(4)
+    fun onTimeValueChange(newVal: String): String {
+        val digits = newVal.filter { it.isDigit() }.take(4)
         return formatDigitsToTime(digits)
     }
 
@@ -1158,7 +1240,7 @@ private fun ActivityEditSheet(
                 OutlinedTextField(
                     value = departureTime,
                     onValueChange = { 
-                        departureTime = onTimeValueChange(it, departureTime)
+                        departureTime = onTimeValueChange(it)
                         departureTimeError = false 
                     },
                     label = { Text(if (selectedType == ActivityType.ACCOMMODATION) "Check-in" else "Giờ đi", maxLines = 1, overflow = TextOverflow.Ellipsis) },
@@ -1180,7 +1262,7 @@ private fun ActivityEditSheet(
                 OutlinedTextField(
                     value = arrivalTime,
                     onValueChange = { 
-                        arrivalTime = onTimeValueChange(it, arrivalTime)
+                        arrivalTime = onTimeValueChange(it)
                         arrivalTimeError = false 
                     },
                     label = { Text(if (selectedType == ActivityType.ACCOMMODATION) "Check-out" else "Giờ đến", maxLines = 1, overflow = TextOverflow.Ellipsis) },
@@ -1204,19 +1286,21 @@ private fun ActivityEditSheet(
             // Smart time offset suggestion chips
             if (isValidTime(departureTime) && departureTime.isNotBlank()) {
                 Spacer(modifier = Modifier.height(6.dp))
-                Row(
+                LazyRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Gợi ý giờ đến:", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    listOf(
+                    item {
+                        Text("Gợi ý giờ đến: ", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    items(listOf(
                         "+30p" to 30,
                         "+1h" to 60,
                         "+2h" to 120,
                         "+3h" to 180,
                         "+4h" to 240
-                    ).forEach { (label, mins) ->
+                    )) { (label, mins) ->
                         SuggestionChip(
                             onClick = {
                                 val suggested = addTimeToFormatted(departureTime, mins)
@@ -1259,7 +1343,7 @@ private fun ActivityEditSheet(
                     contentDescription = null
                 )
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(if (showMoreDetails) "Ẩn bớt thông tin chi tiết" else "Thêm thông tin chi tiết (Google Maps, chi phí, ghi chú...)")
+                Text(if (showMoreDetails) "Ẩn bớt thông tin chi tiết" else "Thêm thông tin chi tiết")
             }
         }
         Spacer(modifier = Modifier.height(8.dp))

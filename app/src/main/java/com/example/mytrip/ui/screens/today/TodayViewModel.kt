@@ -133,6 +133,23 @@ class TodayViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun insertActivityAfter(activity: Activity, insertAfterIndex: Int) {
+        viewModelScope.launch {
+            val dayActivities = _todayActivities.value
+                .sortedBy { it.orderIndex }
+                .toMutableList()
+
+            val newIndex = (insertAfterIndex + 1).coerceIn(0, dayActivities.size)
+            // Shift existing activities
+            val toUpdate = dayActivities.mapIndexed { idx, act ->
+                if (idx >= newIndex) act.copy(orderIndex = idx + 1) else act
+            }
+            toUpdate.forEach { repository.updateActivity(it) }
+            // Insert new one
+            repository.insertActivity(activity.copy(orderIndex = newIndex))
+        }
+    }
+
     fun updateActivity(activity: Activity) {
         viewModelScope.launch {
             repository.updateActivity(activity)
