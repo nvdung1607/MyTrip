@@ -42,6 +42,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -180,6 +181,7 @@ fun HomeScreen(
             // ── Trip list or empty state ───────────────────────────────────
             if (trips.isEmpty()) {
                 EmptyState(
+                    onImportSampleClick = { viewModel.importSampleTrip() },
                     modifier = Modifier.fillMaxSize()
                 )
             } else {
@@ -279,6 +281,7 @@ private fun FilterChipsRow(
 
 @Composable
 private fun EmptyState(
+    onImportSampleClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -316,6 +319,23 @@ private fun EmptyState(
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                     modifier = Modifier.padding(horizontal = 8.dp)
                 )
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                Button(
+                    onClick = onImportSampleClick,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    ),
+                    modifier = Modifier.fillMaxWidth().height(48.dp)
+                ) {
+                    Text(
+                        text = "🚀 Tải chuyến đi mẫu",
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
             }
         }
     }
