@@ -298,7 +298,6 @@ private fun TripDetailContent(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .windowInsetsPadding(WindowInsets.statusBars)
                     .padding(top = topPadding, start = 20.dp, end = 20.dp, bottom = 20.dp),
                 verticalArrangement = Arrangement.Bottom
             ) {

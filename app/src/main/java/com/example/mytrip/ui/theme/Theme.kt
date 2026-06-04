@@ -77,10 +77,8 @@ fun MyTripTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            // Edge-to-edge: transparent status bar
-            window.statusBarColor = android.graphics.Color.TRANSPARENT
-            WindowCompat.setDecorFitsSystemWindows(window, false)
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+            val insetsController = WindowCompat.getInsetsController(window, view)
+            insetsController.isAppearanceLightStatusBars = !darkTheme
         }
     }
 

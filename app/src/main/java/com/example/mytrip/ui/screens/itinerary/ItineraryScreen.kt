@@ -120,25 +120,15 @@ import org.json.JSONArray
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
-// ─── Palette for day number circles — Primary / Tertiary / Secondary cycling ──
+// ─── Palette for day number circles — Consistent Primary color ──────────────────
 @Composable
 private fun dayCircleColor(dayNumber: Int): Color {
-    val colors = listOf(
-        MaterialTheme.colorScheme.primary,
-        MaterialTheme.colorScheme.tertiary,
-        MaterialTheme.colorScheme.secondary
-    )
-    return colors[(dayNumber - 1) % colors.size]
+    return MaterialTheme.colorScheme.primary
 }
 
 @Composable
 private fun dayCircleOnColor(dayNumber: Int): Color {
-    val colors = listOf(
-        MaterialTheme.colorScheme.onPrimary,
-        MaterialTheme.colorScheme.onTertiary,
-        MaterialTheme.colorScheme.onSecondary
-    )
-    return colors[(dayNumber - 1) % colors.size]
+    return MaterialTheme.colorScheme.onPrimary
 }
 
 private fun statusColor(status: ActivityStatus): Color = when (status) {

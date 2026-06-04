@@ -36,9 +36,8 @@ private fun categoryColor(category: ExpenseCategory): Color = when (category) {
     ExpenseCategory.HOTEL        -> Color(0xFF1565C0)
     ExpenseCategory.TRANSPORT    -> Color(0xFF6A1B9A)
     ExpenseCategory.TICKET       -> Color(0xFFE65100)
-    ExpenseCategory.SHOPPING     -> Color(0xFFAD1457)
-    ExpenseCategory.OTHER        -> Color(0xFF00695C)
-    else                         -> Color(0xFF455A64)
+    ExpenseCategory.GIFT         -> Color(0xFFAD1457)
+    ExpenseCategory.MISC         -> Color(0xFF00695C)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
