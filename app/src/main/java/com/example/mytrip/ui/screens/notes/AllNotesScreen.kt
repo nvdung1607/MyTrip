@@ -282,7 +282,7 @@ fun AllNotesScreen(
 
                     if (note.cost > 0) {
                         Surface(
-                            shape = RoundedCornerShape(8.dp),
+                            shape = RoundedCornerShape(12.dp),
                             color = MaterialTheme.colorScheme.secondaryContainer,
                             modifier = Modifier.fillMaxWidth()
                         ) {
@@ -335,28 +335,32 @@ private fun ScrollableFilterCategories(
             FilterChip(
                 selected = activeGroup == "ALL",
                 onClick = { onGroupSelected("ALL") },
-                label = { Text("Tất cả Note") }
+                label = { Text("Tất cả Note") },
+                shape = RoundedCornerShape(50)
             )
         }
         item {
             FilterChip(
                 selected = activeGroup == "DAY",
                 onClick = { onGroupSelected("DAY") },
-                label = { Text("Lọc theo ngày") }
+                label = { Text("Lọc theo ngày") },
+                shape = RoundedCornerShape(50)
             )
         }
         item {
             FilterChip(
                 selected = activeGroup == "WEEK",
                 onClick = { onGroupSelected("WEEK") },
-                label = { Text("Lọc theo tuần") }
+                label = { Text("Lọc theo tuần") },
+                shape = RoundedCornerShape(50)
             )
         }
         item {
             FilterChip(
                 selected = activeGroup == "TAG",
                 onClick = { onGroupSelected("TAG") },
-                label = { Text("Lọc theo loại") }
+                label = { Text("Lọc theo loại") },
+                shape = RoundedCornerShape(50)
             )
         }
     }
@@ -387,7 +391,8 @@ private fun AnimatedSubFilters(
                             FilterChip(
                                 selected = selected,
                                 onClick = { onFilterSelected(NoteFilter.ByDay(day.id)) },
-                                label = { Text("Ngày ${day.dayNumber}") }
+                                label = { Text("Ngày ${day.dayNumber}") },
+                                shape = RoundedCornerShape(50)
                             )
                         }
                     }
@@ -404,7 +409,8 @@ private fun AnimatedSubFilters(
                             FilterChip(
                                 selected = selected,
                                 onClick = { onFilterSelected(NoteFilter.ByWeek(week)) },
-                                label = { Text("Tuần $week") }
+                                label = { Text("Tuần $week") },
+                                shape = RoundedCornerShape(50)
                             )
                         }
                     }
@@ -419,7 +425,8 @@ private fun AnimatedSubFilters(
                             FilterChip(
                                 selected = selected,
                                 onClick = { onFilterSelected(NoteFilter.ByTag(tag)) },
-                                label = { Text("${tag.icon} ${tag.label}") }
+                                label = { Text("${tag.icon} ${tag.label}") },
+                                shape = RoundedCornerShape(50)
                             )
                         }
                     }

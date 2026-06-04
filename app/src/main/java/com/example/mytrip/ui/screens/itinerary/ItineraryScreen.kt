@@ -742,7 +742,8 @@ private fun ActivityEditSheet(
             supportingText = if (nameError) {{ Text("Vui lòng nhập tên") }} else null,
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
             singleLine = true,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp)
         )
 
         // Gợi ý tên
@@ -768,7 +769,8 @@ private fun ActivityEditSheet(
                     placeholder = { Text("HH:mm") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(16.dp)
                 )
                 OutlinedTextField(
                     value = arrivalTime,
@@ -777,7 +779,8 @@ private fun ActivityEditSheet(
                     placeholder = { Text("HH:mm") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(16.dp)
                 )
             }
             Spacer(modifier = Modifier.height(12.dp))
@@ -792,7 +795,8 @@ private fun ActivityEditSheet(
                 placeholder = { Text("0.0") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp)
             )
             Spacer(modifier = Modifier.height(10.dp))
             OutlinedTextField(
@@ -809,7 +813,8 @@ private fun ActivityEditSheet(
                         }
                     }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp)
             )
             Spacer(modifier = Modifier.height(12.dp))
         }
@@ -821,10 +826,11 @@ private fun ActivityEditSheet(
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 6.dp)) {
                     checkInSpots.forEach { spot ->
                         InputChip(
-                            selected = false, onClick = {},
+                            selected = false,
+                            onClick = { checkInSpots = checkInSpots.filter { it != spot } },
                             label = { Text(spot, style = MaterialTheme.typography.labelSmall) },
                             trailingIcon = {
-                                Icon(Icons.Filled.Close, null, modifier = Modifier.size(14.dp).clickable { checkInSpots = checkInSpots.filter { it != spot } })
+                                Icon(Icons.Filled.Close, null, modifier = Modifier.size(14.dp))
                             }
                         )
                     }
@@ -842,7 +848,8 @@ private fun ActivityEditSheet(
                     spotInput = ""
                 }),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp)
             )
             Spacer(modifier = Modifier.height(10.dp))
             OutlinedTextField(
@@ -852,7 +859,8 @@ private fun ActivityEditSheet(
                 placeholder = { Text("https://maps.google.com/...") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp)
             )
             Spacer(modifier = Modifier.height(12.dp))
         }
@@ -865,7 +873,8 @@ private fun ActivityEditSheet(
                 label = { Text("Tên khách sạn / nơi nghỉ") },
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp)
             )
             Spacer(modifier = Modifier.height(10.dp))
             OutlinedTextField(
@@ -876,7 +885,8 @@ private fun ActivityEditSheet(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true,
                 supportingText = { val v = hotelPriceText.toLongOrNull() ?: 0L; if (v > 0) Text(MoneyUtils.formatVnd(MoneyUtils.inputToVnd(v))) },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp)
             )
             Spacer(modifier = Modifier.height(6.dp))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -891,7 +901,8 @@ private fun ActivityEditSheet(
                 label = { Text("Link Google Maps khách sạn") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp)
             )
             Spacer(modifier = Modifier.height(12.dp))
         }
@@ -907,7 +918,8 @@ private fun ActivityEditSheet(
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
             minLines = 2,
             maxLines = 4,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp)
         )
 
         Spacer(modifier = Modifier.height(24.dp))

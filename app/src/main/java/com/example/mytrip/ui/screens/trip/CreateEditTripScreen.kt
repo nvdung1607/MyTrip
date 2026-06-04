@@ -498,7 +498,7 @@ fun CreateEditTripScreen(
                         capitalization = KeyboardCapitalization.Words,
                         imeAction = ImeAction.Next
                     ),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(16.dp)
                 )
             }
 
@@ -516,7 +516,7 @@ fun CreateEditTripScreen(
                         capitalization = KeyboardCapitalization.Sentences,
                         imeAction = ImeAction.Default
                     ),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(16.dp)
                 )
             }
 
@@ -664,7 +664,7 @@ fun CreateEditTripScreen(
                                     capitalization = KeyboardCapitalization.Words,
                                     imeAction = if (index < memberNames.lastIndex) ImeAction.Next else ImeAction.Done
                                 ),
-                                shape = RoundedCornerShape(12.dp)
+                                shape = RoundedCornerShape(16.dp)
                             )
                         }
                     }

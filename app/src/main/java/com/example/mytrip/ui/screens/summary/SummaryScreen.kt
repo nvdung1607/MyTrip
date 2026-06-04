@@ -302,18 +302,21 @@ private fun StatusBadge(text: String, color: Color) {
 
 @Composable
 private fun NoteHighlightCard(note: Note) {
-    Card(modifier = Modifier.width(160.dp)) {
+    Card(
+        modifier = Modifier.width(160.dp),
+        shape = RoundedCornerShape(16.dp)
+    ) {
         Column {
             if (note.photoPath != null) {
                 AsyncImage(
                     model = File(note.photoPath),
                     contentDescription = null,
-                    modifier = Modifier.fillMaxWidth().height(120.dp),
+                    modifier = Modifier.fillMaxWidth().height(120.dp).clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
                     contentScale = ContentScale.Crop
                 )
             } else {
                 Box(Modifier.fillMaxWidth().height(120.dp)
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                    .background(MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
                     contentAlignment = Alignment.Center) {
                     Text(note.tag.icon, fontSize = 40.sp)
                 }

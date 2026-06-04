@@ -116,7 +116,8 @@ fun TodayScreen(
                         label = { Text("Điều gì đã thay đổi?") },
                         placeholder = { Text("VD: Đổi khách sạn, thay đổi lộ trình...") },
                         modifier = Modifier.fillMaxWidth(),
-                        minLines = 3
+                        minLines = 3,
+                        shape = RoundedCornerShape(16.dp)
                     )
                 }
             },
@@ -541,7 +542,7 @@ private fun ActivityTimelineCard(
                 Spacer(Modifier.height(6.dp))
                 Surface(
                     color = Color(0xFFFFF3E0),
-                    shape = RoundedCornerShape(8.dp)
+                    shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
                         text = "🔀 ${activity.actualNotes}",
@@ -595,7 +596,7 @@ private fun StatusBadge(status: ActivityStatus, color: Color) {
     }
     Surface(
         color = color.copy(alpha = 0.12f),
-        shape = RoundedCornerShape(8.dp)
+        shape = RoundedCornerShape(12.dp)
     ) {
         Text(
             text = "$emoji $label",
@@ -617,10 +618,10 @@ private fun StatusActionButton(
 ) {
     Surface(
         modifier = modifier
-            .clip(RoundedCornerShape(10.dp))
+            .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick),
         color = if (isActive) activeColor else MaterialTheme.colorScheme.surfaceVariant,
-        shape = RoundedCornerShape(10.dp)
+        shape = RoundedCornerShape(12.dp)
     ) {
         Text(
             text = label,
@@ -695,7 +696,7 @@ private fun NoteCard(
                 // Tag chip
                 Surface(
                     color = MaterialTheme.colorScheme.primaryContainer,
-                    shape = RoundedCornerShape(6.dp)
+                    shape = RoundedCornerShape(50)
                 ) {
                     Text(
                         text = "${note.tag.icon} ${note.tag.label}",

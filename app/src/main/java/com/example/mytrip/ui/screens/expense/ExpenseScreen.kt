@@ -130,7 +130,8 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
                         label = { Text("Dự kiến") },
                         suffix = { Text("k") },
                         placeholder = { Text("VD: 500 = 500.000₫") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        shape = RoundedCornerShape(16.dp)
                     )
                     if (input.isNotEmpty())
                         Text("= ${MoneyUtils.formatVnd(MoneyUtils.inputToVnd(MoneyUtils.parseInput(input)))}",
@@ -207,7 +208,7 @@ private fun BudgetTab(
                     }
                     LinearProgressIndicator(
                         progress = { ratio },
-                        modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
+                        modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(8.dp)),
                         color = if (overBudget) MaterialTheme.colorScheme.error else Color(0xFF4CAF50),
                         trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(0.2f)
                     )
@@ -292,7 +293,18 @@ private fun ActualTab(
                         Spacer(Modifier.width(12.dp))
                         Column(Modifier.weight(1f)) {
                             Text(rec.description.ifEmpty { rec.category.label }, fontWeight = FontWeight.Medium)
-                            AssistChip(onClick = {}, label = { Text(rec.paidBy) })
+                            Surface(
+                                shape = RoundedCornerShape(50),
+                                color = MaterialTheme.colorScheme.secondaryContainer,
+                                modifier = Modifier.padding(top = 4.dp)
+                            ) {
+                                Text(
+                                    text = rec.paidBy,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                            }
                         }
                         Column(horizontalAlignment = Alignment.End) {
                             Text(MoneyUtils.formatShort(rec.amount), fontWeight = FontWeight.Bold,
@@ -377,7 +389,8 @@ private fun AddExpenseRecordSheet(
                 label = { Text("Số tiền") },
                 suffix = { Text("k") },
                 placeholder = { Text("VD: 200 = 200.000₫") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                shape = RoundedCornerShape(16.dp)
             )
             if (amountInput.isNotEmpty())
                 Text("= ${MoneyUtils.formatVnd(MoneyUtils.inputToVnd(MoneyUtils.parseInput(amountInput)))}",
@@ -402,7 +415,8 @@ private fun AddExpenseRecordSheet(
                 onValueChange = { description = it },
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text("Mô tả (tùy chọn)") },
-                singleLine = true
+                singleLine = true,
+                shape = RoundedCornerShape(16.dp)
             )
 
             Button(

@@ -137,12 +137,7 @@ fun HomeScreen(
                             fontWeight = FontWeight.Bold
                         )
                     }
-                    IconButton(onClick = { /* TODO: navigate to settings */ }) {
-                        Icon(
-                            imageVector = Icons.Filled.Settings,
-                            contentDescription = "Cài đặt"
-                        )
-                    }
+
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,

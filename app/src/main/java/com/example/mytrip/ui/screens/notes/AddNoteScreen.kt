@@ -258,7 +258,8 @@ fun AddNoteScreen(
                             placeholder = { Text("VD: 150 = 150.000₫") },
                             suffix = { Text("k") },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            singleLine = true
+                            singleLine = true,
+                            shape = RoundedCornerShape(16.dp)
                         )
                         // Shortcuts
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -313,7 +314,8 @@ fun AddNoteScreen(
                             modifier = Modifier.fillMaxWidth(),
                             label = { Text("Tên địa điểm / món ăn") },
                             leadingIcon = { Icon(Icons.Default.Place, null) },
-                            singleLine = true
+                            singleLine = true,
+                            shape = RoundedCornerShape(16.dp)
                         )
                         OutlinedTextField(
                             value = comment,
@@ -322,7 +324,8 @@ fun AddNoteScreen(
                             label = { Text("Nhận xét chi tiết") },
                             leadingIcon = { Icon(Icons.Default.Comment, null) },
                             minLines = 3,
-                            maxLines = 5
+                            maxLines = 5,
+                            shape = RoundedCornerShape(16.dp)
                         )
                         if (gpsLat != null && gpsLng != null) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
