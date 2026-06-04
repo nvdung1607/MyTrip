@@ -15,6 +15,10 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import android.content.ContentValues
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 
 object ExcelUtils {
 
@@ -129,6 +133,19 @@ object ExcelUtils {
         val file = File(context.getExternalFilesDir("Exports"), fileName)
         file.parentFile?.mkdirs()
         FileOutputStream(file).use { wb.write(it) }
+
+        // Save to public Downloads directory
+        val success = saveToDownloads(context, wb, fileName)
+        if (success) {
+            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                android.widget.Toast.makeText(
+                    context,
+                    "Đã tải file Excel về thư mục Downloads!",
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+
         wb.close()
 
         return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
@@ -457,6 +474,32 @@ object ExcelUtils {
             scaled.compress(Bitmap.CompressFormat.JPEG, 80, bos)
             bos.toByteArray()
         } catch (_: Exception) { null }
+    }
+
+    // ─── Save to public Downloads folder using MediaStore ─────────────────────
+
+    private fun saveToDownloads(context: Context, wb: XSSFWorkbook, fileName: String): Boolean {
+        try {
+            val resolver = context.contentResolver
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val contentValues = ContentValues().apply {
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                    put(MediaStore.MediaColumns.MIME_TYPE, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, "Download/")
+                }
+                val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues) ?: return false
+                resolver.openOutputStream(uri)?.use { wb.write(it) }
+                return true
+            } else {
+                val targetDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                val file = File(targetDir, fileName)
+                FileOutputStream(file).use { wb.write(it) }
+                return true
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return false
+        }
     }
 
     // ─── Share Excel ──────────────────────────────────────────────────────────

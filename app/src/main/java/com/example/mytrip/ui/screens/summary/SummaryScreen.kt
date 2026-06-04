@@ -30,6 +30,8 @@ import com.example.mytrip.data.db.entities.*
 import com.example.mytrip.util.DateUtils
 import com.example.mytrip.util.MoneyUtils
 import java.io.File
+import androidx.compose.ui.res.painterResource
+import com.example.mytrip.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -225,11 +227,19 @@ fun SummaryScreen(navController: NavController, tripId: Long) {
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Button(
                         onClick = { vm.exportToExcel(ctx) },
-                        modifier = Modifier.fillMaxWidth().height(52.dp)
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF107C41),
+                            contentColor = Color.White
+                        )
                     ) {
-                        Icon(Icons.Default.TableChart, null)
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_excel),
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
                         Spacer(Modifier.width(8.dp))
-                        Text("📄 Xuất file Excel", fontWeight = FontWeight.Bold)
+                        Text("Xuất file Excel", fontWeight = FontWeight.Bold)
                     }
                 }
             }
