@@ -90,10 +90,13 @@ class WidgetRepository(context: Context) {
             tripName         = trip.name,
             tripTypeIcon     = trip.type.icon,
             tripStatus       = trip.status,
+            tripThemeColor   = trip.themeColor,
             currentDay       = currentDay,
             totalDays        = totalDays,
             todayTitle       = todayDay?.title ?: "",
+            todayDayId       = todayDay?.id ?: -1L,
             daysUntilTrip    = daysUntil,
+            numPeople        = trip.numPeople.coerceAtLeast(1),
             nextActivityName = nextActivity?.name ?: "",
             nextActivityTime = nextActivity?.let {
                 it.departureTime.ifBlank { it.arrivalTime }

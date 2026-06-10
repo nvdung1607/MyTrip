@@ -8,6 +8,7 @@ class MyTripApplication : Application() {
     val database by lazy { AppDatabase.getInstance(this) }
     val repository by lazy {
         TripRepository(
+            context      = this,
             tripDao      = database.tripDao(),
             clusterDao   = database.clusterDao(),
             dayDao       = database.dayDao(),

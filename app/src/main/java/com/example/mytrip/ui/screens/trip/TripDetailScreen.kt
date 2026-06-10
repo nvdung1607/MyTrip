@@ -33,7 +33,6 @@ import com.example.mytrip.navigation.Screen
 import com.example.mytrip.util.DateUtils
 import com.example.mytrip.util.MoneyUtils
 import com.example.mytrip.ui.components.DraggableFab
-import com.example.mytrip.ui.components.GlassmorphismCard
 import com.example.mytrip.ui.components.MyTripPrimaryButton
 import com.example.mytrip.ui.theme.*
 
@@ -349,7 +348,6 @@ private fun TripDetailContent(
                 }
             }
         }
-
         // ─── Quick stats row ──────────────────────────────────────────────────
         Surface(
             modifier = Modifier.fillMaxWidth(),
@@ -608,13 +606,16 @@ private fun ActionCard(
     onClick: () -> Unit,
     fullWidth: Boolean = false
 ) {
-    GlassmorphismCard(
+    Surface(
         modifier = modifier
-            .then(if (fullWidth) Modifier.defaultMinSize(minHeight = 84.dp) else Modifier.defaultMinSize(minHeight = 120.dp))
-            .padding(4.dp)
-            .clickable { onClick() }
+            .then(if (fullWidth) Modifier.defaultMinSize(minHeight = 72.dp) else Modifier.defaultMinSize(minHeight = 110.dp))
+            .clip(RoundedCornerShape(16.dp))
+            .clickable { onClick() },
+        shape = RoundedCornerShape(16.dp),
+        color = containerColor,
+        shadowElevation = 2.dp,
+        tonalElevation = 0.dp
     ) {
-        Surface(color = containerColor, modifier = Modifier.fillMaxWidth()) {
         if (fullWidth) {
             Row(
                 modifier = Modifier
@@ -647,8 +648,9 @@ private fun ActionCard(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .fillMaxHeight()
                     .padding(14.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(emoji, style = MaterialTheme.typography.headlineSmall)
                 Column {
@@ -669,7 +671,6 @@ private fun ActionCard(
                     )
                 }
             }
-        }
         }
     }
 }

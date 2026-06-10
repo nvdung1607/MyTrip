@@ -1,14 +1,17 @@
 package com.example.mytrip.data.repository
 
+import android.content.Context
 import com.example.mytrip.data.db.dao.*
 import com.example.mytrip.data.db.entities.*
 import com.example.mytrip.util.CsvImportUtils
 import com.example.mytrip.util.ExcelImportUtils
+import com.example.mytrip.widget.MyTripWidgetUpdater
 import kotlinx.coroutines.flow.Flow
 import org.json.JSONArray
 
 
 class TripRepository(
+    private val context: Context,
     private val tripDao: TripDao,
     private val clusterDao: ClusterDao,
     private val dayDao: DayDao,
@@ -16,6 +19,11 @@ class TripRepository(
     private val noteDao: NoteDao,
     private val expenseDao: ExpenseDao
 ) {
+
+    /** Triggers an immediate widget refresh. Call after any data mutation. */
+    private suspend fun refreshWidget() {
+        MyTripWidgetUpdater.update(context)
+    }
     // ── Trip ──────────────────────────────────────────────────────────
     fun getAllTrips(): Flow<List<Trip>> = tripDao.getAllTrips()
     fun getTripById(id: Long): Flow<Trip?> = tripDao.getTripById(id)
@@ -34,10 +42,20 @@ class TripRepository(
         return tripId
     }
 
-    suspend fun updateTrip(trip: Trip) = tripDao.updateTripEnforcingSingleOngoing(trip)
-    suspend fun deleteTrip(trip: Trip) = tripDao.deleteTrip(trip)
-    suspend fun updateTripStatus(id: Long, status: TripStatus) =
+    suspend fun updateTrip(trip: Trip) {
+        tripDao.updateTripEnforcingSingleOngoing(trip)
+        refreshWidget()
+    }
+
+    suspend fun deleteTrip(trip: Trip) {
+        tripDao.deleteTrip(trip)
+        refreshWidget()
+    }
+
+    suspend fun updateTripStatus(id: Long, status: TripStatus) {
         tripDao.updateStatusEnforcingSingleOngoing(id, status)
+        refreshWidget()
+    }
         
     suspend fun updateTripStartDate(trip: Trip, newStartDate: Long, newStatus: TripStatus? = null) {
         val durationDays = if (trip.endDate >= trip.startDate && trip.startDate > 0) {
@@ -99,10 +117,26 @@ class TripRepository(
     // ── Activity ──────────────────────────────────────────────────────
     fun getActivities(dayId: Long): Flow<List<Activity>> = activityDao.getActivitiesForDay(dayId)
     suspend fun getActivitiesOnce(dayId: Long): List<Activity> = activityDao.getActivitiesForDayOnce(dayId)
-    suspend fun insertActivity(activity: Activity): Long = activityDao.insertActivity(activity)
-    suspend fun updateActivity(activity: Activity) = activityDao.updateActivity(activity)
-    suspend fun deleteActivity(activity: Activity) = activityDao.deleteActivity(activity)
-    suspend fun updateActivityStatus(id: Long, status: ActivityStatus) = activityDao.updateStatus(id, status)
+    suspend fun insertActivity(activity: Activity): Long {
+        val id = activityDao.insertActivity(activity)
+        refreshWidget()
+        return id
+    }
+
+    suspend fun updateActivity(activity: Activity) {
+        activityDao.updateActivity(activity)
+        refreshWidget()
+    }
+
+    suspend fun deleteActivity(activity: Activity) {
+        activityDao.deleteActivity(activity)
+        refreshWidget()
+    }
+
+    suspend fun updateActivityStatus(id: Long, status: ActivityStatus) {
+        activityDao.updateStatus(id, status)
+        refreshWidget()
+    }
 
     // ── Note ──────────────────────────────────────────────────────────
     fun getNotes(tripId: Long): Flow<List<Note>> = noteDao.getNotesForTrip(tripId)
@@ -123,6 +157,7 @@ class TripRepository(
             )
             expenseDao.insertRecord(record)
         }
+        refreshWidget()
         return noteId
     }
 
@@ -151,11 +186,13 @@ class TripRepository(
                 expenseDao.deleteRecord(existingRecord)
             }
         }
+        refreshWidget()
     }
 
     suspend fun deleteNote(note: Note) {
         noteDao.deleteNote(note)
         expenseDao.deleteRecordByNoteId(note.id)
+        refreshWidget()
     }
 
     private fun NoteTag.toExpenseCategory(): ExpenseCategory = when (this) {
@@ -170,7 +207,10 @@ class TripRepository(
 
     // ── Expense ───────────────────────────────────────────────────────
     fun getExpenses(tripId: Long): Flow<List<Expense>> = expenseDao.getExpensesForTrip(tripId)
-    suspend fun updateExpense(expense: Expense) = expenseDao.updateExpense(expense)
+    suspend fun updateExpense(expense: Expense) {
+        expenseDao.updateExpense(expense)
+        refreshWidget()
+    }
 
     fun getExpenseRecords(tripId: Long): Flow<List<ExpenseRecord>> = expenseDao.getRecordsForTrip(tripId)
     suspend fun getExpenseRecordsOnce(tripId: Long): List<ExpenseRecord> = expenseDao.getRecordsForTripOnce(tripId)

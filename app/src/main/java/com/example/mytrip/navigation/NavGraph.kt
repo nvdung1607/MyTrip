@@ -95,7 +95,8 @@ fun MyTripNavGraph(
 
         composable(
             route = Screen.Today.route,
-            arguments = listOf(navArgument("tripId") { type = NavType.LongType })
+            arguments = listOf(navArgument("tripId") { type = NavType.LongType }),
+            deepLinks = listOf(androidx.navigation.navDeepLink { uriPattern = "mytrip://today/{tripId}" })
         ) { backStack ->
             val tripId = backStack.arguments?.getLong("tripId") ?: return@composable
             TodayScreen(navController = navController, tripId = tripId)

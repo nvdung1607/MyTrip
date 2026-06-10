@@ -16,7 +16,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.Alignment
+
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -45,7 +45,7 @@ fun DraggableFab(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     icon: ImageVector = Icons.Default.Add,
-    containerColor: Color = MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
+    containerColor: Color = MaterialTheme.colorScheme.primary,
     contentColor: Color = MaterialTheme.colorScheme.onPrimary
 ) {
     val fabSizeDp = 56.dp
@@ -82,13 +82,11 @@ fun DraggableFab(
         }
 
         Box(modifier = Modifier.fillMaxSize()) {
-            Box(
+            FloatingActionButton(
+                onClick = onClick,
                 modifier = Modifier
                     .offset { IntOffset(animX.value.roundToInt(), animY.value.roundToInt()) }
                     .size(fabSizeDp)
-                    .clip(CircleShape)
-                    .background(containerColor)
-                    .clickable { onClick() }
                     .pointerInput(maxWidthPx, maxHeightPx, fabSizePx, marginPx) {
                         detectDragGestures(
                             onDragEnd = {
@@ -122,12 +120,13 @@ fun DraggableFab(
                             }
                         )
                     },
-                contentAlignment = Alignment.Center
+                shape = CircleShape,
+                containerColor = containerColor,
+                contentColor = contentColor
             ) {
                 Icon(
                     imageVector = icon,
-                    contentDescription = "Thêm",
-                    tint = contentColor
+                    contentDescription = "Thêm"
                 )
             }
         }

@@ -85,7 +85,9 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
                         showAddRecord = true
                     },
                     icon = { Icon(Icons.Default.Add, null) },
-                    text = { Text("Thêm chi tiêu") }
+                    text = { Text("Thêm chi tiêu") },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 )
             }
         }
@@ -361,7 +363,7 @@ private fun BudgetTab(
 
     LazyColumn(
         Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 88.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 100.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {

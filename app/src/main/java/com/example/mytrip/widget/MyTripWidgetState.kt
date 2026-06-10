@@ -15,11 +15,14 @@ data class MyTripWidgetState(
     val tripName: String = "",
     val tripTypeIcon: String = "🗺️",
     val tripStatus: TripStatus = TripStatus.PLANNING,
+    val tripThemeColor: String = "",  // hex e.g. "#1E88E5"
     // Day progress
     val currentDay: Int = 0,
     val totalDays: Int = 0,
     val todayTitle: String = "",
-    val daysUntilTrip: Long = 0L,  // used when status = PLANNING
+    val todayDayId: Long = -1L,        // used for deep-link to Today screen
+    val daysUntilTrip: Long = 0L,      // used when status = PLANNING
+    val numPeople: Int = 1,            // number of travellers (for per-person budget)
     // Next activity
     val nextActivityName: String = "",
     val nextActivityTime: String = "",
@@ -28,7 +31,7 @@ data class MyTripWidgetState(
     // Expense summary
     val totalActual: Long = 0L,    // VND
     val totalPlanned: Long = 0L,   // VND
-    // Today's activity list (for Large widget, max 3)
+    // Today's activity list (scrollable)
     val todayActivities: List<ActivityItem> = emptyList()
 )
 
