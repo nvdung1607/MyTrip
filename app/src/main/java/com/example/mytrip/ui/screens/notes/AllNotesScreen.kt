@@ -288,8 +288,9 @@ private fun ScrollableFilterCategories(
     onGroupSelected: (String) -> Unit
 ) {
     LazyRow(
+        modifier = Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
         item {
             val isSelected = activeGroup == "ALL"

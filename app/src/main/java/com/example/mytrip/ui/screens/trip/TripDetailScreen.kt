@@ -291,7 +291,7 @@ private fun TripDetailContent(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(240.dp)
+                .defaultMinSize(minHeight = 280.dp)
                 .background(com.example.mytrip.ui.theme.TripThemeColors.getThemeGradient(trip.themeColor))
         ) {
             // Overlay scrim for readability
@@ -610,21 +610,21 @@ private fun ActionCard(
 ) {
     GlassmorphismCard(
         modifier = modifier
-            .then(if (fullWidth) Modifier.height(68.dp) else Modifier.height(100.dp))
+            .then(if (fullWidth) Modifier.defaultMinSize(minHeight = 84.dp) else Modifier.defaultMinSize(minHeight = 120.dp))
             .padding(4.dp)
             .clickable { onClick() }
     ) {
-        Surface(color = containerColor, modifier = Modifier.fillMaxSize()) {
+        Surface(color = containerColor, modifier = Modifier.fillMaxWidth()) {
         if (fullWidth) {
             Row(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 20.dp),
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(emoji, style = MaterialTheme.typography.headlineSmall)
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = title,
                         style = MaterialTheme.typography.titleMedium,
@@ -637,7 +637,6 @@ private fun ActionCard(
                         color = contentColor.copy(alpha = 0.7f)
                     )
                 }
-                Spacer(Modifier.weight(1f))
                 Icon(
                     Icons.Default.ChevronRight,
                     contentDescription = null,
@@ -647,9 +646,9 @@ private fun ActionCard(
         } else {
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
                     .padding(14.dp),
-                verticalArrangement = Arrangement.SpaceBetween
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(emoji, style = MaterialTheme.typography.headlineSmall)
                 Column {

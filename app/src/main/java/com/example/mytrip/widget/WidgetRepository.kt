@@ -77,8 +77,8 @@ class WidgetRepository(context: Context) {
             .filter { it.status == com.example.mytrip.data.db.entities.ActivityStatus.PENDING }
             .firstOrNull()
 
-        // Top 3 activities for large widget
-        val widgetActivities = activities.take(3).map { it.toWidgetItem() }
+        // All activities for large widget (LazyColumn)
+        val widgetActivities = activities.map { it.toWidgetItem() }
 
         // ── Expense summary ───────────────────────────────────────────
         val totalActual  = getTotalActual(trip.id)

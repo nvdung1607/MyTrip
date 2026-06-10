@@ -15,6 +15,8 @@ import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.background
 import androidx.glance.layout.*
+import androidx.glance.appwidget.lazy.LazyColumn
+import androidx.glance.appwidget.lazy.items
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
@@ -230,7 +232,7 @@ fun SmallWidget(state: MyTripWidgetState) {
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
                 ),
-                maxLines = 1,
+                maxLines = 2,
                 modifier = GlanceModifier.defaultWeight()
             )
             AddNoteButton(tripId = state.tripId, size = 28)
@@ -430,7 +432,7 @@ fun LargeWidget(state: MyTripWidgetState) {
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
                     ),
-                    maxLines = 1
+                    maxLines = 2
                 )
                 Spacer(GlanceModifier.height(4.dp))
                 if (state.tripStatus == TripStatus.ONGOING && state.currentDay > 0) {
@@ -462,8 +464,8 @@ fun LargeWidget(state: MyTripWidgetState) {
         Spacer(GlanceModifier.height(8.dp))
 
         if (state.todayActivities.isNotEmpty()) {
-            Column(modifier = GlanceModifier.defaultWeight()) {
-                state.todayActivities.take(4).forEach { item ->
+            LazyColumn(modifier = GlanceModifier.defaultWeight()) {
+                items(state.todayActivities) { item ->
                     LargeActivityRow(item)
                     Spacer(GlanceModifier.height(6.dp))
                 }

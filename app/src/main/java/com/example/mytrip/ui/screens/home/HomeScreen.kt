@@ -225,8 +225,9 @@ private fun FilterChipsRow(
     )
 
     LazyRow(
+        modifier = Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
         items(options) { option ->
             val selected = activeFilter == option.status
