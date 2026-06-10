@@ -4,62 +4,73 @@ import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-private val DarkColorScheme = darkColorScheme(
-    primary          = Primary80,
-    onPrimary        = Primary20,
-    primaryContainer = Primary30,
-    onPrimaryContainer = Primary90,
-    secondary        = Secondary80,
-    onSecondary      = Secondary20,
-    secondaryContainer = Secondary30,
-    onSecondaryContainer = Secondary90,
-    tertiary         = Tertiary80,
-    onTertiary       = Tertiary40,
-    tertiaryContainer = Color(0xFF57395C),
-    onTertiaryContainer = Tertiary90,
-    error            = Error80,
-    onError          = Error40,
-    errorContainer   = Color(0xFF93000A),
-    onErrorContainer = Error90,
-    background       = Neutral10,
-    onBackground     = Neutral90,
-    surface          = Neutral10,
-    onSurface        = Neutral90,
-    surfaceVariant   = NeutralVariant30,
-    onSurfaceVariant = NeutralVariant80,
-    outline          = NeutralVariant60,
+private val LightColorScheme = lightColorScheme(
+    primary = md_theme_light_primary,
+    onPrimary = md_theme_light_onPrimary,
+    primaryContainer = md_theme_light_primaryContainer,
+    onPrimaryContainer = md_theme_light_onPrimaryContainer,
+    inversePrimary = md_theme_light_inversePrimary,
+    secondary = md_theme_light_secondary,
+    onSecondary = md_theme_light_onSecondary,
+    secondaryContainer = md_theme_light_secondaryContainer,
+    onSecondaryContainer = md_theme_light_onSecondaryContainer,
+    tertiary = md_theme_light_tertiary,
+    onTertiary = md_theme_light_onTertiary,
+    tertiaryContainer = md_theme_light_tertiaryContainer,
+    onTertiaryContainer = md_theme_light_onTertiaryContainer,
+    error = md_theme_light_error,
+    onError = md_theme_light_onError,
+    errorContainer = md_theme_light_errorContainer,
+    onErrorContainer = md_theme_light_onErrorContainer,
+    background = md_theme_light_background,
+    onBackground = md_theme_light_onBackground,
+    surface = md_theme_light_surface,
+    onSurface = md_theme_light_onSurface,
+    surfaceVariant = md_theme_light_surfaceVariant,
+    onSurfaceVariant = md_theme_light_onSurfaceVariant,
+    surfaceTint = md_theme_light_surfaceTint,
+    inverseSurface = md_theme_light_inverseSurface,
+    inverseOnSurface = md_theme_light_inverseOnSurface,
+    outline = md_theme_light_outline,
+    outlineVariant = Color(0xFFC2C8C6), // fixed alpha issue
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary          = Primary40,
-    onPrimary        = Color.White,
-    primaryContainer = Primary90,
-    onPrimaryContainer = Primary10,
-    secondary        = Secondary40,
-    onSecondary      = Color.White,
-    secondaryContainer = Secondary90,
-    onSecondaryContainer = Secondary10,
-    tertiary         = Tertiary40,
-    onTertiary       = Color.White,
-    tertiaryContainer = Tertiary90,
-    onTertiaryContainer = Color(0xFF29132E),
-    error            = Error40,
-    onError          = Color.White,
-    errorContainer   = Error90,
-    onErrorContainer = Color(0xFF410002),
-    background       = Neutral99,
-    onBackground     = Neutral10,
-    surface          = Neutral99,
-    onSurface        = Neutral10,
-    surfaceVariant   = NeutralVariant90,
-    onSurfaceVariant = NeutralVariant30,
-    outline          = NeutralVariant50,
+private val DarkColorScheme = darkColorScheme(
+    primary = md_theme_dark_primary,
+    onPrimary = md_theme_dark_onPrimary,
+    primaryContainer = md_theme_dark_primaryContainer,
+    onPrimaryContainer = md_theme_dark_onPrimaryContainer,
+    inversePrimary = md_theme_dark_inversePrimary,
+    secondary = md_theme_dark_secondary,
+    onSecondary = md_theme_dark_onSecondary,
+    secondaryContainer = md_theme_dark_secondaryContainer,
+    onSecondaryContainer = md_theme_dark_onSecondaryContainer,
+    tertiary = md_theme_dark_tertiary,
+    onTertiary = md_theme_dark_onTertiary,
+    tertiaryContainer = md_theme_dark_tertiaryContainer,
+    onTertiaryContainer = md_theme_dark_onTertiaryContainer,
+    error = md_theme_dark_error,
+    onError = md_theme_dark_onError,
+    errorContainer = md_theme_dark_errorContainer,
+    onErrorContainer = md_theme_dark_onErrorContainer,
+    background = md_theme_dark_background,
+    onBackground = md_theme_dark_onBackground,
+    surface = md_theme_dark_surface,
+    onSurface = md_theme_dark_onSurface,
+    surfaceVariant = md_theme_dark_surfaceVariant,
+    onSurfaceVariant = md_theme_dark_onSurfaceVariant,
+    surfaceTint = md_theme_dark_surfaceTint,
+    inverseSurface = md_theme_dark_inverseSurface,
+    inverseOnSurface = md_theme_dark_inverseOnSurface,
+    outline = md_theme_dark_outline,
+    outlineVariant = md_theme_dark_outlineVariant,
 )
 
 @Composable
@@ -73,14 +84,17 @@ fun MyTripTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.primary.toArgb()
+            window.statusBarColor = colorScheme.background.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = MyTripTypography,
-        content = content
-    )
+    CompositionLocalProvider(LocalSpacing provides Spacing()) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = MyTripTypography,
+            shapes = MyTripShapes,
+            content = content
+        )
+    }
 }

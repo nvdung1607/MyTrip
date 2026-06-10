@@ -2,63 +2,101 @@ package com.example.mytrip.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Primary — Deep Teal (biển, trời)
-val Primary10 = Color(0xFF002020)
-val Primary20 = Color(0xFF003737)
-val Primary30 = Color(0xFF004F4F)
-val Primary40 = Color(0xFF006A6A)
-val Primary80 = Color(0xFF4DD9D9)
-val Primary90 = Color(0xFF9EF2F2)
-val Primary95 = Color(0xFFCBFBFB)
+val md_theme_light_primary = Color(0xFF4D6360)
+val md_theme_light_onPrimary = Color(0xFFFFFFFF)
+val md_theme_light_primaryContainer = Color(0xFFD1E9E6)
+val md_theme_light_onPrimaryContainer = Color(0xFF546A67)
+val md_theme_light_inversePrimary = Color(0xFFB4CBC8)
 
-// Secondary — Sunset Orange (hoàng hôn)
-val Secondary10 = Color(0xFF2D1500)
-val Secondary20 = Color(0xFF4A2500)
-val Secondary30 = Color(0xFF6A3900)
-val Secondary40 = Color(0xFF8B5000)
-val Secondary80 = Color(0xFFFFB871)
-val Secondary90 = Color(0xFFFFDDB7)
+val md_theme_light_secondary = Color(0xFF506262)
+val md_theme_light_onSecondary = Color(0xFFFFFFFF)
+val md_theme_light_secondaryContainer = Color(0xFFD0E4E3)
+val md_theme_light_onSecondaryContainer = Color(0xFF546666)
 
-// Tertiary — Mountain Purple
-val Tertiary40 = Color(0xFF705574)
-val Tertiary80 = Color(0xFFE9B4EF)
-val Tertiary90 = Color(0xFFFCD8FF)
+val md_theme_light_tertiary = Color(0xFF5C5F5E)
+val md_theme_light_onTertiary = Color(0xFFFFFFFF)
+val md_theme_light_tertiaryContainer = Color(0xFFE2E4E3)
+val md_theme_light_onTertiaryContainer = Color(0xFF636665)
 
-// Neutral
-val Neutral10 = Color(0xFF191C1C)
-val Neutral20 = Color(0xFF2D3131)
-val Neutral90 = Color(0xFFE0E3E3)
-val Neutral95 = Color(0xFFEFF1F1)
-val Neutral99 = Color(0xFFF5FAFA)
+val md_theme_light_error = Color(0xFFBA1A1A)
+val md_theme_light_onError = Color(0xFFFFFFFF)
+val md_theme_light_errorContainer = Color(0xFFFFDAD6)
+val md_theme_light_onErrorContainer = Color(0xFF93000A)
 
-// Neutral Variant
-val NeutralVariant30 = Color(0xFF3F4948)
-val NeutralVariant50 = Color(0xFF6F7978)
-val NeutralVariant60 = Color(0xFF899392)
-val NeutralVariant80 = Color(0xFFBFC8C7)
-val NeutralVariant90 = Color(0xFFDBE4E3)
+val md_theme_light_background = Color(0xFFF1FBFB)
+val md_theme_light_onBackground = Color(0xFF141D1D)
 
-// Error
-val Error40 = Color(0xFFBA1A1A)
-val Error80 = Color(0xFFFFB4AB)
-val Error90 = Color(0xFFFFDAD6)
+val md_theme_light_surface = Color(0xFFF1FBFB)
+val md_theme_light_onSurface = Color(0xFF141D1D)
+val md_theme_light_surfaceVariant = Color(0xFFDAE5E4)
+val md_theme_light_onSurfaceVariant = Color(0xFF424847)
+val md_theme_light_surfaceTint = Color(0xFF4D6360)
+val md_theme_light_inverseSurface = Color(0xFF283232)
+val md_theme_light_inverseOnSurface = Color(0xFFE8F3F2)
+
+val md_theme_light_outline = Color(0xFF727877)
+val md_theme_light_outlineVariant = Color(0xC2C8C6)
+
+val md_theme_light_surfaceDim = Color(0xFFD1DCDC)
+val md_theme_light_surfaceBright = Color(0xFFF1FBFB)
+val md_theme_light_surfaceContainerLowest = Color(0xFFFFFFFF)
+val md_theme_light_surfaceContainerLow = Color(0xFFEBF6F5)
+val md_theme_light_surfaceContainer = Color(0xFFE5F0EF)
+val md_theme_light_surfaceContainerHigh = Color(0xFFDFEAEA)
+val md_theme_light_surfaceContainerHighest = Color(0xFFDAE5E4)
+
+// Dark theme mapping (fallback for now, using inverted or slightly adjusted tones)
+val md_theme_dark_primary = Color(0xFFB4CBC8)
+val md_theme_dark_onPrimary = Color(0xFF1E3532)
+val md_theme_dark_primaryContainer = Color(0xFF354B49)
+val md_theme_dark_onPrimaryContainer = Color(0xFFD1E9E6)
+val md_theme_dark_inversePrimary = Color(0xFF4D6360)
+
+val md_theme_dark_secondary = Color(0xFFB4CCCA)
+val md_theme_dark_onSecondary = Color(0xFF223434)
+val md_theme_dark_secondaryContainer = Color(0xFF384A4A)
+val md_theme_dark_onSecondaryContainer = Color(0xFFD0E4E3)
+
+val md_theme_dark_tertiary = Color(0xFFC6C8C7)
+val md_theme_dark_onTertiary = Color(0xFF2E3130)
+val md_theme_dark_tertiaryContainer = Color(0xFF444747)
+val md_theme_dark_onTertiaryContainer = Color(0xFFE2E4E3)
+
+val md_theme_dark_error = Color(0xFFFFB4AB)
+val md_theme_dark_onError = Color(0xFF690005)
+val md_theme_dark_errorContainer = Color(0xFF93000A)
+val md_theme_dark_onErrorContainer = Color(0xFFFFDAD6)
+
+val md_theme_dark_background = Color(0xFF141D1D)
+val md_theme_dark_onBackground = Color(0xFFE8F3F2)
+
+val md_theme_dark_surface = Color(0xFF141D1D)
+val md_theme_dark_onSurface = Color(0xFFE8F3F2)
+val md_theme_dark_surfaceVariant = Color(0xFF424847)
+val md_theme_dark_onSurfaceVariant = Color(0xFFC2C8C6)
+val md_theme_dark_surfaceTint = Color(0xFFB4CBC8)
+val md_theme_dark_inverseSurface = Color(0xFFF1FBFB)
+val md_theme_dark_inverseOnSurface = Color(0xFF283232)
+
+val md_theme_dark_outline = Color(0xFF8C9291)
+val md_theme_dark_outlineVariant = Color(0xFF424847)
 
 // Status colors
-val StatusPlanning = Color(0xFF5B9BD5)   // Xanh dương — Sắp đi
-val StatusOngoing  = Color(0xFF70AD47)   // Xanh lá — Đang đi
-val StatusDone     = Color(0xFF9E9E9E)   // Xám — Đã xong
+val StatusPlanning = Color(0xFFD1E9E6)   // Sắp đi - Primary Container
+val StatusOngoing  = Color(0xFFD0E4E3)   // Đang đi - Secondary Container
+val StatusDone     = Color(0xFFE2E4E3)   // Đã xong - Tertiary Container
 
 // Trip type colors
-val TripTypeCar     = Color(0xFF1565C0)
-val TripTypeMoto    = Color(0xFFE65100)
-val TripTypePublic  = Color(0xFF2E7D32)
-val TripTypeTreck   = Color(0xFF6A1B9A)
-val TripTypeCamping = Color(0xFF00695C)
+val TripTypeCar     = Color(0xFF4D6360)
+val TripTypeMoto    = Color(0xFF506262)
+val TripTypePublic  = Color(0xFF5C5F5E)
+val TripTypeTreck   = Color(0xFF424847)
+val TripTypeCamping = Color(0xFF546A67)
 
 // Category expense colors
-val ExpenseHotel    = Color(0xFF1976D2)
-val ExpenseFood     = Color(0xFFF57C00)
-val ExpenseTransport= Color(0xFF388E3C)
-val ExpenseTicket   = Color(0xFF7B1FA2)
-val ExpenseGift     = Color(0xFFE91E63)
-val ExpenseMisc     = Color(0xFF607D8B)
+val ExpenseHotel    = Color(0xFF4D6360)
+val ExpenseFood     = Color(0xFF506262)
+val ExpenseTransport= Color(0xFF5C5F5E)
+val ExpenseTicket   = Color(0xFF727877)
+val ExpenseGift     = Color(0xFF546A67)
+val ExpenseMisc     = Color(0xFF424847)

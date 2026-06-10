@@ -36,6 +36,12 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.OpenInNew
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -88,7 +94,12 @@ import com.example.mytrip.util.MoneyUtils
 import com.example.mytrip.ui.components.DraggableFab
 import com.example.mytrip.ui.components.NoteDetailDialog
 import com.example.mytrip.ui.components.ScheduleTimelineList
-import androidx.compose.material.icons.filled.*
+import com.example.mytrip.ui.components.MyTripChip
+import com.example.mytrip.ui.components.MyTripTextField
+import com.example.mytrip.ui.components.MyTripPrimaryButton
+import com.example.mytrip.ui.components.MyTripSecondaryButton
+import com.example.mytrip.ui.components.GlassmorphismCard
+import com.example.mytrip.ui.theme.spacing
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -481,18 +492,10 @@ private fun DateHeaderCard(
     }
     val displayMillis = day?.date ?: targetMillis
 
-    Card(
+    GlassmorphismCard(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { onEditDay() },
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = when (selectedIndex) {
-                1 -> MaterialTheme.colorScheme.primaryContainer
-                else -> MaterialTheme.colorScheme.surfaceVariant
-            }
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            .clickable { onEditDay() }
     ) {
         Column(
             modifier = Modifier
@@ -607,11 +610,8 @@ private fun NoteCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier.clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+    GlassmorphismCard(
+        modifier = modifier.clickable { onClick() }
     ) {
         Column {
             // Photo
@@ -749,10 +749,8 @@ private fun EmptyActivitiesState(
     onAddClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    GlassmorphismCard(
+        modifier = modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier
@@ -769,9 +767,9 @@ private fun EmptyActivitiesState(
                 textAlign = TextAlign.Center
             )
             Spacer(Modifier.height(10.dp))
-            OutlinedButton(
+            MyTripSecondaryButton(
                 onClick = onAddClick,
-                shape = RoundedCornerShape(12.dp)
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Icon(Icons.Default.Add, null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
@@ -783,10 +781,8 @@ private fun EmptyActivitiesState(
 
 @Composable
 private fun EmptyNotesState(modifier: Modifier = Modifier) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    GlassmorphismCard(
+        modifier = modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier
@@ -820,13 +816,12 @@ private fun EditDayTitleDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Thông tin hành trình / địa điểm trong ngày:", style = MaterialTheme.typography.labelMedium)
-                OutlinedTextField(
+                MyTripTextField(
                     value = title,
                     onValueChange = { title = it },
-                    placeholder = { Text("VD: Phú Thọ → Nghệ An | 380km") },
+                    placeholder = "VD: Phú Thọ → Nghệ An | 380km",
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    shape = RoundedCornerShape(16.dp)
+                    singleLine = true
                 )
             }
         },
@@ -1011,36 +1006,26 @@ private fun ActivityEditSheet(
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 16.dp)) {
             ActivityType.entries.forEach { type ->
                 val isSelected = selectedType == type
-                FilterChip(
+                MyTripChip(
+                    text = "${type.icon} ${type.label}",
                     selected = isSelected,
                     onClick = {
                         selectedType = type
                         name = "" // reset name suggestions on type change
-                    },
-                    label = { Text("${type.icon} ${type.label}") },
-                    border = FilterChipDefaults.filterChipBorder(
-                        enabled = true,
-                        selected = isSelected,
-                        borderColor = MaterialTheme.colorScheme.outline,
-                        selectedBorderColor = MaterialTheme.colorScheme.outline,
-                        borderWidth = 1.dp,
-                        selectedBorderWidth = 1.dp
-                    )
+                    }
                 )
             }
         }
 
         // ── Tên hoạt động ─────────────────────────────────────────────
-        OutlinedTextField(
+        MyTripTextField(
             value = name,
             onValueChange = { name = it; nameError = false },
-            label = { Text("${selectedType.icon} Tên ${selectedType.label} *") },
+            label = "${selectedType.icon} Tên ${selectedType.label} *",
             isError = nameError,
-            supportingText = if (nameError) {{ Text("Vui lòng nhập tên") }} else null,
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
             singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp)
+            modifier = Modifier.fillMaxWidth()
         )
 
         // Gợi ý tên
@@ -1057,16 +1042,15 @@ private fun ActivityEditSheet(
         // ── Giờ (Basic - Always Visible except MEAL) ──────────────────
         if (selectedType != ActivityType.MEAL) {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedTextField(
+                MyTripTextField(
                     value = departureTimeValue,
                     onValueChange = { 
                         departureTime = onTimeValueChange(it.text)
                         departureTimeError = false 
                     },
-                    label = { Text(if (selectedType == ActivityType.ACCOMMODATION) "Check-in" else "Giờ đi", maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                    placeholder = { Text("HH:mm") },
+                    label = if (selectedType == ActivityType.ACCOMMODATION) "Check-in" else "Giờ đi",
+                    placeholder = "HH:mm",
                     isError = departureTimeError,
-                    supportingText = if (departureTimeError) {{ Text("Định dạng: HH:mm (VD: 08:30)", color = MaterialTheme.colorScheme.error) }} else null,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                     leadingIcon = {
@@ -1076,19 +1060,17 @@ private fun ActivityEditSheet(
                             Icon(Icons.Filled.AccessTime, contentDescription = "Chọn giờ")
                         }
                     },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(16.dp)
+                    modifier = Modifier.weight(1f)
                 )
-                OutlinedTextField(
+                MyTripTextField(
                     value = arrivalTimeValue,
                     onValueChange = { 
                         arrivalTime = onTimeValueChange(it.text)
                         arrivalTimeError = false 
                     },
-                    label = { Text(if (selectedType == ActivityType.ACCOMMODATION) "Check-out" else "Giờ đến", maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                    placeholder = { Text("HH:mm") },
+                    label = if (selectedType == ActivityType.ACCOMMODATION) "Check-out" else "Giờ đến",
+                    placeholder = "HH:mm",
                     isError = arrivalTimeError,
-                    supportingText = if (arrivalTimeError) {{ Text("Định dạng: HH:mm (VD: 10:30)", color = MaterialTheme.colorScheme.error) }} else null,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                     leadingIcon = {
@@ -1098,8 +1080,7 @@ private fun ActivityEditSheet(
                             Icon(Icons.Filled.AccessTime, contentDescription = "Chọn giờ")
                         }
                     },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(16.dp)
+                    modifier = Modifier.weight(1f)
                 )
             }
             
@@ -1136,14 +1117,13 @@ private fun ActivityEditSheet(
 
         // ACCOMMODATION: Khách sạn (Tên là Basic - Always Visible)
         if (selectedType == ActivityType.ACCOMMODATION) {
-            OutlinedTextField(
+            MyTripTextField(
                 value = hotelName,
                 onValueChange = { hotelName = it },
-                label = { Text("Tên khách sạn") },
+                label = "Tên khách sạn",
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
+                modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(12.dp))
         }
@@ -1176,16 +1156,14 @@ private fun ActivityEditSheet(
                 // ACCOMMODATION: Giá phòng (Detailed)
                 if (selectedType == ActivityType.ACCOMMODATION) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(
+                        MyTripTextField(
                             value = hotelPriceText,
                             onValueChange = { hotelPriceText = it },
-                            label = { Text("Giá phòng dự kiến (nghìn ₫)") },
-                            placeholder = { Text("VD: 500 = 500.000 ₫") },
+                            label = "Giá phòng dự kiến (nghìn ₫)",
+                            placeholder = "VD: 500 = 500.000 ₫",
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             singleLine = true,
-                            supportingText = { val v = hotelPriceText.toLongOrNull() ?: 0L; if (v > 0) Text(MoneyUtils.formatVnd(MoneyUtils.inputToVnd(v))) },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp)
+                            modifier = Modifier.fillMaxWidth()
                         )
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             hotelShortcuts.forEach { sc ->
@@ -1197,15 +1175,14 @@ private fun ActivityEditSheet(
 
                 // TRANSIT: Khoảng cách (Detailed)
                 if (selectedType == ActivityType.TRANSIT) {
-                    OutlinedTextField(
+                    MyTripTextField(
                         value = distanceText,
                         onValueChange = { distanceText = it },
-                        label = { Text("Khoảng cách (km)") },
-                        placeholder = { Text("0.0") },
+                        label = "Khoảng cách (km)",
+                        placeholder = "0.0",
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp)
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
 
@@ -1227,11 +1204,11 @@ private fun ActivityEditSheet(
                                 }
                             }
                         }
-                        OutlinedTextField(
+                        MyTripTextField(
                             value = spotInput,
                             onValueChange = { spotInput = it },
-                            label = { Text("Thêm điểm check-in") },
-                            placeholder = { Text("Nhập tên rồi nhấn Enter") },
+                            label = "Thêm điểm check-in",
+                            placeholder = "Nhập tên rồi nhấn Enter",
                             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
                             keyboardActions = KeyboardActions(onDone = {
                                 val t = spotInput.trim()
@@ -1239,43 +1216,40 @@ private fun ActivityEditSheet(
                                 spotInput = ""
                             }),
                             singleLine = true,
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp)
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
                 }
 
                 // Link Google Maps (Detailed, shown for Transit, Sightseeing, Accommodation)
                 if (selectedType == ActivityType.TRANSIT || selectedType == ActivityType.SIGHTSEEING || selectedType == ActivityType.ACCOMMODATION) {
-                    OutlinedTextField(
+                    MyTripTextField(
                         value = mapsLink,
                         onValueChange = { mapsLink = it },
-                        label = { Text("Link Google Maps") },
-                        placeholder = { Text("https://maps.google.com/...") },
+                        label = "Link Google Maps",
+                        placeholder = "https://maps.google.com/...",
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
                         singleLine = true,
                         trailingIcon = {
                             if (mapsLink.isNotBlank()) {
                                 IconButton(onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(mapsLink))) }) {
-                                    Icon(Icons.Filled.OpenInNew, null, tint = MaterialTheme.colorScheme.primary)
+                                    Icon(Icons.Filled.OpenInNew, "Mở bản đồ", modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
                                 }
                             }
                         },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp)
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
 
                 // Ghi chú thêm (Detailed)
-                OutlinedTextField(
+                MyTripTextField(
                     value = notes,
                     onValueChange = { notes = it },
-                    label = { Text("Ghi chú thêm") },
+                    label = "Ghi chú thêm",
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-                    minLines = 2,
+                    singleLine = false,
                     maxLines = 4,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp)
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }
@@ -1284,16 +1258,16 @@ private fun ActivityEditSheet(
 
         // Action buttons
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            FilledTonalButton(onClick = onDismiss, modifier = Modifier.weight(1f)) { Text("Huỷ") }
-            Button(
+            MyTripSecondaryButton(onClick = onDismiss, modifier = Modifier.weight(1f)) { Text("Huỷ") }
+            MyTripPrimaryButton(
                 onClick = {
-                    if (name.isBlank()) { nameError = true; return@Button }
+                    if (name.isBlank()) { nameError = true; return@MyTripPrimaryButton }
                     
                     val isDepValid = isValidTime(departureTime)
                     val isArrValid = isValidTime(arrivalTime)
                     if (!isDepValid) { departureTimeError = true }
                     if (!isArrValid) { arrivalTimeError = true }
-                    if (!isDepValid || !isArrValid) return@Button
+                    if (!isDepValid || !isArrValid) return@MyTripPrimaryButton
 
                     focusManager.clearFocus()
                     val activity = Activity(

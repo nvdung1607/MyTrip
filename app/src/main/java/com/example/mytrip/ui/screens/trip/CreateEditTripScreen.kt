@@ -46,6 +46,8 @@ import com.example.mytrip.data.db.entities.Trip
 import com.example.mytrip.data.db.entities.TripType
 import com.example.mytrip.navigation.Screen
 import com.example.mytrip.util.DateUtils
+import com.example.mytrip.ui.components.*
+import com.example.mytrip.ui.theme.spacing
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import java.util.Calendar
@@ -262,13 +264,12 @@ fun CreateEditTripScreen(
                         .navigationBarsPadding()
                         .padding(16.dp)
                 ) {
-                    Button(
+                    MyTripPrimaryButton(
                         onClick = { validateAndSave() },
                         enabled = !isSaving,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(52.dp),
-                        shape = RoundedCornerShape(14.dp)
+                            .height(52.dp)
                     ) {
                         if (isSaving) {
                             CircularProgressIndicator(
@@ -312,18 +313,8 @@ fun CreateEditTripScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     // Manual card
-                    Card(
-                        onClick = { useFileImport = false },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (!useFileImport)
-                                MaterialTheme.colorScheme.primaryContainer
-                            else MaterialTheme.colorScheme.surfaceVariant
-                        ),
-                        border = if (!useFileImport) androidx.compose.foundation.BorderStroke(
-                            2.dp, MaterialTheme.colorScheme.primary
-                        ) else null
+                    GlassmorphismCard(
+                        modifier = Modifier.weight(1f)
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),
@@ -347,18 +338,8 @@ fun CreateEditTripScreen(
                     }
 
                     // File import card
-                    Card(
-                        onClick = { useFileImport = true },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (useFileImport)
-                                MaterialTheme.colorScheme.primaryContainer
-                            else MaterialTheme.colorScheme.surfaceVariant
-                        ),
-                        border = if (useFileImport) androidx.compose.foundation.BorderStroke(
-                            2.dp, MaterialTheme.colorScheme.primary
-                        ) else null
+                    GlassmorphismCard(
+                        modifier = Modifier.weight(1f)
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),
@@ -384,11 +365,8 @@ fun CreateEditTripScreen(
 
                 // ── FILE IMPORT PANEL ─────────────────────────────────────────
                 AnimatedVisibility(visible = useFileImport, enter = expandVertically(), exit = shrinkVertically()) {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    GlassmorphismCard(
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(
                             modifier = Modifier.padding(20.dp),
@@ -411,7 +389,7 @@ fun CreateEditTripScreen(
                             HorizontalDivider()
 
                             // Download template button
-                            OutlinedButton(
+                            MyTripSecondaryButton(
                                 onClick = {
                                     coroutineScope.launch {
                                         val savedName = viewModel.downloadTemplateCsv(context)
@@ -422,8 +400,7 @@ fun CreateEditTripScreen(
                                         }
                                     }
                                 },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp)
+                                modifier = Modifier.fillMaxWidth()
                             ) {
                                 Icon(Icons.Default.Download, null, modifier = Modifier.size(18.dp))
                                 Spacer(Modifier.width(8.dp))
@@ -431,10 +408,9 @@ fun CreateEditTripScreen(
                             }
 
                             // Pick file button
-                            Button(
+                            MyTripPrimaryButton(
                                 onClick = { filePickerLauncher.launch("*/*") },
-                                modifier = Modifier.fillMaxWidth().height(52.dp),
-                                shape = RoundedCornerShape(12.dp)
+                                modifier = Modifier.fillMaxWidth().height(52.dp)
                             ) {
                                 if (uiState is TripUiState.Loading) {
                                     CircularProgressIndicator(modifier = Modifier.size(20.dp),
@@ -476,42 +452,38 @@ fun CreateEditTripScreen(
 
             // ── 1. Trip Name ──────────────────────────────────────────────────
             FormSection(title = "🔢 Tên chuyến đi") {
-                OutlinedTextField(
+                MyTripTextField(
                     value = name,
                     onValueChange = {
                         name = it
                         if (it.isNotBlank()) nameError = false
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("VD: Đà Nẵng - Hội An 2026") },
+                    placeholder = "VD: Đà Nẵng - Hội An 2026",
                     isError = nameError,
-                    supportingText = if (nameError) {
-                        { Text("Tên chuyến đi không được để trống", color = MaterialTheme.colorScheme.error) }
-                    } else null,
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Words,
                         imeAction = ImeAction.Next
-                    ),
-                    shape = RoundedCornerShape(16.dp)
+                    )
                 )
             }
 
             // ── 2. Description ────────────────────────────────────────────────
             FormSection(title = "🗒️ Mô tả (tùy chọn)") {
-                OutlinedTextField(
+                MyTripTextField(
                     value = description,
                     onValueChange = { description = it },
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = 80.dp),
-                    placeholder = { Text("Ghi chú ngắn về chuyến đi...") },
+                    placeholder = "Ghi chú ngắn về chuyến đi...",
                     maxLines = 4,
+                    singleLine = false,
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Sentences,
                         imeAction = ImeAction.Default
-                    ),
-                    shape = RoundedCornerShape(16.dp)
+                    )
                 )
             }
 
@@ -525,27 +497,10 @@ fun CreateEditTripScreen(
                 ) {
                     tripTypes.forEach { type ->
                         val isSelected = selectedType == type
-                        FilterChip(
+                        MyTripChip(
+                            text = "${type.icon} ${type.label}",
                             selected = isSelected,
-                            onClick = { selectedType = type },
-                            label = {
-                                Text(
-                                    text = "${type.icon} ${type.label}",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            },
-                            leadingIcon = if (isSelected) {
-                                { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
-                            } else null,
-                            shape = RoundedCornerShape(20.dp),
-                            border = FilterChipDefaults.filterChipBorder(
-                                enabled = true,
-                                selected = isSelected,
-                                borderColor = MaterialTheme.colorScheme.outline,
-                                selectedBorderColor = MaterialTheme.colorScheme.outline,
-                                borderWidth = 1.dp,
-                                selectedBorderWidth = 1.dp
-                            )
+                            onClick = { selectedType = type }
                         )
                     }
                 }
@@ -648,13 +603,13 @@ fun CreateEditTripScreen(
                 FormSection(title = "👤 Tên thành viên") {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         memberNames.forEachIndexed { index, memberName ->
-                            OutlinedTextField(
+                            MyTripTextField(
                                 value = memberName,
                                 onValueChange = { newVal ->
                                     memberNames = memberNames.toMutableList().also { it[index] = newVal }
                                 },
                                 modifier = Modifier.fillMaxWidth(),
-                                label = { Text("Thành viên ${index + 1}") },
+                                label = "Thành viên ${index + 1}",
                                 leadingIcon = {
                                     Icon(
                                         Icons.Default.Person,
@@ -666,8 +621,7 @@ fun CreateEditTripScreen(
                                 keyboardOptions = KeyboardOptions(
                                     capitalization = KeyboardCapitalization.Words,
                                     imeAction = if (index < memberNames.lastIndex) ImeAction.Next else ImeAction.Done
-                                ),
-                                shape = RoundedCornerShape(16.dp)
+                                )
                             )
                         }
                     }

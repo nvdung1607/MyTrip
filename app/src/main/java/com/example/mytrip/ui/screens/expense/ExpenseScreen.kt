@@ -29,6 +29,12 @@ import com.example.mytrip.MyTripApplication
 import com.example.mytrip.data.db.entities.*
 import com.example.mytrip.util.DateUtils
 import com.example.mytrip.util.MoneyUtils
+import com.example.mytrip.ui.components.MyTripChip
+import com.example.mytrip.ui.components.MyTripTextField
+import com.example.mytrip.ui.components.MyTripPrimaryButton
+import com.example.mytrip.ui.components.MyTripSecondaryButton
+import com.example.mytrip.ui.components.GlassmorphismCard
+import com.example.mytrip.ui.theme.spacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -187,134 +193,108 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        FilterChip(
+                        MyTripChip(
+                            text = "Nhập nhanh",
                             selected = !isDetailedMode,
-                            onClick = { isDetailedMode = false },
-                            label = { Text("Nhập nhanh") },
-                            border = FilterChipDefaults.filterChipBorder(
-                                enabled = true,
-                                selected = !isDetailedMode,
-                                borderColor = MaterialTheme.colorScheme.outline,
-                                selectedBorderColor = MaterialTheme.colorScheme.outline,
-                                borderWidth = 1.dp,
-                                selectedBorderWidth = 1.dp
-                            )
+                            onClick = { isDetailedMode = false }
                         )
-                        FilterChip(
+                        MyTripChip(
+                            text = "🧮 Tính chi tiết",
                             selected = isDetailedMode,
-                            onClick = { isDetailedMode = true },
-                            label = { Text("🧮 Tính chi tiết") },
-                            border = FilterChipDefaults.filterChipBorder(
-                                enabled = true,
-                                selected = isDetailedMode,
-                                borderColor = MaterialTheme.colorScheme.outline,
-                                selectedBorderColor = MaterialTheme.colorScheme.outline,
-                                borderWidth = 1.dp,
-                                selectedBorderWidth = 1.dp
-                            )
+                            onClick = { isDetailedMode = true }
                         )
                     }
 
                     if (!isDetailedMode) {
-                        OutlinedTextField(
+                        MyTripTextField(
                             value = input,
                             onValueChange = { input = it.filter { c -> c.isDigit() } },
-                            label = { Text("Dự kiến") },
-                            suffix = { Text("k") },
-                            placeholder = { Text("VD: 500 = 500.000₫") },
+                            label = "Dự kiến",
+                            suffix = "k",
+                            placeholder = "VD: 500 = 500.000₫",
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            shape = RoundedCornerShape(16.dp),
                             modifier = Modifier.fillMaxWidth()
                         )
                     } else {
                         // Detailed inputs
                         when (exp.category) {
                             ExpenseCategory.HOTEL -> {
-                                OutlinedTextField(
+                                MyTripTextField(
                                     value = hotelPrice,
                                     onValueChange = { hotelPrice = it.filter { c -> c.isDigit() } },
-                                    label = { Text("Giá phòng / đêm (k)") },
-                                    suffix = { Text("k") },
-                                    placeholder = { Text("VD: 500 = 500.000₫") },
+                                    label = "Giá phòng / đêm (k)",
+                                    suffix = "k",
+                                    placeholder = "VD: 500 = 500.000₫",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                    shape = RoundedCornerShape(16.dp),
                                     modifier = Modifier.fillMaxWidth()
                                 )
-                                OutlinedTextField(
+                                MyTripTextField(
                                     value = hotelNights,
                                     onValueChange = { hotelNights = it.filter { c -> c.isDigit() } },
-                                    label = { Text("Số đêm") },
-                                    placeholder = { Text("VD: 3") },
+                                    label = "Số đêm",
+                                    placeholder = "VD: 3",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                    shape = RoundedCornerShape(16.dp),
                                     modifier = Modifier.fillMaxWidth()
                                 )
                             }
                             ExpenseCategory.FOOD -> {
-                                OutlinedTextField(
+                                MyTripTextField(
                                     value = foodCostPerPersonPerDay,
                                     onValueChange = { foodCostPerPersonPerDay = it.filter { c -> c.isDigit() } },
-                                    label = { Text("Tiền ăn / người / ngày (k)") },
-                                    suffix = { Text("k") },
-                                    placeholder = { Text("VD: 150 = 150.000₫") },
+                                    label = "Tiền ăn / người / ngày (k)",
+                                    suffix = "k",
+                                    placeholder = "VD: 150 = 150.000₫",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                    shape = RoundedCornerShape(16.dp),
                                     modifier = Modifier.fillMaxWidth()
                                 )
-                                OutlinedTextField(
+                                MyTripTextField(
                                     value = foodDays,
                                     onValueChange = { foodDays = it.filter { c -> c.isDigit() } },
-                                    label = { Text("Số ngày") },
+                                    label = "Số ngày",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                    shape = RoundedCornerShape(16.dp),
                                     modifier = Modifier.fillMaxWidth()
                                 )
-                                OutlinedTextField(
+                                MyTripTextField(
                                     value = foodPeople,
                                     onValueChange = { foodPeople = it.filter { c -> c.isDigit() } },
-                                    label = { Text("Số người ăn") },
+                                    label = "Số người ăn",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                    shape = RoundedCornerShape(16.dp),
                                     modifier = Modifier.fillMaxWidth()
                                 )
                             }
                             ExpenseCategory.TICKET -> {
-                                OutlinedTextField(
+                                MyTripTextField(
                                     value = ticketPrice,
                                     onValueChange = { ticketPrice = it.filter { c -> c.isDigit() } },
-                                    label = { Text("Giá vé / người (k)") },
-                                    suffix = { Text("k") },
-                                    placeholder = { Text("VD: 100 = 100.000₫") },
+                                    label = "Giá vé / người (k)",
+                                    suffix = "k",
+                                    placeholder = "VD: 100 = 100.000₫",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                    shape = RoundedCornerShape(16.dp),
                                     modifier = Modifier.fillMaxWidth()
                                 )
-                                OutlinedTextField(
+                                MyTripTextField(
                                     value = ticketCount,
                                     onValueChange = { ticketCount = it.filter { c -> c.isDigit() } },
-                                    label = { Text("Số vé") },
+                                    label = "Số vé",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                    shape = RoundedCornerShape(16.dp),
                                     modifier = Modifier.fillMaxWidth()
                                 )
                             }
                             else -> {
-                                OutlinedTextField(
+                                MyTripTextField(
                                     value = genericPrice,
                                     onValueChange = { genericPrice = it.filter { c -> c.isDigit() } },
-                                    label = { Text("Đơn giá / khoản chi (k)") },
-                                    suffix = { Text("k") },
-                                    placeholder = { Text("VD: 200 = 200.000₫") },
+                                    label = "Đơn giá / khoản chi (k)",
+                                    suffix = "k",
+                                    placeholder = "VD: 200 = 200.000₫",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                    shape = RoundedCornerShape(16.dp),
                                     modifier = Modifier.fillMaxWidth()
                                 )
-                                OutlinedTextField(
+                                MyTripTextField(
                                     value = genericQuantity,
                                     onValueChange = { genericQuantity = it.filter { c -> c.isDigit() } },
-                                    label = { Text("Số lượng / Số chặng") },
+                                    label = "Số lượng / Số chặng",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                    shape = RoundedCornerShape(16.dp),
                                     modifier = Modifier.fillMaxWidth()
                                 )
                             }
@@ -340,12 +320,12 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
                 }
             },
             confirmButton = {
-                Button(onClick = {
+                MyTripPrimaryButton(onClick = {
                     vm.updatePlanned(exp.copy(planned = MoneyUtils.inputToVnd(MoneyUtils.parseInput(input))))
                     editExpense = null
                 }) { Text("Lưu") }
             },
-            dismissButton = { TextButton(onClick = { editExpense = null }) { Text("Hủy") } }
+            dismissButton = { MyTripSecondaryButton(onClick = { editExpense = null }) { Text("Hủy") } }
         )
     }
 
@@ -383,9 +363,8 @@ private fun BudgetTab(
     ) {
         item {
             // Summary card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+            GlassmorphismCard(
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -422,7 +401,7 @@ private fun BudgetTab(
                 isDone -> "Chuyến đi đã kết thúc"
                 else -> "Nhấn để chỉnh dự kiến"
             }
-            Card(
+            GlassmorphismCard(
                 modifier = Modifier.fillMaxWidth().clickable(enabled = !isDone) {
                     onCategoryClick(exp.category)
                 }
@@ -448,8 +427,7 @@ private fun BudgetTab(
 
         item {
             // Per person
-            Card(modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
+            GlassmorphismCard(modifier = Modifier.fillMaxWidth()) {
                 Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                     Column {
                         Text("Dự kiến/người", style = MaterialTheme.typography.labelSmall)
@@ -487,7 +465,7 @@ private fun ActualTab(
         grouped.forEach { (date, dayRecords) ->
             item { Text(date, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold) }
             items(dayRecords, key = { it.id }) { rec ->
-                Card(modifier = Modifier.fillMaxWidth()) {
+                GlassmorphismCard(modifier = Modifier.fillMaxWidth()) {
                     Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(rec.category.icon, fontSize = 24.sp)
                         Spacer(Modifier.width(12.dp))
@@ -528,10 +506,7 @@ private fun ActualTab(
             }
             items(memberNames) { name ->
                 val balance = memberBalances[name] ?: 0L
-                Card(modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (balance >= 0) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)
-                    )) {
+                GlassmorphismCard(modifier = Modifier.fillMaxWidth()) {
                     Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         Text(name, fontWeight = FontWeight.Medium)
                         if (balance >= 0) {
@@ -585,31 +560,22 @@ private fun AddExpenseRecordSheet(
             Text("Hạng mục", style = MaterialTheme.typography.labelLarge)
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(ExpenseCategory.values()) { cat ->
-                    FilterChip(
+                    MyTripChip(
+                        text = "${cat.icon} ${cat.label}",
                         selected = category == cat,
-                        onClick = { category = cat },
-                        label = { Text("${cat.icon} ${cat.label}") },
-                        border = FilterChipDefaults.filterChipBorder(
-                            enabled = true,
-                            selected = category == cat,
-                            borderColor = MaterialTheme.colorScheme.outline,
-                            selectedBorderColor = MaterialTheme.colorScheme.outline,
-                            borderWidth = 1.dp,
-                            selectedBorderWidth = 1.dp
-                        )
+                        onClick = { category = cat }
                     )
                 }
             }
 
-            OutlinedTextField(
+            MyTripTextField(
                 value = amountInput,
                 onValueChange = { amountInput = it.filter { c -> c.isDigit() } },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Số tiền") },
-                suffix = { Text("k") },
-                placeholder = { Text("VD: 200 = 200.000₫") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                shape = RoundedCornerShape(16.dp)
+                label = "Số tiền",
+                suffix = "k",
+                placeholder = "VD: 200 = 200.000₫",
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
             if (amountInput.isNotEmpty())
                 Text("= ${MoneyUtils.formatVnd(MoneyUtils.inputToVnd(MoneyUtils.parseInput(amountInput)))}",
@@ -625,32 +591,23 @@ private fun AddExpenseRecordSheet(
             Text("Ai trả", style = MaterialTheme.typography.labelLarge)
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(memberNames) { m ->
-                    FilterChip(
+                    MyTripChip(
+                        text = m,
                         selected = paidBy == m,
-                        onClick = { paidBy = m },
-                        label = { Text(m) },
-                        border = FilterChipDefaults.filterChipBorder(
-                            enabled = true,
-                            selected = paidBy == m,
-                            borderColor = MaterialTheme.colorScheme.outline,
-                            selectedBorderColor = MaterialTheme.colorScheme.outline,
-                            borderWidth = 1.dp,
-                            selectedBorderWidth = 1.dp
-                        )
+                        onClick = { paidBy = m }
                     )
                 }
             }
 
-            OutlinedTextField(
+            MyTripTextField(
                 value = description,
                 onValueChange = { description = it },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Mô tả (tùy chọn)") },
-                singleLine = true,
-                shape = RoundedCornerShape(16.dp)
+                label = "Mô tả (tùy chọn)",
+                singleLine = true
             )
 
-            Button(
+            MyTripPrimaryButton(
                 onClick = {
                     onSave(ExpenseRecord(
                         tripId = 0L, category = category,

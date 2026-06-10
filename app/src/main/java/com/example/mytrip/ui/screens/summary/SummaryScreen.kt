@@ -32,6 +32,8 @@ import com.example.mytrip.util.MoneyUtils
 import java.io.File
 import androidx.compose.ui.res.painterResource
 import com.example.mytrip.R
+import com.example.mytrip.ui.components.GlassmorphismCard
+import com.example.mytrip.ui.components.MyTripPrimaryButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -143,7 +145,7 @@ fun SummaryScreen(navController: NavController, tripId: Long) {
             // ── Chi phí ───────────────────────────────────────────────
             item { SectionHeader("💰 Tổng kết chi phí") }
             item {
-                Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                GlassmorphismCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         // Header row
                         Row(Modifier.fillMaxWidth()) {
@@ -189,11 +191,8 @@ fun SummaryScreen(navController: NavController, tripId: Long) {
                 item { SectionHeader("⚖️ Quyết toán") }
                 items(memberNames) { name ->
                     val balance = memberBalances[name] ?: 0L
-                    Card(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (balance >= 0) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)
-                        )
+                    GlassmorphismCard(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
                     ) {
                         Row(Modifier.fillMaxWidth().padding(16.dp),
                             horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -225,13 +224,9 @@ fun SummaryScreen(navController: NavController, tripId: Long) {
             // ── Export buttons ─────────────────────────────────────────
             item {
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Button(
+                    MyTripPrimaryButton(
                         onClick = { vm.exportToExcel(ctx) },
-                        modifier = Modifier.fillMaxWidth().height(52.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF107C41),
-                            contentColor = Color.White
-                        )
+                        modifier = Modifier.fillMaxWidth().height(52.dp)
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_excel),
@@ -302,9 +297,8 @@ private fun StatusBadge(text: String, color: Color) {
 
 @Composable
 private fun NoteHighlightCard(note: Note) {
-    Card(
-        modifier = Modifier.width(160.dp),
-        shape = RoundedCornerShape(16.dp)
+    GlassmorphismCard(
+        modifier = Modifier.width(160.dp)
     ) {
         Column {
             if (note.photoPath != null) {

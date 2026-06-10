@@ -6,6 +6,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -32,6 +33,8 @@ import com.example.mytrip.navigation.Screen
 import com.example.mytrip.util.DateUtils
 import com.example.mytrip.util.MoneyUtils
 import com.example.mytrip.ui.components.DraggableFab
+import com.example.mytrip.ui.components.GlassmorphismCard
+import com.example.mytrip.ui.components.MyTripPrimaryButton
 import com.example.mytrip.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -270,7 +273,12 @@ private fun TripDetailContent(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = topPadding + 8.dp, start = 20.dp, end = 20.dp, bottom = 20.dp),
+                    .padding(
+                        top = topPadding + MaterialTheme.spacing.small, 
+                        start = MaterialTheme.spacing.marginMobile, 
+                        end = MaterialTheme.spacing.marginMobile, 
+                        bottom = MaterialTheme.spacing.marginMobile
+                    ),
                 verticalArrangement = Arrangement.Bottom
             ) {
 
@@ -569,12 +577,13 @@ private fun ActionCard(
     onClick: () -> Unit,
     fullWidth: Boolean = false
 ) {
-    Card(
-        onClick = onClick,
-        modifier = modifier.then(if (fullWidth) Modifier.height(68.dp) else Modifier.height(100.dp)),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = containerColor)
+    GlassmorphismCard(
+        modifier = modifier
+            .then(if (fullWidth) Modifier.height(68.dp) else Modifier.height(100.dp))
+            .padding(4.dp)
+            .clickable { onClick() }
     ) {
+        Surface(color = containerColor, modifier = Modifier.fillMaxSize()) {
         if (fullWidth) {
             Row(
                 modifier = Modifier
@@ -631,16 +640,14 @@ private fun ActionCard(
                 }
             }
         }
+        }
     }
 }
 
 // ─── Trip type gradient helper ────────────────────────────────────────────────
 
-private fun tripTypeGradient(type: TripType): List<Color> = when (type) {
-    TripType.CAR       -> listOf(Color(0xFF1565C0), Color(0xFF42A5F5))
-    TripType.MOTORBIKE -> listOf(Color(0xFFBF360C), Color(0xFFFF7043))
-    TripType.PUBLIC    -> listOf(Color(0xFF1B5E20), Color(0xFF66BB6A))
-    TripType.TREKKING  -> listOf(Color(0xFF4A148C), Color(0xFFAB47BC))
-    TripType.CAMPING   -> listOf(Color(0xFF004D40), Color(0xFF26A69A))
-    TripType.OTHER     -> listOf(Color(0xFF37474F), Color(0xFF78909C))
+private fun tripTypeGradient(type: TripType): List<Color> {
+    // Subtle gradients: moving between Primary teal and white/transparent
+    val base = md_theme_light_primaryContainer
+    return listOf(base, Color.White.copy(alpha = 0.5f))
 }

@@ -38,6 +38,8 @@ import com.example.mytrip.util.DateUtils
 import com.example.mytrip.util.MoneyUtils
 import com.example.mytrip.ui.components.DraggableFab
 import com.example.mytrip.ui.components.NoteDetailDialog
+import com.example.mytrip.ui.components.GlassmorphismCard
+import com.example.mytrip.ui.components.MyTripChip
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -225,70 +227,34 @@ private fun ScrollableFilterCategories(
     ) {
         item {
             val isSelected = activeGroup == "ALL"
-            FilterChip(
+            MyTripChip(
+                text = "Tất cả",
                 selected = isSelected,
-                onClick = { onGroupSelected("ALL") },
-                label = { Text("Tất cả") },
-                shape = RoundedCornerShape(50),
-                border = FilterChipDefaults.filterChipBorder(
-                    enabled = true,
-                    selected = isSelected,
-                    borderColor = MaterialTheme.colorScheme.outline,
-                    selectedBorderColor = MaterialTheme.colorScheme.outline,
-                    borderWidth = 1.dp,
-                    selectedBorderWidth = 1.dp
-                )
+                onClick = { onGroupSelected("ALL") }
             )
         }
         item {
             val isSelected = activeGroup == "DAY"
-            FilterChip(
+            MyTripChip(
+                text = "Lọc theo ngày",
                 selected = isSelected,
-                onClick = { onGroupSelected("DAY") },
-                label = { Text("Lọc theo ngày") },
-                shape = RoundedCornerShape(50),
-                border = FilterChipDefaults.filterChipBorder(
-                    enabled = true,
-                    selected = isSelected,
-                    borderColor = MaterialTheme.colorScheme.outline,
-                    selectedBorderColor = MaterialTheme.colorScheme.outline,
-                    borderWidth = 1.dp,
-                    selectedBorderWidth = 1.dp
-                )
+                onClick = { onGroupSelected("DAY") }
             )
         }
         item {
             val isSelected = activeGroup == "WEEK"
-            FilterChip(
+            MyTripChip(
+                text = "Lọc theo tuần",
                 selected = isSelected,
-                onClick = { onGroupSelected("WEEK") },
-                label = { Text("Lọc theo tuần") },
-                shape = RoundedCornerShape(50),
-                border = FilterChipDefaults.filterChipBorder(
-                    enabled = true,
-                    selected = isSelected,
-                    borderColor = MaterialTheme.colorScheme.outline,
-                    selectedBorderColor = MaterialTheme.colorScheme.outline,
-                    borderWidth = 1.dp,
-                    selectedBorderWidth = 1.dp
-                )
+                onClick = { onGroupSelected("WEEK") }
             )
         }
         item {
             val isSelected = activeGroup == "TAG"
-            FilterChip(
+            MyTripChip(
+                text = "Lọc theo loại",
                 selected = isSelected,
-                onClick = { onGroupSelected("TAG") },
-                label = { Text("Lọc theo loại") },
-                shape = RoundedCornerShape(50),
-                border = FilterChipDefaults.filterChipBorder(
-                    enabled = true,
-                    selected = isSelected,
-                    borderColor = MaterialTheme.colorScheme.outline,
-                    selectedBorderColor = MaterialTheme.colorScheme.outline,
-                    borderWidth = 1.dp,
-                    selectedBorderWidth = 1.dp
-                )
+                onClick = { onGroupSelected("TAG") }
             )
         }
     }
@@ -316,19 +282,10 @@ private fun AnimatedSubFilters(
                     ) {
                         items(sortedDays, key = { it.id }) { day ->
                             val selected = currentFilter is NoteFilter.ByDay && currentFilter.dayId == day.id
-                            FilterChip(
+                            MyTripChip(
+                                text = "Ngày ${day.dayNumber} (${DateUtils.formatDate(day.date)})",
                                 selected = selected,
-                                onClick = { onFilterSelected(NoteFilter.ByDay(day.id)) },
-                                label = { Text("Ngày ${day.dayNumber} (${DateUtils.formatDate(day.date)})") },
-                                shape = RoundedCornerShape(50),
-                                border = FilterChipDefaults.filterChipBorder(
-                                    enabled = true,
-                                    selected = selected,
-                                    borderColor = MaterialTheme.colorScheme.outline,
-                                    selectedBorderColor = MaterialTheme.colorScheme.outline,
-                                    borderWidth = 1.dp,
-                                    selectedBorderWidth = 1.dp
-                                )
+                                onClick = { onFilterSelected(NoteFilter.ByDay(day.id)) }
                             )
                         }
                     }
@@ -352,19 +309,10 @@ private fun AnimatedSubFilters(
                             } else {
                                 "Tuần $week"
                             }
-                            FilterChip(
+                            MyTripChip(
+                                text = labelText,
                                 selected = selected,
-                                onClick = { onFilterSelected(NoteFilter.ByWeek(week)) },
-                                label = { Text(labelText) },
-                                shape = RoundedCornerShape(50),
-                                border = FilterChipDefaults.filterChipBorder(
-                                    enabled = true,
-                                    selected = selected,
-                                    borderColor = MaterialTheme.colorScheme.outline,
-                                    selectedBorderColor = MaterialTheme.colorScheme.outline,
-                                    borderWidth = 1.dp,
-                                    selectedBorderWidth = 1.dp
-                                )
+                                onClick = { onFilterSelected(NoteFilter.ByWeek(week)) }
                             )
                         }
                     }
@@ -376,19 +324,10 @@ private fun AnimatedSubFilters(
                     ) {
                         items(NoteTag.entries) { tag ->
                             val selected = currentFilter is NoteFilter.ByTag && currentFilter.tag == tag
-                            FilterChip(
+                            MyTripChip(
+                                text = "${tag.icon} ${tag.label}",
                                 selected = selected,
-                                onClick = { onFilterSelected(NoteFilter.ByTag(tag)) },
-                                label = { Text("${tag.icon} ${tag.label}") },
-                                shape = RoundedCornerShape(50),
-                                border = FilterChipDefaults.filterChipBorder(
-                                    enabled = true,
-                                    selected = selected,
-                                    borderColor = MaterialTheme.colorScheme.outline,
-                                    selectedBorderColor = MaterialTheme.colorScheme.outline,
-                                    borderWidth = 1.dp,
-                                    selectedBorderWidth = 1.dp
-                                )
+                                onClick = { onFilterSelected(NoteFilter.ByTag(tag)) }
                             )
                         }
                     }
@@ -407,16 +346,13 @@ private fun AllNoteCard(
     onClick: () -> Unit,
     onLongClick: () -> Unit
 ) {
-    Card(
+    GlassmorphismCard(
         modifier = Modifier
             .fillMaxWidth()
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick
-            ),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            )
     ) {
         Column {
             // Photo Thumbnail

@@ -48,6 +48,11 @@ import com.example.mytrip.data.db.entities.Note
 import com.example.mytrip.data.db.entities.NoteTag
 import com.example.mytrip.ui.screens.trip.TripViewModel
 import com.example.mytrip.util.MoneyUtils
+import com.example.mytrip.ui.components.MyTripChip
+import com.example.mytrip.ui.components.MyTripTextField
+import com.example.mytrip.ui.components.MyTripPrimaryButton
+import com.example.mytrip.ui.components.MyTripSecondaryButton
+import com.example.mytrip.ui.components.GlassmorphismCard
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -140,8 +145,8 @@ fun AddNoteScreen(
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Icon(Icons.Default.CameraAlt, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
                 Text("Cần quyền camera", style = MaterialTheme.typography.titleMedium)
-                Button(onClick = { cameraPermission.launchPermissionRequest() }) { Text("Cấp quyền") }
-                TextButton(onClick = { showCamera = false }) { Text("Bỏ qua ảnh") }
+                MyTripPrimaryButton(onClick = { cameraPermission.launchPermissionRequest() }) { Text("Cấp quyền") }
+                MyTripSecondaryButton(onClick = { showCamera = false }) { Text("Bỏ qua ảnh") }
             }
         }
     } else {
@@ -160,7 +165,7 @@ fun AddNoteScreen(
             bottomBar = {
                 Box(Modifier.fillMaxWidth().navigationBarsPadding().padding(16.dp)) {
                     val cost = MoneyUtils.inputToVnd(MoneyUtils.parseInput(costInput))
-                    Button(
+                    MyTripPrimaryButton(
                         onClick = {
                             noteVm.saveNote(Note(
                                 tripId = tripId,
@@ -233,12 +238,8 @@ fun AddNoteScreen(
                             
                             // Nút thêm ảnh từ Camera trong hàng
                             item {
-                                Card(
-                                    modifier = Modifier.size(120.dp),
-                                    shape = RoundedCornerShape(12.dp),
-                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
-                                    onClick = { if (cameraPermission.status.isGranted) showCamera = true else cameraPermission.launchPermissionRequest() }
+                                GlassmorphismCard(
+                                    modifier = Modifier.size(120.dp).clickable { if (cameraPermission.status.isGranted) showCamera = true else cameraPermission.launchPermissionRequest() }
                                 ) {
                                     Column(
                                         modifier = Modifier.fillMaxSize(),
@@ -254,12 +255,8 @@ fun AddNoteScreen(
                             
                             // Nút thêm ảnh từ máy trong hàng
                             item {
-                                Card(
-                                    modifier = Modifier.size(120.dp),
-                                    shape = RoundedCornerShape(12.dp),
-                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
-                                    onClick = { galleryLauncher.launch("image/*") }
+                                GlassmorphismCard(
+                                    modifier = Modifier.size(120.dp).clickable { galleryLauncher.launch("image/*") }
                                 ) {
                                     Column(
                                         modifier = Modifier.fillMaxSize(),
@@ -275,10 +272,8 @@ fun AddNoteScreen(
                         }
                     }
                 } else {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                    GlassmorphismCard(
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),
@@ -289,19 +284,17 @@ fun AddNoteScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                OutlinedButton(
+                                MyTripSecondaryButton(
                                     onClick = { if (cameraPermission.status.isGranted) showCamera = true else cameraPermission.launchPermissionRequest() },
-                                    modifier = Modifier.weight(1f).height(56.dp),
-                                    shape = RoundedCornerShape(12.dp)
+                                    modifier = Modifier.weight(1f).height(56.dp)
                                 ) {
                                     Icon(Icons.Default.AddAPhoto, null)
                                     Spacer(Modifier.width(8.dp))
                                     Text("Chụp ảnh")
                                 }
-                                OutlinedButton(
+                                MyTripSecondaryButton(
                                     onClick = { galleryLauncher.launch("image/*") },
-                                    modifier = Modifier.weight(1f).height(56.dp),
-                                    shape = RoundedCornerShape(12.dp)
+                                    modifier = Modifier.weight(1f).height(56.dp)
                                 ) {
                                     Icon(Icons.Default.Image, null)
                                     Spacer(Modifier.width(8.dp))
@@ -313,23 +306,22 @@ fun AddNoteScreen(
                 }
 
                 // 📝 Tên ghi chú
-                Card(modifier = Modifier.fillMaxWidth()) {
+                GlassmorphismCard(modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("📝 Tên ghi chú / địa điểm", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                        OutlinedTextField(
+                        MyTripTextField(
                             value = name,
                             onValueChange = { name = it },
                             modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("VD: Ăn trưa hải sản, Vé cáp treo...") },
+                            placeholder = "VD: Ăn trưa hải sản, Vé cáp treo...",
                             leadingIcon = { Icon(Icons.Default.Place, null) },
-                            singleLine = true,
-                            shape = RoundedCornerShape(16.dp)
+                            singleLine = true
                         )
                     }
                 }
 
                 // ⭐ Rating
-                Card(modifier = Modifier.fillMaxWidth()) {
+                GlassmorphismCard(modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("⭐ Đánh giá *", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                         Row(
@@ -359,7 +351,7 @@ fun AddNoteScreen(
                 }
 
                 // 🏷️ Tag
-                Card(modifier = Modifier.fillMaxWidth()) {
+                GlassmorphismCard(modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("🏷️ Loại *", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                         FlowRow(
@@ -368,18 +360,10 @@ fun AddNoteScreen(
                         ) {
                                     NoteTag.entries.forEach { tag ->
                                         val isSelected = selectedTag == tag
-                                        FilterChip(
+                                        MyTripChip(
+                                            text = "${tag.icon} ${tag.label}",
                                             selected = isSelected,
-                                            onClick = { selectedTag = tag },
-                                            label = { Text("${tag.icon} ${tag.label}") },
-                                            border = FilterChipDefaults.filterChipBorder(
-                                                enabled = true,
-                                                selected = isSelected,
-                                                borderColor = MaterialTheme.colorScheme.outline,
-                                                selectedBorderColor = MaterialTheme.colorScheme.outline,
-                                                borderWidth = 1.dp,
-                                                selectedBorderWidth = 1.dp
-                                            )
+                                            onClick = { selectedTag = tag }
                                         )
                                     }
                                 }
@@ -387,26 +371,26 @@ fun AddNoteScreen(
                 }
 
                 // 💰 Chi phí
-                Card(modifier = Modifier.fillMaxWidth()) {
+                GlassmorphismCard(modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text("💰 Chi phí *", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                        OutlinedTextField(
+                        MyTripTextField(
                             value = costInput,
                             onValueChange = { costInput = it.filter { c -> c.isDigit() } },
                             modifier = Modifier.fillMaxWidth(),
-                            label = { Text("Số tiền") },
-                            placeholder = { Text("VD: 150 = 150.000₫") },
-                            suffix = { Text("k") },
+                            label = "Số tiền",
+                            placeholder = "VD: 150 = 150.000₫",
+                            suffix = "k",
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            singleLine = true,
-                            shape = RoundedCornerShape(16.dp)
+                            singleLine = true
                         )
                         // Shortcuts
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             items(MoneyUtils.SHORTCUTS) { amount ->
-                                SuggestionChip(
-                                    onClick = { costInput = amount.toString() },
-                                    label = { Text(if (amount >= 1000) "${amount/1000}M" else "${amount}k") }
+                                MyTripChip(
+                                    text = if (amount >= 1000) "${amount/1000}M" else "${amount}k",
+                                    selected = false,
+                                    onClick = { costInput = amount.toString() }
                                 )
                             }
                         }
@@ -421,7 +405,7 @@ fun AddNoteScreen(
                 }
 
                 // 👤 Ai trả
-                Card(modifier = Modifier.fillMaxWidth()) {
+                GlassmorphismCard(modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("👤 Ai trả *", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                         FlowRow(
@@ -430,18 +414,10 @@ fun AddNoteScreen(
                                 ) {
                                     memberNames.forEach { member ->
                                         val isSelected = paidBy == member
-                                        FilterChip(
+                                        MyTripChip(
+                                            text = member,
                                             selected = isSelected,
-                                            onClick = { paidBy = member },
-                                            label = { Text(member) },
-                                            border = FilterChipDefaults.filterChipBorder(
-                                                enabled = true,
-                                                selected = isSelected,
-                                                borderColor = MaterialTheme.colorScheme.outline,
-                                                selectedBorderColor = MaterialTheme.colorScheme.outline,
-                                                borderWidth = 1.dp,
-                                                selectedBorderWidth = 1.dp
-                                            )
+                                            onClick = { paidBy = member }
                                         )
                                     }
                                 }
@@ -449,7 +425,7 @@ fun AddNoteScreen(
                 }
 
                 // Optional fields
-                OutlinedButton(
+                MyTripSecondaryButton(
                     onClick = { showOptional = !showOptional },
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -460,15 +436,12 @@ fun AddNoteScreen(
 
                 AnimatedVisibility(visible = showOptional, enter = expandVertically(), exit = shrinkVertically()) {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        OutlinedTextField(
+                        MyTripTextField(
                             value = comment,
                             onValueChange = { comment = it },
                             modifier = Modifier.fillMaxWidth(),
-                            label = { Text("Nhận xét chi tiết") },
-                            leadingIcon = { Icon(Icons.AutoMirrored.Filled.Comment, null) },
-                            minLines = 3,
-                            maxLines = 5,
-                            shape = RoundedCornerShape(16.dp)
+                            label = "Nhận xét chi tiết",
+                            leadingIcon = { Icon(Icons.AutoMirrored.Filled.Comment, null) }
                         )
                         if (gpsLat != null && gpsLng != null) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -520,7 +493,7 @@ private fun CameraScreen(
         )
 
         // Skip button top-right
-        TextButton(
+        MyTripSecondaryButton(
             onClick = onSkip,
             modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
         ) {

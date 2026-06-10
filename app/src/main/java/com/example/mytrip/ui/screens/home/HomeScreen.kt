@@ -56,6 +56,10 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import com.example.mytrip.ui.components.MyTripChip
+import com.example.mytrip.ui.components.GlassmorphismCard
+import com.example.mytrip.ui.components.MyTripPrimaryButton
+import com.example.mytrip.ui.theme.spacing
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -170,6 +174,7 @@ fun HomeScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
                 .padding(innerPadding)
         ) {
             // ── Filter chips ──────────────────────────────────────────────
@@ -187,12 +192,12 @@ fun HomeScreen(
             } else {
                 LazyColumn(
                     contentPadding = PaddingValues(
-                        start = 16.dp,
-                        end = 16.dp,
-                        top = 8.dp,
+                        start = MaterialTheme.spacing.marginMobile,
+                        end = MaterialTheme.spacing.marginMobile,
+                        top = MaterialTheme.spacing.small,
                         bottom = 96.dp
                     ),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.gutterSm),
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(trips, key = { it.id }) { trip ->
@@ -247,31 +252,10 @@ private fun FilterChipsRow(
     ) {
         items(options) { option ->
             val selected = activeFilter == option.status
-            FilterChip(
+            MyTripChip(
+                text = option.label,
                 selected = selected,
-                onClick = { onFilterSelected(option.status) },
-                label = { 
-                    Text(
-                        text = option.label,
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
-                    )
-                },
-                shape = RoundedCornerShape(50),
-                colors = FilterChipDefaults.filterChipColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    selectedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer
-                ),
-                border = FilterChipDefaults.filterChipBorder(
-                    enabled = true,
-                    selected = selected,
-                    borderColor = Color.Transparent,
-                    selectedBorderColor = Color.Transparent,
-                    borderWidth = 0.dp,
-                    selectedBorderWidth = 0.dp
-                )
+                onClick = { onFilterSelected(option.status) }
             )
         }
     }
@@ -288,12 +272,7 @@ private fun EmptyState(
         modifier = modifier.padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
-        Card(
-            shape = RoundedCornerShape(24.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-            ),
+        GlassmorphismCard(
             modifier = Modifier.fillMaxWidth().padding(16.dp)
         ) {
             Column(
@@ -321,19 +300,12 @@ private fun EmptyState(
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 
-                Button(
+                MyTripPrimaryButton(
                     onClick = onImportSampleClick,
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    ),
                     modifier = Modifier.fillMaxWidth().height(48.dp)
                 ) {
                     Text(
-                        text = "🚀 Tải chuyến đi mẫu",
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.labelLarge
+                        text = "🚀 Tải chuyến đi mẫu"
                     )
                 }
             }
@@ -366,18 +338,13 @@ fun TripCard(
         )
     }
 
-    Card(
+    GlassmorphismCard(
         modifier = Modifier
             .fillMaxWidth()
             .combinedClickable(
                 onClick = onCardClick,
                 onLongClick = { showDeleteDialog = true }
-            ),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+            )
     ) {
         Column {
             // ── Gradient header ───────────────────────────────────────────
