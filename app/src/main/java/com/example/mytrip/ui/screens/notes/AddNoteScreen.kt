@@ -53,6 +53,7 @@ import com.example.mytrip.ui.components.MyTripTextField
 import com.example.mytrip.ui.components.MyTripPrimaryButton
 import com.example.mytrip.ui.components.MyTripSecondaryButton
 import com.example.mytrip.ui.components.GlassmorphismCard
+import com.example.mytrip.ui.theme.TripThemeProvider
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -85,6 +86,7 @@ fun AddNoteScreen(
     val cameraPermission = rememberPermissionState(Manifest.permission.CAMERA)
     val locationPermission = rememberPermissionState(Manifest.permission.ACCESS_COARSE_LOCATION)
 
+    TripThemeProvider(trip = trip) {
     // State
     var photoPaths by remember { mutableStateOf<List<String>>(emptyList()) }
     var showCamera by remember { mutableStateOf(false) } // Bắt đầu ở màn hình Form trực tiếp
@@ -455,6 +457,7 @@ fun AddNoteScreen(
                 Spacer(Modifier.height(16.dp))
             }
         }
+    }
     }
 }
 

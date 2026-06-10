@@ -124,6 +124,7 @@ import com.example.mytrip.ui.components.MyTripTextField
 import com.example.mytrip.ui.components.MyTripPrimaryButton
 import com.example.mytrip.ui.components.MyTripSecondaryButton
 import com.example.mytrip.ui.components.GlassmorphismCard
+import com.example.mytrip.ui.theme.TripThemeProvider
 import com.example.mytrip.ui.theme.spacing
 
 // ─── Palette for day number circles ───────────────────────────────────────────
@@ -220,8 +221,9 @@ fun ItineraryScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
+    TripThemeProvider(trip = trip) {
+        Scaffold(
+            topBar = {
             TopAppBar(
                 title = {
                     Column {
@@ -389,6 +391,7 @@ fun ItineraryScreen(
                 },
                 onDismiss = { scope.launch { sheetState.hide() }; showSheet = false }
             )
+        }
         }
     }
 }

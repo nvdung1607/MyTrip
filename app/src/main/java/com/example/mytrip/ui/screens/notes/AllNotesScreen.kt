@@ -5,6 +5,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -13,8 +14,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.ViewList
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -40,6 +45,7 @@ import com.example.mytrip.ui.components.DraggableFab
 import com.example.mytrip.ui.components.NoteDetailDialog
 import com.example.mytrip.ui.components.GlassmorphismCard
 import com.example.mytrip.ui.components.MyTripChip
+import com.example.mytrip.ui.theme.TripThemeProvider
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,12 +66,14 @@ fun AllNotesScreen(
 
     var noteToDelete by remember { mutableStateOf<Note?>(null) }
     var expandedNote by remember { mutableStateOf<Note?>(null) }
+    var isListView by remember { mutableStateOf(false) }
 
     // Group-by category selected helper
     var activeCategoryGroup by remember { mutableStateOf("ALL") } // "ALL", "DAY", "WEEK", "TAG"
 
-    Scaffold(
-        topBar = {
+    TripThemeProvider(trip = trip) {
+        Scaffold(
+            topBar = {
             TopAppBar(
                 title = {
                     Column {
@@ -86,6 +94,14 @@ fun AllNotesScreen(
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { isListView = !isListView }) {
+                        Icon(
+                            imageVector = if (isListView) Icons.Default.GridView else Icons.Default.ViewList,
+                            contentDescription = "Chuyển chế độ xem"
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -151,23 +167,45 @@ fun AllNotesScreen(
                     }
                 }
             } else {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    contentPadding = PaddingValues(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .weight(1f)
-                ) {
-                    items(filteredNotes, key = { it.id }) { note ->
-                        val noteDay = days.find { it.id == note.dayId }
-                        AllNoteCard(
-                            note = note,
-                            dayNumber = noteDay?.dayNumber,
-                            onClick = { expandedNote = note },
-                            onLongClick = { noteToDelete = note }
-                        )
+                androidx.compose.animation.AnimatedContent(
+                    targetState = isListView,
+                    label = "ViewModeAnimation",
+                    modifier = Modifier.fillMaxSize().weight(1f)
+                ) { listMode ->
+                    if (listMode) {
+                        LazyColumn(
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(filteredNotes, key = { it.id }) { note ->
+                                val noteDay = days.find { it.id == note.dayId }
+                                AllNoteListRow(
+                                    note = note,
+                                    dayNumber = noteDay?.dayNumber,
+                                    onClick = { expandedNote = note },
+                                    onLongClick = { noteToDelete = note }
+                                )
+                            }
+                        }
+                    } else {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            contentPadding = PaddingValues(16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(filteredNotes, key = { it.id }) { note ->
+                                val noteDay = days.find { it.id == note.dayId }
+                                AllNoteCard(
+                                    note = note,
+                                    dayNumber = noteDay?.dayNumber,
+                                    onClick = { expandedNote = note },
+                                    onLongClick = { noteToDelete = note }
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -179,6 +217,7 @@ fun AllNotesScreen(
             modifier = Modifier.fillMaxSize()
         )
     }
+}
 }
 
     // ── Delete confirmation dialog ────────────────────────────────────
@@ -443,6 +482,114 @@ private fun AllNoteCard(
                             text = MoneyUtils.formatShort(note.cost),
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                             color = Color(0xFF2E7D32)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ─── List Row View ────────────────────────────────────────────────────────────
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun AllNoteListRow(
+    note: Note,
+    dayNumber: Int?,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit
+) {
+    GlassmorphismCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Note image or icon
+            val firstImage = try {
+                val arr = org.json.JSONArray(note.photoPaths)
+                if (arr.length() > 0) arr.getString(0) else null
+            } catch (_: Exception) { null }
+
+            if (firstImage != null) {
+                coil.compose.AsyncImage(
+                    model = firstImage,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(note.tag.icon, fontSize = 24.sp)
+                }
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            // Info
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = note.tag.label,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                    if (note.cost > 0.0) {
+                        Text(
+                            text = MoneyUtils.formatShort(note.cost),
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF2E7D32)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                if (note.name.isNotBlank()) {
+                    Text(
+                        text = note.name,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                } else if (note.comment.isNotBlank()) {
+                    Text(
+                        text = note.comment,
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault()).format(java.util.Date(note.timestamp)),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    if (dayNumber != null) {
+                        Text(
+                            text = "Ngày $dayNumber",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }

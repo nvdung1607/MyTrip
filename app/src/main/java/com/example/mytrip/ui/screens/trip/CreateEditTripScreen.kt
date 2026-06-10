@@ -8,6 +8,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -69,17 +70,18 @@ fun CreateEditTripScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     // Import mode (only in create mode)
+    var selectedImportUri by remember { mutableStateOf<android.net.Uri?>(null) }
     var useFileImport by remember { mutableStateOf(false) }
     var importFileName by remember { mutableStateOf<String?>(null) }
     var importSuccess by remember { mutableStateOf(false) }
 
-    // File picker launcher for CSV
+    // File picker launcher for Excel
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         if (uri != null) {
-            importFileName = uri.lastPathSegment ?: "file.csv"
-            viewModel.importFromCsvUri(context, uri)
+            importFileName = uri.lastPathSegment ?: "file.xlsx"
+            selectedImportUri = uri
         }
     }
 
@@ -303,64 +305,14 @@ fun CreateEditTripScreen(
 
             // ── MODE SELECTOR (only in Create mode) ──────────────────────────
             if (!isEditMode) {
-                Text(
-                    text = "Chọn cách tạo lịch trình",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                // File import toggle
+                MyTripSecondaryButton(
+                    onClick = { useFileImport = !useFileImport },
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    // Manual card
-                    GlassmorphismCard(
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(Icons.Default.EditNote, null,
-                                modifier = Modifier.size(32.dp),
-                                tint = if (!useFileImport) MaterialTheme.colorScheme.primary
-                                       else MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("Tạo thủ công", fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.bodyMedium,
-                                textAlign = TextAlign.Center,
-                                color = if (!useFileImport) MaterialTheme.colorScheme.primary
-                                        else MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("Điền form từng bước",
-                                style = MaterialTheme.typography.bodySmall,
-                                textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
-
-                    // File import card
-                    GlassmorphismCard(
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(Icons.Default.UploadFile, null,
-                                modifier = Modifier.size(32.dp),
-                                tint = if (useFileImport) MaterialTheme.colorScheme.primary
-                                       else MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("Nhập từ file CSV", fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.bodyMedium,
-                                textAlign = TextAlign.Center,
-                                color = if (useFileImport) MaterialTheme.colorScheme.primary
-                                        else MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("Tải file mẫu, điền và import",
-                                style = MaterialTheme.typography.bodySmall,
-                                textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
+                    Icon(if (useFileImport) Icons.Default.Remove else Icons.Default.Add, null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Nhập từ file Excel", fontWeight = FontWeight.Bold)
                 }
 
                 // ── FILE IMPORT PANEL ─────────────────────────────────────────
@@ -375,12 +327,10 @@ fun CreateEditTripScreen(
                             Text("📋 Hướng dẫn nhập file", fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.titleSmall)
 
-                            // Steps
                             listOf(
-                                "1️⃣ Tải file mẫu CSV về máy",
-                                "2️⃣ Mở file bằng Excel / Google Sheets",
-                                "3️⃣ Điền thông tin chuyến đi của bạn",
-                                "4️⃣ Lưu file và chọn nhập vào app"
+                                "1️⃣ Tải file mẫu Excel về máy",
+                                "2️⃣ Mở file và điền thông tin chuyến đi",
+                                "3️⃣ Tải file lên và nhấn Nhập"
                             ).forEach { step ->
                                 Text(step, style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -392,9 +342,9 @@ fun CreateEditTripScreen(
                             MyTripSecondaryButton(
                                 onClick = {
                                     coroutineScope.launch {
-                                        val savedName = viewModel.downloadTemplateCsv(context)
+                                        val savedName = viewModel.downloadTemplateExcel(context)
                                         if (savedName != null) {
-                                            snackbarHostState.showSnackbar("✅ Đã tải về Thư mục Tải xuống: $savedName")
+                                            snackbarHostState.showSnackbar("✅ Đã tải file mẫu: $savedName")
                                         } else {
                                             snackbarHostState.showSnackbar("❌ Không tải được file mẫu")
                                         }
@@ -404,13 +354,30 @@ fun CreateEditTripScreen(
                             ) {
                                 Icon(Icons.Default.Download, null, modifier = Modifier.size(18.dp))
                                 Spacer(Modifier.width(8.dp))
-                                Text("Tải file mẫu (.csv)", fontWeight = FontWeight.Medium)
+                                Text("Tải file mẫu (.xlsx)", fontWeight = FontWeight.Medium)
                             }
 
                             // Pick file button
+                            MyTripSecondaryButton(
+                                onClick = { filePickerLauncher.launch("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(Icons.Default.FolderOpen, null, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    text = if (importFileName != null) "📂 ${if (importFileName!!.length > 25) importFileName!!.substring(0, 25) + "..." else importFileName}"
+                                           else "Tải file lên",
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+
+                            // Import button
                             MyTripPrimaryButton(
-                                onClick = { filePickerLauncher.launch("*/*") },
-                                modifier = Modifier.fillMaxWidth().height(52.dp)
+                                onClick = {
+                                    selectedImportUri?.let { viewModel.importFromExcelUri(context, it) }
+                                },
+                                modifier = Modifier.fillMaxWidth().height(52.dp),
+                                enabled = selectedImportUri != null && uiState !is TripUiState.Loading
                             ) {
                                 if (uiState is TripUiState.Loading) {
                                     CircularProgressIndicator(modifier = Modifier.size(20.dp),
@@ -418,25 +385,9 @@ fun CreateEditTripScreen(
                                     Spacer(Modifier.width(8.dp))
                                     Text("Đang nhập...")
                                 } else {
-                                    Icon(Icons.Default.FolderOpen, null, modifier = Modifier.size(20.dp))
+                                    Icon(Icons.Default.UploadFile, null, modifier = Modifier.size(20.dp))
                                     Spacer(Modifier.width(8.dp))
-                                    Text(
-                                        text = if (importFileName != null) "📂 ${importFileName!!.take(25)}"
-                                               else "Chọn file CSV từ máy",
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            }
-
-                            if (importFileName != null && uiState !is TripUiState.Loading) {
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = MaterialTheme.colorScheme.secondaryContainer
-                                ) {
-                                    Text("File đã chọn: $importFileName",
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer)
+                                    Text("Nhập", fontWeight = FontWeight.Bold)
                                 }
                             }
                         }

@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -27,12 +28,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // savedInstanceState is non-null on config changes (rotation etc.)
         val coldStart = savedInstanceState == null
-
-        // Parse widget deep-link URI (mytrip://add_note/<tripId> or mytrip://trip_detail/<tripId>)
-        val deepLinkUri = intent?.data?.takeIf { it.scheme == "mytrip" }
-
         enableEdgeToEdge()
         setContent {
             MyTripTheme {
@@ -40,36 +36,21 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    val navController = rememberNavController()
                     val app = applicationContext as MyTripApplication
-                    val allTrips by app.repository.getAllTrips()
-                        .collectAsState(initial = null)
-
-                    // Only auto-navigate once on cold start, after trips are loaded
-                    var navigated by remember { mutableStateOf(false) }
-                    LaunchedEffect(allTrips) {
-                        if (!navigated && coldStart && allTrips != null) {
-                            navigated = true
-                            when {
-                                // Widget deep-link takes priority
-                                deepLinkUri != null -> {
-                                    val path = deepLinkUri.host + (deepLinkUri.path ?: "")
-                                    // host = "add_note", path = "/<tripId>"
-                                    val tripId = deepLinkUri.lastPathSegment?.toLongOrNull()
-                                    if (tripId != null) {
-                                        when (deepLinkUri.host) {
-                                            "add_note" -> navController.navigate(
-                                                Screen.AddNote.createRoute(tripId)
-                                            )
-                                            "trip_detail" -> navController.navigate(
-                                                Screen.TripDetail.createRoute(tripId)
-                                            )
-                                        }
-                                    }
-                                }
-                                // Regular cold start: jump to ongoing trip if any
-                                else -> {
-                                    val ongoingTrip = allTrips!!.firstOrNull { it.status == TripStatus.ONGOING }
+                    val allTrips by app.repository.getAllTrips().collectAsState(initial = null)
+                    
+                    if (allTrips == null) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {}
+                    } else {
+                        val navController = rememberNavController()
+                        
+                        var navigated by remember { mutableStateOf(false) }
+                        LaunchedEffect(Unit) {
+                            if (!navigated && coldStart) {
+                                navigated = true
+                                val hasDeepLink = intent?.data?.scheme == "mytrip"
+                                if (!hasDeepLink) {
+                                    val ongoingTrip = allTrips?.firstOrNull { it.status == TripStatus.ONGOING }
                                     if (ongoingTrip != null) {
                                         navController.navigate(Screen.TripDetail.createRoute(ongoingTrip.id)) {
                                             popUpTo(Screen.Home.route) { inclusive = false }
@@ -78,11 +59,11 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         }
-                    }
 
-                    MyTripNavGraph(navController = navController)
+                        MyTripNavGraph(navController = navController)
+                    }
                 }
             }
         }
     }
-}
+}

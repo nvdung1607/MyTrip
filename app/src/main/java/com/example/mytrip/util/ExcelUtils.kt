@@ -231,7 +231,6 @@ object ExcelUtils {
 
         for (day in days.sortedBy { it.dayNumber }) {
             val acts = (activitiesMap[day.id] ?: emptyList())
-                .filter { it.status != ActivityStatus.PENDING }
                 .sortedBy { it.orderIndex }
             if (acts.isEmpty()) continue
 
@@ -433,7 +432,7 @@ object ExcelUtils {
             // Embed thumbnail image if available
             if (note.photoPath != null) {
                 try {
-                    val imgBytes = loadThumbnail(note.photoPath, 120, 80)
+                    val imgBytes = loadThumbnail(context, note.photoPath, 120, 80)
                     if (imgBytes != null) {
                         val picIdx = wb.addPicture(imgBytes, Workbook.PICTURE_TYPE_JPEG)
                         val anchor = XSSFClientAnchor(0, 0, 0, 0, 8, r, 9, r + 1)
@@ -460,15 +459,29 @@ object ExcelUtils {
 
     // ─── Thumbnail helper ─────────────────────────────────────────────────────
 
-    private fun loadThumbnail(path: String, maxW: Int, maxH: Int): ByteArray? {
+    private fun loadThumbnail(context: Context, path: String, maxW: Int, maxH: Int): ByteArray? {
         return try {
+            val uri = Uri.parse(path)
+            val isUri = uri.scheme == "content" || uri.scheme == "file" || path.startsWith("android.resource://")
+
             val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-            BitmapFactory.decodeFile(path, opts)
+            if (isUri) {
+                context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, opts) }
+            } else {
+                BitmapFactory.decodeFile(path, opts)
+            }
+
             val scaleW = (opts.outWidth / maxW).coerceAtLeast(1)
             val scaleH = (opts.outHeight / maxH).coerceAtLeast(1)
             val scale = maxOf(scaleW, scaleH)
+            
             val opts2 = BitmapFactory.Options().apply { inSampleSize = scale }
-            val bmp = BitmapFactory.decodeFile(path, opts2) ?: return null
+            val bmp = if (isUri) {
+                context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, opts2) }
+            } else {
+                BitmapFactory.decodeFile(path, opts2)
+            } ?: return null
+
             val scaled = Bitmap.createScaledBitmap(bmp, maxW, maxH, true)
             val bos = ByteArrayOutputStream()
             scaled.compress(Bitmap.CompressFormat.JPEG, 80, bos)

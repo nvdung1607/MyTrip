@@ -87,8 +87,9 @@ fun TripDetailScreen(
         )
     }
 
-    Scaffold(
-        topBar = {
+    TripThemeProvider(trip = trip) {
+        Scaffold(
+            topBar = {
             TopAppBar(
                 title = {
                     val t = trip
@@ -232,6 +233,7 @@ fun TripDetailScreen(
             )
         }
         } // end Box
+    }
     }
 }
 
@@ -516,6 +518,7 @@ private fun TripDetailContent(
         )
     }
 }
+
 
 // ─── Helper composables ───────────────────────────────────────────────────────
 

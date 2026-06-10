@@ -32,5 +32,6 @@ data class Trip(
     val numPeople: Int = 1,
     val memberNames: String = "", // JSON array of names, e.g. ["Dũng","An","Bình"]
     val useClusters: Boolean = false,
+    val themeColor: String = "", // hex string, e.g. "#D1E9E6"
     val createdAt: Long = System.currentTimeMillis()
 )

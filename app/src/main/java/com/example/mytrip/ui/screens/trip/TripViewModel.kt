@@ -70,11 +70,12 @@ class TripViewModel(application: Application) : AndroidViewModel(application) {
      * Save trip: if trip.id == 0 → create (returns new id), else → update (returns same id).
      */
     suspend fun saveTrip(trip: Trip): Long {
-        val tripId = if (trip.id == 0L) {
-            repository.createTrip(trip)
+        val tripToSave = if (trip.themeColor.isEmpty()) trip.copy(themeColor = com.example.mytrip.ui.theme.TripThemeColors.getRandomColor()) else trip
+        val tripId = if (tripToSave.id == 0L) {
+            repository.createTrip(tripToSave)
         } else {
-            repository.updateTrip(trip)
-            trip.id
+            repository.updateTrip(tripToSave)
+            tripToSave.id
         }
         MyTripWidgetUpdater.update(getApplication())
         return tripId
@@ -103,18 +104,18 @@ class TripViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /** Import trip from a user-picked CSV file URI */
-    fun importFromCsvUri(context: Context, uri: Uri) {
+    /** Import trip from a user-picked Excel file URI */
+    fun importFromExcelUri(context: Context, uri: Uri) {
         viewModelScope.launch {
             _uiState.value = TripUiState.Loading
-            when (val result = CsvImportUtils.parseFromUri(context, uri)) {
-                is CsvImportUtils.ImportResult.Error -> {
+            when (val result = com.example.mytrip.util.ExcelImportUtils.parseFromUri(context, uri)) {
+                is com.example.mytrip.util.ExcelImportUtils.ImportResult.Error -> {
                     _importError.value = result.message
                     _uiState.value = TripUiState.Success
                 }
-                is CsvImportUtils.ImportResult.Success -> {
+                is com.example.mytrip.util.ExcelImportUtils.ImportResult.Success -> {
                     try {
-                        val tripId = repository.importFromCsv(result.data)
+                        val tripId = repository.importFromExcel(result.data)
                         _importedTripId.value = tripId
                         _uiState.value = TripUiState.Success
                     } catch (e: Exception) {
@@ -126,28 +127,49 @@ class TripViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /** Save the template CSV to Downloads folder so user can open/edit it */
-    fun downloadTemplateCsv(context: Context): String? {
-        return try {
-            val assetContent = context.assets.open("trip_template.csv").use { it.readBytes() }
-            val fileName = "MyTrip_Mau_Lich_Trinh.csv"
-
-            // Save to Downloads via MediaStore
-            val values = android.content.ContentValues().apply {
-                put(android.provider.MediaStore.Downloads.DISPLAY_NAME, fileName)
-                put(android.provider.MediaStore.Downloads.MIME_TYPE, "text/csv")
-                put(android.provider.MediaStore.Downloads.IS_PENDING, 1)
+    /** Import sample trip */
+    fun importSampleTrip() {
+        viewModelScope.launch {
+            _uiState.value = TripUiState.Loading
+            try {
+                // To trigger navigation after import, we can fetch the last inserted ID.
+                // Or simply we can get the latest trip. But repository.importSeedTrip doesn't return ID.
+                val tripId = repository.importSeedTrip()
+                _importedTripId.value = tripId
+                _uiState.value = TripUiState.Success
+            } catch (e: Exception) {
+                _importError.value = "Lỗi lưu dữ liệu mẫu: ${e.message}"
+                _uiState.value = TripUiState.Success
             }
-            val resolver = context.contentResolver
-            val uri = resolver.insert(android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
-            if (uri != null) {
-                resolver.openOutputStream(uri)?.use { it.write(assetContent) }
-                values.clear()
-                values.put(android.provider.MediaStore.Downloads.IS_PENDING, 0)
-                resolver.update(uri, values, null, null)
-                fileName
-            } else null
+        }
+    }
+
+    /** Save the template Excel to Downloads folder using ExcelUtils */
+    fun downloadTemplateExcel(context: Context): String? {
+        return try {
+            val trip = com.example.mytrip.data.seed.TripSeedData.trip.copy(name = "Lịch trình mẫu")
+            val days = com.example.mytrip.data.seed.TripSeedData.days.map { daySeed ->
+                com.example.mytrip.data.db.entities.Day(
+                    id = 0L,
+                    tripId = trip.id,
+                    dayNumber = daySeed.dayNumber,
+                    date = trip.startDate + (daySeed.dayNumber - 1) * 86_400_000L,
+                    title = daySeed.title
+                )
+            }
+            val uri = com.example.mytrip.util.ExcelUtils.exportTripToExcel(
+                context = context,
+                trip = trip,
+                days = days,
+                activitiesMap = emptyMap(),
+                expenses = emptyList(),
+                records = emptyList(),
+                notes = emptyList(),
+                memberNames = listOf("Tôi")
+            )
+            uri.lastPathSegment
         } catch (e: Exception) {
+            e.printStackTrace()
             null
         }
     }

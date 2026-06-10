@@ -3,6 +3,7 @@ package com.example.mytrip.data.repository
 import com.example.mytrip.data.db.dao.*
 import com.example.mytrip.data.db.entities.*
 import com.example.mytrip.util.CsvImportUtils
+import com.example.mytrip.util.ExcelImportUtils
 import kotlinx.coroutines.flow.Flow
 import org.json.JSONArray
 
@@ -169,7 +170,8 @@ class TripRepository(
             numPeople = data.numPeople,
             memberNames = namesJson,
             description = data.description,
-            useClusters = data.days.any { it.clusterName.isNotBlank() }
+            useClusters = data.days.any { it.clusterName.isNotBlank() },
+            themeColor = com.example.mytrip.ui.theme.TripThemeColors.getRandomColor()
         )
         val tripId = tripDao.insertTrip(trip)
 
@@ -228,7 +230,40 @@ class TripRepository(
         return tripId
     }
 
-    suspend fun importSeedTrip(overrideType: TripType? = null) {
+    suspend fun importFromExcel(data: ExcelImportUtils.ParsedData): Long {
+        val tripId = tripDao.insertTrip(data.trip.copy(id = 0L))
+
+        val dayIdMap = mutableMapOf<Long, Long>()
+        for (day in data.days) {
+            val dayId = dayDao.insertDay(day.copy(tripId = tripId, id = 0L))
+            dayIdMap[day.id] = dayId
+        }
+
+        for (act in data.activities) {
+            val newDayId = dayIdMap[act.dayId] ?: continue
+            activityDao.insertActivity(act.copy(dayId = newDayId, id = 0L))
+        }
+
+        val expenses = if (data.expenses.isEmpty()) {
+            ExpenseCategory.values().map { Expense(tripId = tripId, category = it, planned = 0) }
+        } else {
+            data.expenses.map { it.copy(tripId = tripId, id = 0L) }
+        }
+        expenseDao.insertExpenses(expenses)
+
+        for (rec in data.records) {
+            expenseDao.insertRecord(rec.copy(tripId = tripId, id = 0L))
+        }
+
+        for (note in data.notes) {
+            val newDayId = note.dayId?.let { dayIdMap[it] }
+            noteDao.insertNote(note.copy(tripId = tripId, dayId = newDayId, id = 0L))
+        }
+
+        return tripId
+    }
+
+    suspend fun importSeedTrip(overrideType: TripType? = null): Long {
 
         val todayStartMs = run {
             val now = System.currentTimeMillis()
@@ -238,7 +273,8 @@ class TripRepository(
             startDate = todayStartMs,
             endDate = todayStartMs + 29 * 86_400_000L,
             createdAt = System.currentTimeMillis(),
-            type = overrideType ?: com.example.mytrip.data.seed.TripSeedData.trip.type
+            type = overrideType ?: com.example.mytrip.data.seed.TripSeedData.trip.type,
+            themeColor = com.example.mytrip.ui.theme.TripThemeColors.getRandomColor()
         )
         val seedDays = com.example.mytrip.data.seed.TripSeedData.days
         
@@ -307,5 +343,6 @@ class TripRepository(
             
             currentDayDate += 86_400_000L
         }
+        return tripId
     }
 }

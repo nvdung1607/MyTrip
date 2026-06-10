@@ -90,7 +90,7 @@ class AllNotesViewModel(application: Application) : AndroidViewModel(application
             }
             is NoteFilter.ByTag -> notes.filter { it.tag == filter.tag }
         }
-        resultList.sortedBy { it.timestamp }
+        resultList.sortedByDescending { it.timestamp }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     fun loadTrip(tripId: Long) {

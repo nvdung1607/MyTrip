@@ -186,7 +186,6 @@ fun HomeScreen(
             // ── Trip list or empty state ───────────────────────────────────
             if (trips.isEmpty()) {
                 EmptyState(
-                    onImportSampleClick = { viewModel.importSampleTrip() },
                     modifier = Modifier.fillMaxSize()
                 )
             } else {
@@ -265,7 +264,6 @@ private fun FilterChipsRow(
 
 @Composable
 private fun EmptyState(
-    onImportSampleClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -299,15 +297,6 @@ private fun EmptyState(
                     modifier = Modifier.padding(horizontal = 8.dp)
                 )
                 Spacer(modifier = Modifier.height(24.dp))
-                
-                MyTripPrimaryButton(
-                    onClick = onImportSampleClick,
-                    modifier = Modifier.fillMaxWidth().height(48.dp)
-                ) {
-                    Text(
-                        text = "🚀 Tải chuyến đi mẫu"
-                    )
-                }
             }
         }
     }

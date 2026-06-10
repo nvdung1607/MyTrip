@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceModifier
+import androidx.glance.LocalContext
 import androidx.glance.action.actionParametersOf
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.action.actionRunCallback
@@ -59,9 +60,11 @@ private fun formatVnd(amount: Long): String = when {
     else                    -> "${amount}đ"
 }
 
-private fun openAppIntent(tripId: Long, route: String = "trip_detail/$tripId") =
-    Intent(Intent.ACTION_VIEW, Uri.parse("mytrip://$route"))
-        .apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP }
+private fun openAppIntent(context: android.content.Context, tripId: Long, route: String = "trip_detail/$tripId") =
+    Intent(Intent.ACTION_VIEW, android.net.Uri.parse("mytrip://$route")).apply {
+        component = android.content.ComponentName(context, com.example.mytrip.MainActivity::class.java)
+        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+    }
 
 // ── Reusable components ───────────────────────────────────────────────────────
 
@@ -73,7 +76,7 @@ private fun AddNoteButton(tripId: Long, size: Int = 30) {
             .size(size.dp)
             .cornerRadius((size / 2).dp)
             .background(PlusColor)
-            .clickable(actionRunCallback<AddNoteAction>(actionParametersOf(tripIdKey to tripId))),
+            .clickable(actionStartActivity(openAppIntent(LocalContext.current, tripId, "add_note/$tripId?dayId=-1"))),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -164,7 +167,12 @@ private fun BudgetSection(actual: Long, planned: Long, compact: Boolean = false)
 
 @Composable
 fun EmptyWidget() {
-    val openApp = actionStartActivity(Intent(Intent.ACTION_VIEW, Uri.parse("mytrip://home")).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP })
+    val openApp = actionStartActivity(
+        Intent(Intent.ACTION_VIEW, Uri.parse("mytrip://home")).apply {
+            component = android.content.ComponentName(LocalContext.current, com.example.mytrip.MainActivity::class.java)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+    )
 
     Column(
         modifier = GlanceModifier
@@ -197,101 +205,12 @@ fun EmptyWidget() {
 
 // ── Small Widget (2×2) ────────────────────────────────────────────────────────
 
+// ── Small Widget (2×2) ────────────────────────────────────────────────────────
 @Composable
 fun SmallWidget(state: MyTripWidgetState) {
-    val openApp = actionStartActivity(openAppIntent(state.tripId))
+    val openApp = actionStartActivity(openAppIntent(LocalContext.current, state.tripId))
 
     Column(
-        modifier = GlanceModifier
-            .fillMaxSize()
-            .cornerRadius(16.dp)
-            .background(BgColor)
-            .padding(10.dp)
-            .clickable(openApp)
-    ) {
-        // Top row
-        Row(
-            modifier = GlanceModifier.fillMaxWidth(),
-            verticalAlignment = Alignment.Vertical.CenterVertically
-        ) {
-            Text(state.tripTypeIcon, style = TextStyle(fontSize = 18.sp))
-            Spacer(GlanceModifier.width(5.dp))
-            StatusBadge(state.tripStatus, compact = true)
-            Spacer(GlanceModifier.defaultWeight())
-            AddNoteButton(tripId = state.tripId, size = 24)
-        }
-
-        Spacer(GlanceModifier.height(8.dp))
-
-        // Trip Name
-        Text(
-            state.tripName,
-            style = TextStyle(
-                color = TextPrimary,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold
-            ),
-            maxLines = 1
-        )
-
-        Spacer(GlanceModifier.defaultWeight())
-
-        // Bottom info
-        when {
-            state.tripStatus == TripStatus.ONGOING && state.currentDay > 0 -> {
-                Column(modifier = GlanceModifier.fillMaxWidth()) {
-                    Text(
-                        "Ngày ${state.currentDay} / ${state.totalDays}",
-                        style = TextStyle(
-                            color = NavyColor,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    )
-                    Spacer(GlanceModifier.height(4.dp))
-                    ProgressBar(state.currentDay.toFloat() / state.totalDays)
-                }
-            }
-            state.tripStatus == TripStatus.ONGOING -> {
-                Text(
-                    "Đang đi (Ngoài lịch trình)",
-                    style = TextStyle(color = NavyColor, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                )
-            }
-            state.tripStatus == TripStatus.PLANNING -> {
-                Column {
-                    Text(
-                        "Còn ${state.daysUntilTrip} ngày",
-                        style = TextStyle(
-                            color = NavyColor,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    )
-                    Spacer(GlanceModifier.height(2.dp))
-                    Text(
-                        "nữa khởi hành!",
-                        style = TextStyle(color = TextSecondary, fontSize = 10.sp)
-                    )
-                }
-            }
-            else -> {
-                Text(
-                    "Đã kết thúc",
-                    style = TextStyle(color = TextMuted, fontSize = 11.sp, fontWeight = FontWeight.Medium)
-                )
-            }
-        }
-    }
-}
-
-// ── Medium Widget (4×2) ───────────────────────────────────────────────────────
-
-@Composable
-fun MediumWidget(state: MyTripWidgetState) {
-    val openApp = actionStartActivity(openAppIntent(state.tripId))
-
-    Row(
         modifier = GlanceModifier
             .fillMaxSize()
             .cornerRadius(16.dp)
@@ -299,343 +218,270 @@ fun MediumWidget(state: MyTripWidgetState) {
             .padding(12.dp)
             .clickable(openApp)
     ) {
-        // Left Column (50% space): General trip status
-        Column(
-            modifier = GlanceModifier
-                .defaultWeight()
-                .fillMaxHeight()
+        // Top: Tên chuyến đi và Nút (+)
+        Row(
+            modifier = GlanceModifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Vertical.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
-                Text(state.tripTypeIcon, style = TextStyle(fontSize = 20.sp))
-                Spacer(GlanceModifier.width(6.dp))
-                StatusBadge(state.tripStatus, compact = true)
-            }
-            
-            Spacer(GlanceModifier.height(8.dp))
-            
             Text(
                 state.tripName,
                 style = TextStyle(
                     color = TextPrimary,
-                    fontSize = 15.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
                 ),
-                maxLines = 1
+                maxLines = 1,
+                modifier = GlanceModifier.defaultWeight()
             )
-            
-            Spacer(GlanceModifier.defaultWeight())
-            
-            if (state.tripStatus == TripStatus.ONGOING && state.currentDay > 0) {
-                Column {
-                    Text(
-                        "Ngày ${state.currentDay} / ${state.totalDays}",
-                        style = TextStyle(color = NavyColor, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                    )
-                    Spacer(GlanceModifier.height(4.dp))
-                    ProgressBar(state.currentDay.toFloat() / state.totalDays)
-                }
-            } else if (state.tripStatus == TripStatus.ONGOING) {
-                Text(
-                    "Đang đi (Ngoài lịch trình)",
-                    style = TextStyle(color = NavyColor, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                )
-            } else if (state.tripStatus == TripStatus.PLANNING) {
-                Column {
-                    Text(
-                        "Còn ${state.daysUntilTrip} ngày nữa",
-                        style = TextStyle(color = NavyColor, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                    )
-                    Spacer(GlanceModifier.height(2.dp))
-                    Text(
-                        "lên đường!",
-                        style = TextStyle(color = TextSecondary, fontSize = 10.sp)
-                    )
-                }
-            } else {
-                Text(
-                    "Đã kết thúc",
-                    style = TextStyle(color = TextMuted, fontSize = 11.sp)
-                )
-            }
+            AddNoteButton(tripId = state.tripId, size = 28)
         }
 
-        Spacer(GlanceModifier.width(10.dp))
-        
-        // Vertical Divider
-        Box(
-            modifier = GlanceModifier
-                .width(1.dp)
-                .fillMaxHeight()
-                .background(DividerColor)
-        ) {}
+        Spacer(GlanceModifier.height(8.dp))
 
-        Spacer(GlanceModifier.width(10.dp))
+        // Ngày hiện tại
+        if (state.tripStatus == TripStatus.ONGOING && state.currentDay > 0) {
+            Text(
+                "Ngày ${state.currentDay}",
+                style = TextStyle(
+                    color = NavyColor,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            )
+        } else if (state.tripStatus == TripStatus.PLANNING) {
+            Text(
+                "Còn ${state.daysUntilTrip} ngày",
+                style = TextStyle(color = NavyColor, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+            )
+        } else {
+            Text(
+                if (state.tripStatus == TripStatus.DONE) "Đã kết thúc" else "Ngoài lịch trình",
+                style = TextStyle(color = TextSecondary, fontSize = 13.sp)
+            )
+        }
 
-        // Right Column (50% space): Actions and next activities / budget
-        Column(
-            modifier = GlanceModifier
-                .defaultWeight()
-                .fillMaxHeight()
-        ) {
-            Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
+        Spacer(GlanceModifier.defaultWeight())
+
+        // Lộ trình tiếp theo
+        if (state.hasNextActivity) {
+            Column(
+                modifier = GlanceModifier
+                    .fillMaxWidth()
+                    .cornerRadius(8.dp)
+                    .background(CardColor)
+                    .padding(8.dp)
+            ) {
                 Text(
-                    "Kế hoạch tiếp theo",
-                    style = TextStyle(color = TextMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    "Tiếp theo:",
+                    style = TextStyle(color = TextMuted, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                )
+                Spacer(GlanceModifier.height(2.dp))
+                Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
+                    Text(state.nextActivityIcon, style = TextStyle(fontSize = 12.sp))
+                    Spacer(GlanceModifier.width(4.dp))
+                    Text(
+                        state.nextActivityName,
+                        style = TextStyle(color = TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold),
+                        maxLines = 1
+                    )
+                }
+            }
+        } else {
+            Text("Không có lịch trình tiếp theo", style = TextStyle(color = TextMuted, fontSize = 10.sp))
+        }
+    }
+}
+
+// ── Medium Widget (4×2) ───────────────────────────────────────────────────────
+@Composable
+fun MediumWidget(state: MyTripWidgetState) {
+    val openApp = actionStartActivity(openAppIntent(LocalContext.current, state.tripId))
+
+    Row(
+        modifier = GlanceModifier
+            .fillMaxSize()
+            .cornerRadius(16.dp)
+            .background(BgColor)
+            .padding(16.dp)
+            .clickable(openApp),
+        verticalAlignment = Alignment.Vertical.CenterVertically
+    ) {
+        // Left side: Tên chuyến đi & Ngày
+        Column(
+            modifier = GlanceModifier.defaultWeight().fillMaxHeight(),
+            verticalAlignment = Alignment.Vertical.CenterVertically
+        ) {
+            Spacer(GlanceModifier.defaultWeight())
+            Text(
+                state.tripName,
+                style = TextStyle(
+                    color = TextPrimary,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                ),
+                maxLines = 2
+            )
+            Spacer(GlanceModifier.height(8.dp))
+            if (state.tripStatus == TripStatus.ONGOING && state.currentDay > 0) {
+                Text(
+                    "Ngày ${state.currentDay}",
+                    style = TextStyle(color = NavyColor, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                )
+            } else if (state.tripStatus == TripStatus.PLANNING) {
+                Text(
+                    "Còn ${state.daysUntilTrip} ngày",
+                    style = TextStyle(color = NavyColor, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                )
+            } else {
+                Text(
+                    if (state.tripStatus == TripStatus.DONE) "Đã kết thúc" else "Ngoài lịch trình",
+                    style = TextStyle(color = TextSecondary, fontSize = 14.sp)
+                )
+            }
+            Spacer(GlanceModifier.defaultWeight())
+        }
+
+        Spacer(GlanceModifier.width(16.dp))
+
+        // Right side: Lộ trình tiếp theo & Add button
+        Column(
+            modifier = GlanceModifier.defaultWeight().fillMaxHeight()
+        ) {
+            Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.Vertical.CenterVertically) {
+                Text(
+                    "Lộ trình tiếp theo",
+                    style = TextStyle(color = TextMuted, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 )
                 Spacer(GlanceModifier.defaultWeight())
-                AddNoteButton(tripId = state.tripId, size = 26)
+                AddNoteButton(tripId = state.tripId, size = 32)
             }
-            
-            Spacer(GlanceModifier.height(6.dp))
 
-            when {
-                state.hasNextActivity -> {
-                    Row(
-                        modifier = GlanceModifier
-                            .fillMaxWidth()
-                            .cornerRadius(8.dp)
-                            .background(CardColor)
-                            .padding(8.dp),
-                        verticalAlignment = Alignment.Vertical.CenterVertically
-                    ) {
-                        Text(state.nextActivityIcon, style = TextStyle(fontSize = 14.sp))
-                        Spacer(GlanceModifier.width(6.dp))
-                        Column(modifier = GlanceModifier.defaultWeight()) {
+            Spacer(GlanceModifier.height(8.dp))
+
+            if (state.hasNextActivity) {
+                Row(
+                    modifier = GlanceModifier
+                        .fillMaxWidth()
+                        .cornerRadius(12.dp)
+                        .background(CardColor)
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.Vertical.CenterVertically
+                ) {
+                    Text(state.nextActivityIcon, style = TextStyle(fontSize = 16.sp))
+                    Spacer(GlanceModifier.width(8.dp))
+                    Column(modifier = GlanceModifier.defaultWeight()) {
+                        Text(
+                            state.nextActivityName,
+                            style = TextStyle(color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold),
+                            maxLines = 1
+                        )
+                        if (state.nextActivityTime.isNotBlank()) {
+                            Spacer(GlanceModifier.height(2.dp))
                             Text(
-                                state.nextActivityName,
-                                style = TextStyle(color = TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold),
-                                maxLines = 1
+                                "🕐 ${state.nextActivityTime}",
+                                style = TextStyle(color = TextSecondary, fontSize = 11.sp)
                             )
-                            if (state.nextActivityTime.isNotBlank()) {
-                                Text(
-                                    "🕐 ${state.nextActivityTime}",
-                                    style = TextStyle(color = TextSecondary, fontSize = 9.sp)
-                                )
-                            }
                         }
                     }
                 }
-                state.tripStatus == TripStatus.PLANNING -> {
-                    Box(
-                        modifier = GlanceModifier
-                            .fillMaxWidth()
-                            .cornerRadius(8.dp)
-                            .background(CardColor)
-                            .padding(8.dp)
-                    ) {
-                        Text(
-                            "Đang chuẩn bị khởi hành...",
-                            style = TextStyle(color = TextSecondary, fontSize = 10.sp)
-                        )
-                    }
+            } else {
+                Box(
+                    modifier = GlanceModifier
+                        .fillMaxWidth()
+                        .cornerRadius(12.dp)
+                        .background(CardColor)
+                        .padding(12.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "Không có lịch trình tiếp theo",
+                        style = TextStyle(color = TextMuted, fontSize = 12.sp)
+                    )
                 }
-                else -> {
-                    Box(
-                        modifier = GlanceModifier
-                            .fillMaxWidth()
-                            .cornerRadius(8.dp)
-                            .background(CardColor)
-                            .padding(8.dp)
-                    ) {
-                        Text(
-                            "Không có hoạt động nào",
-                            style = TextStyle(color = TextMuted, fontSize = 10.sp)
-                        )
-                    }
-                }
-            }
-
-            Spacer(GlanceModifier.defaultWeight())
-
-            if (state.totalPlanned > 0) {
-                BudgetSection(state.totalActual, state.totalPlanned, compact = true)
             }
         }
     }
 }
 
 // ── Large Widget (4×4) ────────────────────────────────────────────────────────
-
 @Composable
 fun LargeWidget(state: MyTripWidgetState) {
-    val openApp = actionStartActivity(openAppIntent(state.tripId))
+    // For large widget, we display the same simplified information but larger and with a list of activities if possible.
+    val openApp = actionStartActivity(openAppIntent(LocalContext.current, state.tripId))
 
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
             .cornerRadius(16.dp)
             .background(BgColor)
-            .padding(14.dp)
+            .padding(16.dp)
             .clickable(openApp)
     ) {
-        // ── Clean Header ──────────────────────────────────────────────
+        // Header
         Row(
             modifier = GlanceModifier.fillMaxWidth(),
             verticalAlignment = Alignment.Vertical.CenterVertically
         ) {
             Column(modifier = GlanceModifier.defaultWeight()) {
-                Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
-                    Text(state.tripTypeIcon, style = TextStyle(fontSize = 20.sp))
-                    Spacer(GlanceModifier.width(6.dp))
+                Text(
+                    state.tripName,
+                    style = TextStyle(
+                        color = TextPrimary,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    maxLines = 1
+                )
+                Spacer(GlanceModifier.height(4.dp))
+                if (state.tripStatus == TripStatus.ONGOING && state.currentDay > 0) {
                     Text(
-                        state.tripName,
-                        style = TextStyle(
-                            color = TextPrimary,
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold
-                        ),
-                        maxLines = 1
+                        "Ngày ${state.currentDay}",
+                        style = TextStyle(color = NavyColor, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    )
+                } else if (state.tripStatus == TripStatus.PLANNING) {
+                    Text(
+                        "Còn ${state.daysUntilTrip} ngày",
+                        style = TextStyle(color = NavyColor, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    )
+                } else {
+                    Text(
+                        if (state.tripStatus == TripStatus.DONE) "Đã kết thúc" else "Ngoài lịch trình",
+                        style = TextStyle(color = TextSecondary, fontSize = 14.sp)
                     )
                 }
-                Spacer(GlanceModifier.height(4.dp))
-                Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
-                    StatusBadge(state.tripStatus)
-                    Spacer(GlanceModifier.width(8.dp))
-                    if (state.tripStatus == TripStatus.ONGOING && state.currentDay > 0) {
-                        Text(
-                            "Ngày ${state.currentDay} / ${state.totalDays}",
-                            style = TextStyle(
-                                color = NavyColor,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-                    } else if (state.tripStatus == TripStatus.ONGOING) {
-                        Text(
-                            "Ngoài lịch trình",
-                            style = TextStyle(
-                                color = NavyColor,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-                    } else if (state.tripStatus == TripStatus.PLANNING) {
-                        Text(
-                            "Còn ${state.daysUntilTrip} ngày xuất phát",
-                            style = TextStyle(
-                                color = NavyColor,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-                    }
-                }
             }
-            AddNoteButton(tripId = state.tripId, size = 32)
+            AddNoteButton(tripId = state.tripId, size = 36)
         }
 
-        Spacer(GlanceModifier.height(10.dp))
-        Box(modifier = GlanceModifier.fillMaxWidth().height(1.dp).background(DividerColor)) {}
-        Spacer(GlanceModifier.height(10.dp))
+        Spacer(GlanceModifier.height(16.dp))
 
-        // ── Dashboard Split ───────────────────────────────────────────
-        Row(
-            modifier = GlanceModifier
-                .fillMaxWidth()
-                .defaultWeight()
-        ) {
-            // Left Column (50% width): Activities List
-            Column(
-                modifier = GlanceModifier
-                    .defaultWeight()
-                    .fillMaxHeight()
-            ) {
-                Text(
-                    if (state.tripStatus == TripStatus.ONGOING) "📋 Hôm nay" else "📋 Dự kiến hành trình",
-                    style = TextStyle(
-                        color = NavyColor,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                )
-                Spacer(GlanceModifier.height(6.dp))
+        Text(
+            "Lộ trình tiếp theo",
+            style = TextStyle(color = TextMuted, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        )
+        Spacer(GlanceModifier.height(8.dp))
 
-                if (state.todayActivities.isNotEmpty()) {
-                    Column {
-                        state.todayActivities.take(4).forEach { item ->
-                            LargeActivityRow(item)
-                            Spacer(GlanceModifier.height(4.dp))
-                        }
-                    }
-                } else {
-                    Box(
-                        modifier = GlanceModifier
-                            .fillMaxWidth()
-                            .defaultWeight()
-                            .cornerRadius(8.dp)
-                            .background(CardColor)
-                            .padding(10.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            if (state.tripStatus == TripStatus.PLANNING) "Hãy chuẩn bị hành trang cho chuyến đi mẫu sắp tới!" else "Không có hoạt động nào",
-                            style = TextStyle(
-                                color = TextMuted,
-                                fontSize = 11.sp,
-                                textAlign = TextAlign.Center
-                            )
-                        )
-                    }
+        if (state.todayActivities.isNotEmpty()) {
+            Column(modifier = GlanceModifier.defaultWeight()) {
+                state.todayActivities.take(4).forEach { item ->
+                    LargeActivityRow(item)
+                    Spacer(GlanceModifier.height(6.dp))
                 }
             }
-
-            Spacer(GlanceModifier.width(12.dp))
-
-            // Right Column (50% width): Budget and Summary Cards
-            Column(
+        } else {
+            Box(
                 modifier = GlanceModifier
+                    .fillMaxWidth()
                     .defaultWeight()
-                    .fillMaxHeight()
+                    .cornerRadius(12.dp)
+                    .background(CardColor)
+                    .padding(12.dp),
+                contentAlignment = Alignment.Center
             ) {
-                if (state.totalPlanned > 0) {
-                    Text(
-                        "💰 Chi phí",
-                        style = TextStyle(
-                            color = NavyColor,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    )
-                    Spacer(GlanceModifier.height(6.dp))
-                    Box(
-                        modifier = GlanceModifier
-                            .fillMaxWidth()
-                            .cornerRadius(8.dp)
-                            .background(CardColor)
-                            .padding(8.dp)
-                    ) {
-                        Column {
-                            val fraction = if (state.totalPlanned > 0) state.totalActual.toFloat() / state.totalPlanned else 0f
-                            val overBudget = fraction > 0.9f
-                            Text(
-                                "Đã chi: ${formatVnd(state.totalActual)}",
-                                style = TextStyle(
-                                    color = if (overBudget) RedAlert else TextPrimary,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            )
-                            Spacer(GlanceModifier.height(2.dp))
-                            Text(
-                                "Hạn mức: ${formatVnd(state.totalPlanned)}",
-                                style = TextStyle(color = TextSecondary, fontSize = 9.sp)
-                            )
-                            Spacer(GlanceModifier.height(6.dp))
-                            ProgressBar(fraction, isAlert = overBudget)
-                        }
-                    }
-                }
-
-                Spacer(GlanceModifier.defaultWeight())
-
-                // App Branding Tag
-                Row(
-                    modifier = GlanceModifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.Vertical.CenterVertically,
-                    horizontalAlignment = Alignment.Horizontal.End
-                ) {
-                    Text("MyTrip App 🗺️", style = TextStyle(color = TextMuted, fontSize = 9.sp))
-                }
+                Text(
+                    "Không có lịch trình tiếp theo",
+                    style = TextStyle(color = TextMuted, fontSize = 14.sp)
+                )
             }
         }
     }

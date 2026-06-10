@@ -5,6 +5,8 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.mytrip.data.db.dao.*
 import com.example.mytrip.data.db.entities.*
 
@@ -18,7 +20,7 @@ import com.example.mytrip.data.db.entities.*
         Expense::class,
         ExpenseRecord::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -33,6 +35,12 @@ abstract class AppDatabase : RoomDatabase() {
     companion object {
         @Volatile private var INSTANCE: AppDatabase? = null
 
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE trips ADD COLUMN themeColor TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase =
             INSTANCE ?: synchronized(this) {
                 INSTANCE ?: Room.databaseBuilder(
@@ -40,6 +48,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "mytrip.db"
                 )
+                    .addMigrations(MIGRATION_4_5)
                     .fallbackToDestructiveMigration()
                     .build()
                     .also { INSTANCE = it }

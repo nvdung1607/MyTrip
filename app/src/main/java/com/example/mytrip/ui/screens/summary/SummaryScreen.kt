@@ -34,6 +34,7 @@ import androidx.compose.ui.res.painterResource
 import com.example.mytrip.R
 import com.example.mytrip.ui.components.GlassmorphismCard
 import com.example.mytrip.ui.components.MyTripPrimaryButton
+import com.example.mytrip.ui.theme.TripThemeProvider
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,8 +65,9 @@ fun SummaryScreen(navController: NavController, tripId: Long) {
             ?: listOf("Tôi")
     }
 
-    Scaffold(
-        topBar = {
+    TripThemeProvider(trip = trip) {
+        Scaffold(
+            topBar = {
             TopAppBar(
                 title = { Text("📊 Tổng kết chuyến đi") },
                 navigationIcon = {
@@ -240,6 +242,7 @@ fun SummaryScreen(navController: NavController, tripId: Long) {
             }
         }
     }
+}
 }
 
 @Composable

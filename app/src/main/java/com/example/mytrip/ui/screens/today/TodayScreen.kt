@@ -99,6 +99,7 @@ import com.example.mytrip.ui.components.MyTripTextField
 import com.example.mytrip.ui.components.MyTripPrimaryButton
 import com.example.mytrip.ui.components.MyTripSecondaryButton
 import com.example.mytrip.ui.components.GlassmorphismCard
+import com.example.mytrip.ui.theme.TripThemeProvider
 import com.example.mytrip.ui.theme.spacing
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -239,8 +240,9 @@ fun TodayScreen(
         )
     }
 
-    Scaffold(
-        topBar = {
+    TripThemeProvider(trip = trip) {
+        Scaffold(
+            topBar = {
             TopAppBar(
                 title = {
                     Text(
@@ -416,6 +418,7 @@ fun TodayScreen(
             modifier = Modifier.fillMaxSize()
         )
     }
+}
 }
 }
 

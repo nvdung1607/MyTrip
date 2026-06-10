@@ -76,7 +76,8 @@ fun MyTripNavGraph(
 
         composable(
             route = Screen.TripDetail.route,
-            arguments = listOf(navArgument("tripId") { type = NavType.LongType })
+            arguments = listOf(navArgument("tripId") { type = NavType.LongType }),
+            deepLinks = listOf(androidx.navigation.navDeepLink { uriPattern = "mytrip://trip_detail/{tripId}" })
         ) { backStack ->
             val tripId = backStack.arguments?.getLong("tripId") ?: return@composable
             TripDetailScreen(navController = navController, tripId = tripId)
@@ -103,7 +104,8 @@ fun MyTripNavGraph(
             arguments = listOf(
                 navArgument("tripId") { type = NavType.LongType },
                 navArgument("dayId") { type = NavType.LongType; defaultValue = -1L }
-            )
+            ),
+            deepLinks = listOf(androidx.navigation.navDeepLink { uriPattern = "mytrip://add_note/{tripId}" })
         ) { backStack ->
             val tripId = backStack.arguments?.getLong("tripId") ?: return@composable
             val dayId = backStack.arguments?.getLong("dayId").let { if (it == -1L) null else it }

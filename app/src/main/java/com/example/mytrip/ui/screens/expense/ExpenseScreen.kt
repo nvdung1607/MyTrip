@@ -34,6 +34,7 @@ import com.example.mytrip.ui.components.MyTripTextField
 import com.example.mytrip.ui.components.MyTripPrimaryButton
 import com.example.mytrip.ui.components.MyTripSecondaryButton
 import com.example.mytrip.ui.components.GlassmorphismCard
+import com.example.mytrip.ui.theme.TripThemeProvider
 import com.example.mytrip.ui.theme.spacing
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -63,8 +64,9 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
     var editExpense by remember { mutableStateOf<Expense?>(null) }
     var selectedCategoryForNewRecord by remember { mutableStateOf(ExpenseCategory.FOOD) }
 
-    Scaffold(
-        topBar = {
+    TripThemeProvider(trip = trip) {
+        Scaffold(
+            topBar = {
             TopAppBar(
                 title = { Text("💰 Chi phí") },
                 navigationIcon = {
@@ -341,6 +343,7 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
             }
         )
     }
+}
 }
 
 @Composable
