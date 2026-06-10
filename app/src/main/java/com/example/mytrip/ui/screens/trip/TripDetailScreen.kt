@@ -48,9 +48,21 @@ fun TripDetailScreen(
     val uiState by viewModel.uiState.collectAsState()
     val totalPlanned by viewModel.totalPlanned.collectAsState()
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var pendingStatusChange by remember { mutableStateOf<TripStatus?>(null) }
+    val datePickerState = rememberDatePickerState()
 
     LaunchedEffect(tripId) {
         viewModel.loadTrip(tripId)
+    }
+
+    val handleStatusChange: (TripStatus) -> Unit = { newStatus ->
+        if (trip?.startDate == 0L) {
+            pendingStatusChange = newStatus
+            showDatePicker = true
+        } else {
+            viewModel.updateStatus(tripId, newStatus)
+        }
     }
 
     // ─── Delete confirmation dialog ───────────────────────────────────────────
@@ -87,6 +99,30 @@ fun TripDetailScreen(
         )
     }
 
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { dateMillis ->
+                        trip?.let { viewModel.updateStartDate(it, dateMillis, pendingStatusChange) }
+                    }
+                    showDatePicker = false
+                    pendingStatusChange = null
+                }) {
+                    Text("Xác nhận")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Hủy")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+
     TripThemeProvider(trip = trip) {
         Scaffold(
             topBar = {
@@ -109,8 +145,8 @@ fun TripDetailScreen(
                 actions = {
                     val t = trip
                     if (t != null) {
-                        var showMenu by remember { mutableStateOf(false) }
                         Box {
+                            var showMenu by remember { mutableStateOf(false) }
                             IconButton(onClick = { showMenu = true }) {
                                 Icon(
                                     Icons.Default.Settings,
@@ -123,14 +159,14 @@ fun TripDetailScreen(
                                 onDismissRequest = { showMenu = false }
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text("✏️ Chỉnh sửa chuyến đi") },
+                                    text = { Text("Chỉnh sửa thông tin") },
                                     onClick = {
                                         showMenu = false
                                         navController.navigate(Screen.EditTrip.createRoute(tripId))
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("🗑️ Xóa chuyến đi") },
+                                    text = { Text("Xóa chuyến đi", color = MaterialTheme.colorScheme.error) },
                                     onClick = {
                                         showMenu = false
                                         showDeleteDialog = true
@@ -142,7 +178,7 @@ fun TripDetailScreen(
                                     enabled = t.status != TripStatus.PLANNING,
                                     onClick = {
                                         showMenu = false
-                                        viewModel.updateStatus(tripId, TripStatus.PLANNING)
+                                        handleStatusChange(TripStatus.PLANNING)
                                     }
                                 )
                                 DropdownMenuItem(
@@ -150,7 +186,7 @@ fun TripDetailScreen(
                                     enabled = t.status != TripStatus.ONGOING,
                                     onClick = {
                                         showMenu = false
-                                        viewModel.updateStatus(tripId, TripStatus.ONGOING)
+                                        handleStatusChange(TripStatus.ONGOING)
                                     }
                                 )
                                 DropdownMenuItem(
@@ -158,7 +194,7 @@ fun TripDetailScreen(
                                     enabled = t.status != TripStatus.DONE,
                                     onClick = {
                                         showMenu = false
-                                        viewModel.updateStatus(tripId, TripStatus.DONE)
+                                        handleStatusChange(TripStatus.DONE)
                                     }
                                 )
                             }
@@ -206,9 +242,7 @@ fun TripDetailScreen(
                     totalPlanned = totalPlanned,
                     topPadding = innerPadding.calculateTopPadding(),
                     navController = navController,
-                    onStatusChange = { newStatus ->
-                        viewModel.updateStatus(tripId, newStatus)
-                    }
+                    onStatusChange = handleStatusChange
                 )
             }
             
@@ -258,13 +292,7 @@ private fun TripDetailContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(240.dp)
-                .background(
-                    brush = Brush.linearGradient(
-                        colors = tripTypeGradient(trip.type),
-                        start = Offset(0f, 0f),
-                        end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
-                    )
-                )
+                .background(com.example.mytrip.ui.theme.TripThemeColors.getThemeGradient(trip.themeColor))
         ) {
             // Overlay scrim for readability
             Box(
@@ -647,10 +675,4 @@ private fun ActionCard(
     }
 }
 
-// ─── Trip type gradient helper ────────────────────────────────────────────────
 
-private fun tripTypeGradient(type: TripType): List<Color> {
-    // Subtle gradients: moving between Primary teal and white/transparent
-    val base = md_theme_light_primaryContainer
-    return listOf(base, Color.White.copy(alpha = 0.5f))
-}

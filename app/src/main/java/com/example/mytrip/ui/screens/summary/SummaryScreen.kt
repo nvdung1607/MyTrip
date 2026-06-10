@@ -52,6 +52,7 @@ fun SummaryScreen(navController: NavController, tripId: Long) {
     val expenses by vm.expenses.collectAsState()
     val records by vm.records.collectAsState()
     val memberBalances by vm.memberBalances.collectAsState()
+    val isExportingPhotos by vm.isExportingPhotos.collectAsState()
 
     val totalPlanned = expenses.sumOf { it.planned }
     val totalActual = records.sumOf { it.amount }
@@ -85,10 +86,10 @@ fun SummaryScreen(navController: NavController, tripId: Long) {
             // ── Hero header ────────────────────────────────────────────
             item {
                 trip?.let { t ->
-                    val gradient = tripGradient(t.type)
+                    val gradient = com.example.mytrip.ui.theme.TripThemeColors.getThemeGradient(t.themeColor)
                     Box(
                         modifier = Modifier.fillMaxWidth().height(200.dp)
-                            .background(Brush.linearGradient(gradient))
+                            .background(gradient)
                     ) {
                         Column(
                             modifier = Modifier.fillMaxSize().padding(24.dp),
@@ -238,6 +239,24 @@ fun SummaryScreen(navController: NavController, tripId: Long) {
                         Spacer(Modifier.width(8.dp))
                         Text("Xuất file Excel", fontWeight = FontWeight.Bold)
                     }
+
+                    MyTripPrimaryButton(
+                        onClick = {
+                            vm.exportPhotos(ctx) { count ->
+                                android.widget.Toast.makeText(ctx, "Đã lưu $count ảnh vào thư viện", android.widget.Toast.LENGTH_LONG).show()
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                        enabled = !isExportingPhotos
+                    ) {
+                        if (isExportingPhotos) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White)
+                        } else {
+                            Icon(Icons.Default.SaveAlt, contentDescription = null, modifier = Modifier.size(24.dp))
+                        }
+                        Spacer(Modifier.width(8.dp))
+                        Text(if (isExportingPhotos) "Đang lưu ảnh..." else "Lưu toàn bộ ảnh về máy", fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }
@@ -330,14 +349,7 @@ private fun NoteHighlightCard(note: Note) {
     }
 }
 
-private fun tripGradient(type: TripType): List<Color> = when (type) {
-    TripType.CAR       -> listOf(Color(0xFF1565C0), Color(0xFF42A5F5))
-    TripType.MOTORBIKE -> listOf(Color(0xFFE65100), Color(0xFFFF9800))
-    TripType.PUBLIC    -> listOf(Color(0xFF2E7D32), Color(0xFF66BB6A))
-    TripType.TREKKING  -> listOf(Color(0xFF6A1B9A), Color(0xFFAB47BC))
-    TripType.CAMPING   -> listOf(Color(0xFF00695C), Color(0xFF26A69A))
-    TripType.OTHER     -> listOf(Color(0xFF37474F), Color(0xFF78909C))
-}
+
 
 private fun statusColor(status: TripStatus): Color = when (status) {
     TripStatus.PLANNING -> Color(0xFF1976D2)

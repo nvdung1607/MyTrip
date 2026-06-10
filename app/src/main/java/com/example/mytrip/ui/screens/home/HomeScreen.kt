@@ -82,30 +82,8 @@ import com.example.mytrip.data.db.entities.Trip
 import com.example.mytrip.data.db.entities.TripStatus
 import com.example.mytrip.data.db.entities.TripType
 import com.example.mytrip.navigation.Screen
+import com.example.mytrip.ui.components.MyTripSecondaryButton
 import com.example.mytrip.util.DateUtils
-
-// ─── Gradient colors per trip type ───────────────────────────────────────────
-
-private fun tripGradient(type: TripType): Brush = when (type) {
-    TripType.CAR -> Brush.linearGradient(
-        listOf(Color(0xFF1565C0), Color(0xFF42A5F5))
-    )
-    TripType.MOTORBIKE -> Brush.linearGradient(
-        listOf(Color(0xFFE65100), Color(0xFFFF9800))
-    )
-    TripType.PUBLIC -> Brush.linearGradient(
-        listOf(Color(0xFF2E7D32), Color(0xFF66BB6A))
-    )
-    TripType.TREKKING -> Brush.linearGradient(
-        listOf(Color(0xFF6A1B9A), Color(0xFFAB47BC))
-    )
-    TripType.CAMPING -> Brush.linearGradient(
-        listOf(Color(0xFF00695C), Color(0xFF26A69A))
-    )
-    TripType.OTHER -> Brush.linearGradient(
-        listOf(Color(0xFF37474F), Color(0xFF78909C))
-    )
-}
 
 private fun statusChipColors(status: TripStatus): Pair<Color, Color> = when (status) {
     TripStatus.PLANNING -> Pair(Color(0xFF1565C0), Color(0xFFE3F2FD))
@@ -186,7 +164,8 @@ fun HomeScreen(
             // ── Trip list or empty state ───────────────────────────────────
             if (trips.isEmpty()) {
                 EmptyState(
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    onCreateSampleTrip = { viewModel.importSampleTrip() }
                 )
             } else {
                 LazyColumn(
@@ -264,7 +243,8 @@ private fun FilterChipsRow(
 
 @Composable
 private fun EmptyState(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onCreateSampleTrip: () -> Unit
 ) {
     Box(
         modifier = modifier.padding(24.dp),
@@ -297,6 +277,10 @@ private fun EmptyState(
                     modifier = Modifier.padding(horizontal = 8.dp)
                 )
                 Spacer(modifier = Modifier.height(24.dp))
+                
+                MyTripSecondaryButton(onClick = onCreateSampleTrip) {
+                    Text("Tạo chuyến đi mẫu", fontWeight = FontWeight.Bold)
+                }
             }
         }
     }
@@ -336,12 +320,11 @@ fun TripCard(
             )
     ) {
         Column {
-            // ── Gradient header ───────────────────────────────────────────
+            // ── Top header (Colored) ──────────────────────────────────────
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(90.dp)
-                    .background(brush = tripGradient(trip.type), shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                    .background(brush = com.example.mytrip.ui.theme.TripThemeColors.getThemeGradient(trip.themeColor), shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
                     .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
                     .padding(16.dp)
             ) {

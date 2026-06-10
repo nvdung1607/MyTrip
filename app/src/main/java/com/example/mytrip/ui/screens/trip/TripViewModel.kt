@@ -66,6 +66,10 @@ class TripViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun resetUiState() {
+        _uiState.value = TripUiState.Success
+    }
+
     /**
      * Save trip: if trip.id == 0 → create (returns new id), else → update (returns same id).
      */
@@ -89,6 +93,19 @@ class TripViewModel(application: Application) : AndroidViewModel(application) {
                 _uiState.value = TripUiState.Success
             } catch (e: Exception) {
                 _uiState.value = TripUiState.Error(e.message ?: "Không thể xóa chuyến đi")
+            }
+        }
+    }
+
+    fun updateStartDate(trip: Trip, newStartDate: Long, newStatus: TripStatus? = null) {
+        viewModelScope.launch {
+            try {
+                repository.updateTripStartDate(trip, newStartDate, newStatus)
+                // Reload trip to get updated dates
+                loadTrip(trip.id)
+                MyTripWidgetUpdater.update(getApplication())
+            } catch (e: Exception) {
+                _uiState.value = TripUiState.Error(e.message ?: "Lỗi khi cập nhật ngày")
             }
         }
     }

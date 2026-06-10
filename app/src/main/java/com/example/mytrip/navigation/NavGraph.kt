@@ -32,10 +32,12 @@ sealed class Screen(val route: String) {
     object Today : Screen("today/{tripId}") {
         fun createRoute(tripId: Long) = "today/$tripId"
     }
-    object AddNote : Screen("add_note/{tripId}?dayId={dayId}") {
-        fun createRoute(tripId: Long, dayId: Long? = null) =
-            if (dayId != null) "add_note/$tripId?dayId=$dayId"
-            else "add_note/$tripId?dayId=-1"
+    object AddNote : Screen("add_note/{tripId}?dayId={dayId}&noteId={noteId}") {
+        fun createRoute(tripId: Long, dayId: Long? = null, noteId: Long? = null): String {
+            val dId = dayId ?: -1L
+            val nId = noteId ?: -1L
+            return "add_note/$tripId?dayId=$dId&noteId=$nId"
+        }
     }
     object Expense : Screen("expense/{tripId}") {
         fun createRoute(tripId: Long) = "expense/$tripId"
@@ -103,13 +105,15 @@ fun MyTripNavGraph(
             route = Screen.AddNote.route,
             arguments = listOf(
                 navArgument("tripId") { type = NavType.LongType },
-                navArgument("dayId") { type = NavType.LongType; defaultValue = -1L }
+                navArgument("dayId") { type = NavType.LongType; defaultValue = -1L },
+                navArgument("noteId") { type = NavType.LongType; defaultValue = -1L }
             ),
             deepLinks = listOf(androidx.navigation.navDeepLink { uriPattern = "mytrip://add_note/{tripId}" })
         ) { backStack ->
             val tripId = backStack.arguments?.getLong("tripId") ?: return@composable
             val dayId = backStack.arguments?.getLong("dayId").let { if (it == -1L) null else it }
-            AddNoteScreen(navController = navController, tripId = tripId, dayId = dayId)
+            val noteId = backStack.arguments?.getLong("noteId").let { if (it == -1L) null else it }
+            AddNoteScreen(navController = navController, tripId = tripId, dayId = dayId, noteId = noteId)
         }
 
         composable(

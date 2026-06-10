@@ -127,6 +127,7 @@ import com.example.mytrip.data.db.entities.ActivityType
 import java.util.Calendar
 import java.util.Locale
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import com.example.mytrip.data.db.entities.Day
@@ -151,6 +152,8 @@ fun TodayScreen(
     val selectedIndex by viewModel.selectedDayIndex.collectAsState()
 
     var selectedNoteForDetail by remember { mutableStateOf<Note?>(null) }
+    var noteOptionsTarget by remember { mutableStateOf<Note?>(null) }
+    var noteToDelete by remember { mutableStateOf<Note?>(null) }
     var showEditDayDialog by remember { mutableStateOf(false) }
     var activityToEdit by remember { mutableStateOf<Activity?>(null) }
     var activityToDelete by remember { mutableStateOf<Activity?>(null) }
@@ -237,6 +240,52 @@ fun TodayScreen(
             note = note,
             dayNumber = todayDay?.dayNumber,
             onDismiss = { selectedNoteForDetail = null }
+        )
+    }
+
+    if (noteOptionsTarget != null) {
+        val note = noteOptionsTarget!!
+        AlertDialog(
+            onDismissRequest = { noteOptionsTarget = null },
+            title = { Text("Tùy chọn nhật ký", fontWeight = FontWeight.Bold) },
+            text = { Text("Bạn muốn làm gì với nhật ký này?") },
+            confirmButton = {
+                Button(onClick = {
+                    val nId = note.id
+                    noteOptionsTarget = null
+                    navController.navigate(Screen.AddNote.createRoute(tripId, todayDay?.id, nId))
+                }) { Text("Sửa") }
+            },
+            dismissButton = {
+                Button(
+                    onClick = {
+                        noteToDelete = note
+                        noteOptionsTarget = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) { Text("Xóa") }
+            }
+        )
+    }
+
+    if (noteToDelete != null) {
+        val note = noteToDelete!!
+        AlertDialog(
+            onDismissRequest = { noteToDelete = null },
+            title = { Text("Xóa nhật ký?", fontWeight = FontWeight.Bold) },
+            text = { Text("Bạn có chắc chắn muốn xóa nhật ký này không?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.deleteNote(note)
+                        noteToDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) { Text("Xóa") }
+            },
+            dismissButton = {
+                TextButton(onClick = { noteToDelete = null }) { Text("Hủy") }
+            }
         )
     }
 
@@ -400,6 +449,7 @@ fun TodayScreen(
                                 NoteCard(
                                     note = note,
                                     onClick = { selectedNoteForDetail = note },
+                                    onLongClick = { noteOptionsTarget = note },
                                     modifier = Modifier.weight(1f)
                                 )
                             }
@@ -607,14 +657,19 @@ private fun StatusActionButton(
 
 // ── Note card ─────────────────────────────────────────────────────────────────
 
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 private fun NoteCard(
     note: Note,
     onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     GlassmorphismCard(
-        modifier = modifier.clickable { onClick() }
+        modifier = modifier.combinedClickable(
+            onClick = onClick,
+            onLongClick = onLongClick
+        )
     ) {
         Column {
             // Photo

@@ -11,6 +11,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -115,6 +116,7 @@ fun CreateEditTripScreen(
     var numPeople by remember { mutableStateOf(1) }
     var memberNames by remember { mutableStateOf(listOf("")) }
     var useClusters by remember { mutableStateOf(false) }
+    var themeColor by remember { mutableStateOf(com.example.mytrip.ui.theme.TripThemeColors.vibrantColors[0]) }
     var nameError by remember { mutableStateOf(false) }
     var dateError by remember { mutableStateOf(false) }
     var isSaving by remember { mutableStateOf(false) }
@@ -123,6 +125,8 @@ fun CreateEditTripScreen(
     LaunchedEffect(tripId) {
         if (tripId != null) {
             viewModel.loadTrip(tripId)
+        } else {
+            viewModel.resetUiState()
         }
     }
 
@@ -137,6 +141,9 @@ fun CreateEditTripScreen(
             endDate = t.endDate
             numPeople = t.numPeople
             useClusters = t.useClusters
+            if (t.themeColor.isNotEmpty()) {
+                themeColor = t.themeColor
+            }
             // Parse member names from JSON
             val parsed = mutableListOf<String>()
             try {
@@ -212,7 +219,8 @@ fun CreateEditTripScreen(
                         endDate = endDate,
                         numPeople = numPeople,
                         memberNames = namesJson,
-                        useClusters = useClusters
+                        useClusters = useClusters,
+                        themeColor = themeColor
                     )
                 } else {
                     Trip(
@@ -223,7 +231,8 @@ fun CreateEditTripScreen(
                         endDate = endDate,
                         numPeople = numPeople,
                         memberNames = namesJson,
-                        useClusters = useClusters
+                        useClusters = useClusters,
+                        themeColor = themeColor
                     )
                 }
                 viewModel.saveTrip(tripToSave)
@@ -574,6 +583,35 @@ fun CreateEditTripScreen(
                                     imeAction = if (index < memberNames.lastIndex) ImeAction.Next else ImeAction.Done
                                 )
                             )
+                        }
+                    }
+                }
+            }
+
+            // ── 6.5 Theme Color ───────────────────────────────────────────────
+            FormSection(title = "🎨 Màu chủ đề") {
+                androidx.compose.foundation.lazy.LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(vertical = 8.dp)
+                ) {
+                    items(com.example.mytrip.ui.theme.TripThemeColors.vibrantColors) { colorHex ->
+                        val color = Color(android.graphics.Color.parseColor(colorHex))
+                        val isSelected = themeColor == colorHex
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(CircleShape)
+                                .background(color)
+                                .clickable { themeColor = colorHex }
+                                .then(
+                                    if (isSelected) Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
+                                    else Modifier
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (isSelected) {
+                                Icon(Icons.Default.Check, contentDescription = null, tint = Color.White)
+                            }
                         }
                     }
                 }

@@ -9,6 +9,9 @@ interface DayDao {
     @Query("SELECT * FROM days WHERE tripId = :tripId ORDER BY dayNumber ASC")
     fun getDaysForTrip(tripId: Long): Flow<List<Day>>
 
+    @Query("SELECT * FROM days WHERE tripId = :tripId ORDER BY dayNumber ASC")
+    suspend fun getDaysForTripOnce(tripId: Long): List<Day>
+
     @Query("SELECT * FROM days WHERE clusterId = :clusterId ORDER BY dayNumber ASC")
     fun getDaysForCluster(clusterId: Long): Flow<List<Day>>
 

@@ -177,6 +177,13 @@ class TodayViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun deleteNote(note: Note) {
+        viewModelScope.launch {
+            repository.deleteNote(note)
+            MyTripWidgetUpdater.update(getApplication())
+        }
+    }
+
     companion object {
         val Factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")

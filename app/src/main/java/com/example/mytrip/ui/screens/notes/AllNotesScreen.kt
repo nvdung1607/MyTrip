@@ -64,6 +64,7 @@ fun AllNotesScreen(
     val filteredNotes by viewModel.filteredNotes.collectAsState()
     val currentFilter by viewModel.currentFilter.collectAsState()
 
+    var noteOptionsTarget by remember { mutableStateOf<Note?>(null) }
     var noteToDelete by remember { mutableStateOf<Note?>(null) }
     var expandedNote by remember { mutableStateOf<Note?>(null) }
     var isListView by remember { mutableStateOf(false) }
@@ -184,7 +185,7 @@ fun AllNotesScreen(
                                     note = note,
                                     dayNumber = noteDay?.dayNumber,
                                     onClick = { expandedNote = note },
-                                    onLongClick = { noteToDelete = note }
+                                    onLongClick = { noteOptionsTarget = note }
                                 )
                             }
                         }
@@ -202,7 +203,7 @@ fun AllNotesScreen(
                                     note = note,
                                     dayNumber = noteDay?.dayNumber,
                                     onClick = { expandedNote = note },
-                                    onLongClick = { noteToDelete = note }
+                                    onLongClick = { noteOptionsTarget = note }
                                 )
                             }
                         }
@@ -217,8 +218,33 @@ fun AllNotesScreen(
             modifier = Modifier.fillMaxSize()
         )
     }
-}
-}
+    }
+
+    if (noteOptionsTarget != null) {
+        val note = noteOptionsTarget!!
+        AlertDialog(
+            onDismissRequest = { noteOptionsTarget = null },
+            title = { Text("Tùy chọn nhật ký", fontWeight = FontWeight.Bold) },
+            text = { Text("Bạn muốn làm gì với nhật ký này?") },
+            confirmButton = {
+                Button(onClick = {
+                    val nId = note.id
+                    val dayId = if (note.dayId == 0L) null else note.dayId
+                    noteOptionsTarget = null
+                    navController.navigate(Screen.AddNote.createRoute(tripId, dayId, nId))
+                }) { Text("Sửa") }
+            },
+            dismissButton = {
+                Button(
+                    onClick = {
+                        noteToDelete = note
+                        noteOptionsTarget = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) { Text("Xóa") }
+            }
+        )
+    }
 
     // ── Delete confirmation dialog ────────────────────────────────────
     if (noteToDelete != null) {
@@ -251,6 +277,7 @@ fun AllNotesScreen(
             dayNumber = noteDay?.dayNumber,
             onDismiss = { expandedNote = null }
         )
+    }
     }
 }
 
@@ -512,7 +539,9 @@ fun AllNoteListRow(
             val firstImage = try {
                 val arr = org.json.JSONArray(note.photoPaths)
                 if (arr.length() > 0) arr.getString(0) else null
-            } catch (_: Exception) { null }
+            } catch (_: Exception) {
+                null
+            }
 
             if (firstImage != null) {
                 coil.compose.AsyncImage(
@@ -527,7 +556,10 @@ fun AllNoteListRow(
                 Box(
                     modifier = Modifier
                         .size(64.dp)
-                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp)),
+                        .background(
+                            MaterialTheme.colorScheme.surfaceVariant,
+                            RoundedCornerShape(8.dp)
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(note.tag.icon, fontSize = 24.sp)
@@ -581,7 +613,8 @@ fun AllNoteListRow(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault()).format(java.util.Date(note.timestamp)),
+                        text = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
+                            .format(java.util.Date(note.timestamp)),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

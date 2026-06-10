@@ -67,7 +67,8 @@ import java.util.concurrent.Executors
 fun AddNoteScreen(
     navController: NavController,
     tripId: Long,
-    dayId: Long?
+    dayId: Long?,
+    noteId: Long? = null
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as MyTripApplication
@@ -109,6 +110,36 @@ fun AddNoteScreen(
         }
         if (copiedPaths.isNotEmpty()) {
             photoPaths = photoPaths + copiedPaths
+        }
+    }
+
+    // Tải note nếu noteId != null
+    val noteToEdit by noteVm.noteToEdit.collectAsState()
+    var isInitialized by remember { mutableStateOf(false) }
+
+    LaunchedEffect(noteId) {
+        if (noteId != null) {
+            noteVm.loadNote(noteId)
+        } else {
+            isInitialized = true
+        }
+    }
+
+    LaunchedEffect(noteToEdit) {
+        noteToEdit?.let { note ->
+            if (!isInitialized) {
+                photoPaths = if (note.photoPaths.isNotEmpty()) note.photoPaths else if (note.photoPath != null) listOf(note.photoPath!!) else emptyList()
+                rating = note.rating
+                selectedTag = note.tag
+                costInput = note.cost.toString()
+                paidBy = note.paidBy
+                name = note.name
+                comment = note.comment
+                gpsLat = note.gpsLat
+                gpsLng = note.gpsLng
+                if (comment.isNotBlank() || note.photoPaths.size > 1 || (note.gpsLat != null)) showOptional = true
+                isInitialized = true
+            }
         }
     }
 
@@ -170,6 +201,7 @@ fun AddNoteScreen(
                     MyTripPrimaryButton(
                         onClick = {
                             noteVm.saveNote(Note(
+                                id = noteToEdit?.id ?: 0L,
                                 tripId = tripId,
                                 dayId = dayId,
                                 photoPath = photoPaths.firstOrNull(),
@@ -182,7 +214,7 @@ fun AddNoteScreen(
                                 comment = comment,
                                 gpsLat = gpsLat,
                                 gpsLng = gpsLng,
-                                timestamp = System.currentTimeMillis()
+                                timestamp = noteToEdit?.timestamp ?: System.currentTimeMillis()
                             ))
                         },
                         modifier = Modifier.fillMaxWidth().height(52.dp),

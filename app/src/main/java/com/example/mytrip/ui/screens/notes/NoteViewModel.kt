@@ -21,10 +21,26 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     private val _savedNoteId = MutableStateFlow<Long?>(null)
     val savedNoteId: StateFlow<Long?> = _savedNoteId.asStateFlow()
 
+    private val _noteToEdit = MutableStateFlow<Note?>(null)
+    val noteToEdit: StateFlow<Note?> = _noteToEdit.asStateFlow()
+
+    fun loadNote(noteId: Long) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _noteToEdit.value = repository.getNoteById(noteId)
+            _isLoading.value = false
+        }
+    }
+
     fun saveNote(note: Note) {
         viewModelScope.launch {
             _isLoading.value = true
-            val id = repository.insertNote(note)
+            val id = if (note.id == 0L) {
+                repository.insertNote(note)
+            } else {
+                repository.updateNote(note)
+                note.id
+            }
             MyTripWidgetUpdater.update(getApplication())
             _savedNoteId.value = id
             _isLoading.value = false

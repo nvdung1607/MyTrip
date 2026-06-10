@@ -91,6 +91,20 @@ class SummaryViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    private val _isExportingPhotos = MutableStateFlow(false)
+    val isExportingPhotos: StateFlow<Boolean> = _isExportingPhotos.asStateFlow()
+
+    fun exportPhotos(context: Context, onComplete: (Int) -> Unit) {
+        val t = _trip.value ?: return
+        val tripNotes = _notes.value
+        viewModelScope.launch {
+            _isExportingPhotos.value = true
+            val count = com.example.mytrip.util.PhotoExportUtils.exportTripPhotos(context, t.name, tripNotes)
+            _isExportingPhotos.value = false
+            onComplete(count)
+        }
+    }
+
     companion object {
         fun factory(app: Application) = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")

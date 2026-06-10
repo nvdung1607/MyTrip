@@ -38,6 +38,31 @@ class TripRepository(
     suspend fun deleteTrip(trip: Trip) = tripDao.deleteTrip(trip)
     suspend fun updateTripStatus(id: Long, status: TripStatus) =
         tripDao.updateStatusEnforcingSingleOngoing(id, status)
+        
+    suspend fun updateTripStartDate(trip: Trip, newStartDate: Long, newStatus: TripStatus? = null) {
+        val durationDays = if (trip.endDate >= trip.startDate && trip.startDate > 0) {
+            ((trip.endDate - trip.startDate) / 86_400_000L).toInt() + 1
+        } else {
+            // For sample trips, they might have endDate=0, startDate=0. 
+            // We can fetch max dayNumber to know duration, or just assume it from Days
+            val days = dayDao.getDaysForTripOnce(trip.id)
+            if (days.isNotEmpty()) days.maxOf { it.dayNumber } else 1
+        }
+        
+        val newEndDate = newStartDate + (durationDays - 1) * 86_400_000L
+        val updatedTrip = trip.copy(
+            startDate = newStartDate, 
+            endDate = newEndDate,
+            status = newStatus ?: trip.status
+        )
+        tripDao.updateTripEnforcingSingleOngoing(updatedTrip)
+        
+        val days = dayDao.getDaysForTripOnce(trip.id)
+        val updatedDays = days.map {
+            it.copy(date = newStartDate + (it.dayNumber - 1) * 86_400_000L)
+        }
+        updatedDays.forEach { dayDao.updateDay(it) }
+    }
 
     private fun generateDays(trip: Trip): List<Day> {
         val days = mutableListOf<Day>()
@@ -82,6 +107,7 @@ class TripRepository(
     // ── Note ──────────────────────────────────────────────────────────
     fun getNotes(tripId: Long): Flow<List<Note>> = noteDao.getNotesForTrip(tripId)
     fun getNotesForDay(dayId: Long): Flow<List<Note>> = noteDao.getNotesForDay(dayId)
+    suspend fun getNoteById(id: Long): Note? = noteDao.getNoteById(id)
     suspend fun insertNote(note: Note): Long {
         val noteId = noteDao.insertNote(note)
         if (note.cost > 0) {
@@ -264,15 +290,14 @@ class TripRepository(
     }
 
     suspend fun importSeedTrip(overrideType: TripType? = null): Long {
-
-        val todayStartMs = run {
-            val now = System.currentTimeMillis()
-            now - (now % 86_400_000L)
-        }
+        // Clear old notes & images if any (simplified: just clear all seed trips)
+        // Usually, the easiest way is to let the new trip have its own ID.
+        // We will insert the seed trip as a NEW trip.
         val seedTrip = com.example.mytrip.data.seed.TripSeedData.trip.copy(
-            startDate = todayStartMs,
-            endDate = todayStartMs + 29 * 86_400_000L,
-            createdAt = System.currentTimeMillis(),
+            id = 0,
+            name = "Lịch trình mẫu",
+            startDate = 0L,
+            endDate = 0L,
             type = overrideType ?: com.example.mytrip.data.seed.TripSeedData.trip.type,
             themeColor = com.example.mytrip.ui.theme.TripThemeColors.getRandomColor()
         )
@@ -304,7 +329,7 @@ class TripRepository(
             clusterDao.insertCluster(Cluster(tripId = tripId, name = name, orderIndex = idx))
         }
         
-        var currentDayDate = todayStartMs
+        var currentDayDate = 0L
         for (daySeed in seedDays) {
             val clusterId = when (daySeed.dayNumber) {
                 in 1..3  -> clusterIds[0]   // Bắc Trung Bộ
