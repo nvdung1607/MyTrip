@@ -1,5 +1,6 @@
 package com.example.mytrip.ui.screens.trip
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -608,13 +609,19 @@ private fun ActionCard(
 ) {
     Surface(
         modifier = modifier
-            .then(if (fullWidth) Modifier.defaultMinSize(minHeight = 72.dp) else Modifier.defaultMinSize(minHeight = 110.dp))
-            .clip(RoundedCornerShape(16.dp))
-            .clickable { onClick() },
+            .then(if (fullWidth) Modifier.defaultMinSize(minHeight = 72.dp) else Modifier.defaultMinSize(minHeight = 110.dp)),
         shape = RoundedCornerShape(16.dp),
         color = containerColor,
         shadowElevation = 2.dp,
-        tonalElevation = 0.dp
+        tonalElevation = 0.dp,
+        border = BorderStroke(
+            width = 1.dp,
+            color = if (containerColor.alpha < 0.3f)
+                MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
+            else
+                Color.Transparent
+        ),
+        onClick = onClick
     ) {
         if (fullWidth) {
             Row(
@@ -648,7 +655,6 @@ private fun ActionCard(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .fillMaxHeight()
                     .padding(14.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
