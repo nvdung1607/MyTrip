@@ -62,5 +62,11 @@ interface ExpenseDao {
 
     @Query("SELECT SUM(planned) FROM expenses WHERE tripId = :tripId")
     suspend fun getTotalPlannedOnce(tripId: Long): Long?
+
+    @Query("SELECT SUM(amount) FROM expense_records WHERE tripId = :tripId AND dayId = :dayId")
+    suspend fun getTodayActualOnce(tripId: Long, dayId: Long): Long?
+
+    @Query("SELECT SUM(amount) FROM expense_records WHERE tripId = :tripId AND dayId = :dayId")
+    suspend fun getDayActualOnce(tripId: Long, dayId: Long): Long?
 }
 

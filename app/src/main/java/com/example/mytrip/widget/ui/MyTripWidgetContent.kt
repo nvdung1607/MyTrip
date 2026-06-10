@@ -214,74 +214,209 @@ private fun ActivityRow(
     }
 }
 
-/** Budget section: actual/planned + progress + per-person breakdown */
+/** Budget section nâng cao cho Large widget:
+ *  - Tổng thực tế / dự kiến + progress bar
+ *  - Chi tiêu hôm nay
+ *  - Chi phí còn lại (hoặc vượt ngân sách)
+ *  - Chi phí / người (thực tế & dự kiến)
+ */
 @Composable
-private fun BudgetSection(actual: Long, planned: Long, numPeople: Int, accentColor: ColorProvider) {
-    val overBudget = planned > 0 && actual > planned
-    val fraction   = if (planned > 0) actual.toFloat() / planned else 0f
-    val fillEnd    = ((1f - fraction.coerceIn(0f, 1f)) * 100).dp
-    val perActual  = if (numPeople > 0) actual / numPeople else actual
-    val perPlanned = if (numPeople > 0) planned / numPeople else planned
+private fun BudgetSection(
+    actual: Long,
+    planned: Long,
+    todayActual: Long,
+    numPeople: Int,
+    accentColor: ColorProvider,
+    accentCardColor: ColorProvider
+) {
+    val overBudget  = planned > 0 && actual > planned
+    val fraction    = if (planned > 0) (actual.toFloat() / planned).coerceIn(0f, 1f) else 0f
+    val fillEnd     = ((1f - fraction) * 100).dp
+    val remaining   = planned - actual            // âm = vượt ngân sách
+    val perActual   = if (numPeople > 1) actual / numPeople else actual
+    val perPlanned  = if (numPeople > 1) planned / numPeople else planned
+    val percentUsed = if (planned > 0) (fraction * 100).toInt() else 0
 
     Column(modifier = GlanceModifier.fillMaxWidth()) {
-        // Label
-        Text(
-            "💰 Chi phí",
-            style = TextStyle(color = TextMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-        )
-        Spacer(GlanceModifier.height(4.dp))
-        // Row 1: actual vs planned
-        Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.Vertical.CenterVertically) {
-            Text(
-                formatVnd(actual),
-                style = TextStyle(
-                    color      = if (overBudget) RedAlert else accentColor,
-                    fontSize   = 13.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            )
-            Text(
-                " / ${formatVnd(planned)}",
-                style = TextStyle(color = TextMuted, fontSize = 11.sp)
-            )
-        }
-        Spacer(GlanceModifier.height(4.dp))
-        // Progress bar
-        Box(modifier = GlanceModifier.fillMaxWidth().height(4.dp).cornerRadius(2.dp).background(TrackColor)) {
-            Box(
-                modifier = GlanceModifier.fillMaxSize().padding(end = fillEnd).cornerRadius(2.dp)
-                    .background(if (overBudget) RedAlert else accentColor)
-            ) {}
-        }
-        Spacer(GlanceModifier.height(5.dp))
-        // Row 2: per-person
-        Box(
-            modifier = GlanceModifier.fillMaxWidth().cornerRadius(6.dp).background(CardColor)
-                .padding(horizontal = 8.dp, vertical = 4.dp)
+
+        // ── Header label ──────────────────────────────────────────────────────
+        Row(
+            modifier = GlanceModifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Vertical.CenterVertically
         ) {
-            Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.Vertical.CenterVertically) {
+            Text(
+                "💰 Chi phí chuyến đi",
+                style = TextStyle(color = TextMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold),
+                modifier = GlanceModifier.defaultWeight()
+            )
+            // % đã sử dụng
+            Box(
+                modifier = GlanceModifier
+                    .cornerRadius(6.dp)
+                    .background(if (overBudget) RedAlert else accentCardColor)
+                    .padding(horizontal = 6.dp, vertical = 2.dp)
+            ) {
                 Text(
-                    "👤",
-                    style = TextStyle(fontSize = 10.sp)
-                )
-                Spacer(GlanceModifier.width(4.dp))
-                Text(
-                    formatVnd(perActual),
+                    "$percentUsed%",
                     style = TextStyle(
-                        color = if (overBudget) RedAlert else accentColor,
-                        fontSize = 11.sp,
+                        color      = if (overBudget) TextOnDark else accentColor,
+                        fontSize   = 9.sp,
                         fontWeight = FontWeight.Bold
                     )
                 )
+            }
+        }
+
+        Spacer(GlanceModifier.height(5.dp))
+
+        // ── Row 1: Thực tế / Dự kiến ─────────────────────────────────────────
+        Row(
+            modifier = GlanceModifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Vertical.CenterVertically
+        ) {
+            Column(modifier = GlanceModifier.defaultWeight()) {
                 Text(
-                    " / ${formatVnd(perPlanned)}",
-                    style = TextStyle(color = TextMuted, fontSize = 10.sp)
-                )
-                Spacer(GlanceModifier.defaultWeight())
-                Text(
-                    "$numPeople người",
+                    "Thực tế",
                     style = TextStyle(color = TextMuted, fontSize = 9.sp)
                 )
+                Text(
+                    formatVnd(actual),
+                    style = TextStyle(
+                        color      = if (overBudget) RedAlert else accentColor,
+                        fontSize   = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+            }
+            // Divider
+            Box(modifier = GlanceModifier.width(1.dp).height(28.dp).background(DividerColor)) {}
+            Spacer(GlanceModifier.width(10.dp))
+            Column(modifier = GlanceModifier.defaultWeight()) {
+                Text(
+                    "Dự kiến",
+                    style = TextStyle(color = TextMuted, fontSize = 9.sp)
+                )
+                Text(
+                    if (planned > 0) formatVnd(planned) else "–",
+                    style = TextStyle(color = TextSecondary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                )
+            }
+        }
+
+        Spacer(GlanceModifier.height(5.dp))
+
+        // ── Progress bar ──────────────────────────────────────────────────────
+        Box(modifier = GlanceModifier.fillMaxWidth().height(5.dp).cornerRadius(3.dp).background(TrackColor)) {
+            Box(
+                modifier = GlanceModifier
+                    .fillMaxSize()
+                    .padding(end = fillEnd)
+                    .cornerRadius(3.dp)
+                    .background(if (overBudget) RedAlert else accentColor)
+            ) {}
+        }
+
+        Spacer(GlanceModifier.height(6.dp))
+
+        // ── Row 2: Hôm nay + Còn lại (2 thẻ nhỏ) ────────────────────────────
+        Row(
+            modifier = GlanceModifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Vertical.Top
+        ) {
+            // Thẻ: Chi tiêu hôm nay
+            Box(
+                modifier = GlanceModifier
+                    .defaultWeight()
+                    .cornerRadius(8.dp)
+                    .background(accentCardColor)
+                    .padding(horizontal = 8.dp, vertical = 5.dp)
+            ) {
+                Column {
+                    Text(
+                        "📅 Hôm nay",
+                        style = TextStyle(color = TextMuted, fontSize = 9.sp)
+                    )
+                    Spacer(GlanceModifier.height(2.dp))
+                    Text(
+                        if (todayActual > 0) formatVnd(todayActual) else "–",
+                        style = TextStyle(
+                            color      = accentColor,
+                            fontSize   = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                }
+            }
+
+            Spacer(GlanceModifier.width(6.dp))
+
+            // Thẻ: Còn lại / Vượt ngân sách
+            Box(
+                modifier = GlanceModifier
+                    .defaultWeight()
+                    .cornerRadius(8.dp)
+                    .background(if (overBudget) ColorProvider(Color(0xFFFFEBEE)) else accentCardColor)
+                    .padding(horizontal = 8.dp, vertical = 5.dp)
+            ) {
+                Column {
+                    Text(
+                        if (overBudget) "⚠️ Vượt NS" else "✅ Còn lại",
+                        style = TextStyle(color = TextMuted, fontSize = 9.sp)
+                    )
+                    Spacer(GlanceModifier.height(2.dp))
+                    Text(
+                        if (planned > 0) formatVnd(if (overBudget) actual - planned else remaining) else "–",
+                        style = TextStyle(
+                            color      = if (overBudget) RedAlert else accentColor,
+                            fontSize   = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                }
+            }
+        }
+
+        // ── Row 3: Chi phí / người ────────────────────────────────────────────
+        if (numPeople > 1) {
+            Spacer(GlanceModifier.height(5.dp))
+            Box(
+                modifier = GlanceModifier
+                    .fillMaxWidth()
+                    .cornerRadius(8.dp)
+                    .background(CardColor)
+                    .padding(horizontal = 8.dp, vertical = 5.dp)
+            ) {
+                Row(
+                    modifier = GlanceModifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Vertical.CenterVertically
+                ) {
+                    Text("👤", style = TextStyle(fontSize = 11.sp))
+                    Spacer(GlanceModifier.width(5.dp))
+                    Text(
+                        "Mỗi người:",
+                        style = TextStyle(color = TextMuted, fontSize = 10.sp)
+                    )
+                    Spacer(GlanceModifier.width(4.dp))
+                    Text(
+                        formatVnd(perActual),
+                        style = TextStyle(
+                            color      = if (overBudget) RedAlert else accentColor,
+                            fontSize   = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                    if (planned > 0) {
+                        Text(
+                            " / ${formatVnd(perPlanned)}",
+                            style = TextStyle(color = TextMuted, fontSize = 10.sp)
+                        )
+                    }
+                    Spacer(GlanceModifier.defaultWeight())
+                    Text(
+                        "$numPeople người",
+                        style = TextStyle(color = TextMuted, fontSize = 9.sp)
+                    )
+                }
             }
         }
     }
@@ -706,10 +841,12 @@ fun LargeWidget(state: MyTripWidgetState) {
             Spacer(GlanceModifier.height(6.dp))
             Column(modifier = GlanceModifier.fillMaxWidth().clickable(openApp)) {
                 BudgetSection(
-                    actual      = state.totalActual,
-                    planned     = state.totalPlanned,
-                    numPeople   = state.numPeople,
-                    accentColor = accent
+                    actual          = state.totalActual,
+                    planned         = state.totalPlanned,
+                    todayActual     = state.todayActual,
+                    numPeople       = state.numPeople,
+                    accentColor     = accent,
+                    accentCardColor = accentCard
                 )
             }
         }

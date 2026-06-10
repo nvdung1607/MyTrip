@@ -82,7 +82,20 @@ fun AddNoteScreen(
     LaunchedEffect(tripId) { tripVm.loadTrip(tripId) }
 
     val savedId by noteVm.savedNoteId.collectAsState()
-    LaunchedEffect(savedId) { if (savedId != null) navController.popBackStack() }
+    LaunchedEffect(savedId) {
+        if (savedId != null) {
+            // Kiểm tra màn hình trước: nếu không phải TripDetail (ví dụ mở từ widget),
+            // navigate đến TripDetail thay vì popBackStack về Home.
+            val prevRoute = navController.previousBackStackEntry?.destination?.route
+            if (prevRoute != null && prevRoute.startsWith("trip_detail")) {
+                navController.popBackStack()
+            } else {
+                navController.navigate(com.example.mytrip.navigation.Screen.TripDetail.createRoute(tripId)) {
+                    popUpTo(com.example.mytrip.navigation.Screen.Home.route)
+                }
+            }
+        }
+    }
 
     val cameraPermission = rememberPermissionState(Manifest.permission.CAMERA)
     val locationPermission = rememberPermissionState(Manifest.permission.ACCESS_COARSE_LOCATION)

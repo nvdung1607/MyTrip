@@ -35,6 +35,8 @@ import com.example.mytrip.util.MoneyUtils
 import com.example.mytrip.ui.components.DraggableFab
 import com.example.mytrip.ui.components.MyTripPrimaryButton
 import com.example.mytrip.ui.theme.*
+import androidx.compose.ui.graphics.toArgb
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -383,6 +385,10 @@ private fun TripDetailContent(
         Spacer(Modifier.height(16.dp))
 
         // ─── Action grid ──────────────────────────────────────────────────────
+        // Tính màu pastel từ themeColor chuyến đi
+        val themeHex = trip.themeColor
+        val pastelColors = remember(themeHex) { buildPastelColors(themeHex) }
+
         Column(
             modifier = Modifier.padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -404,8 +410,8 @@ private fun TripDetailContent(
                     emoji = "🗓️",
                     title = "Lịch trình",
                     subtitle = "$numDays ngày",
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    containerColor = pastelColors[0],
+                    contentColor = pastelColors[4],
                     onClick = { navController.navigate(Screen.Itinerary.createRoute(trip.id)) }
                 )
                 if (trip.status == TripStatus.ONGOING) {
@@ -414,8 +420,8 @@ private fun TripDetailContent(
                         emoji = "🌄",
                         title = "Hôm nay",
                         subtitle = "Đang đi",
-                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                        containerColor = pastelColors[1],
+                        contentColor = pastelColors[4],
                         onClick = { navController.navigate(Screen.Today.createRoute(trip.id)) }
                     )
                 } else {
@@ -429,8 +435,8 @@ private fun TripDetailContent(
                         emoji = "🔄",
                         title = "Trạng thái",
                         subtitle = statusLabel,
-                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                        containerColor = pastelColors[1],
+                        contentColor = pastelColors[4],
                         onClick = { showStatusDialog = true }
                     )
                 }
@@ -446,8 +452,8 @@ private fun TripDetailContent(
                     emoji = "📖",
                     title = "Nhật ký & Ảnh",
                     subtitle = "Tất cả ghi chép",
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    containerColor = pastelColors[2],
+                    contentColor = pastelColors[4],
                     onClick = { navController.navigate(Screen.AllNotes.createRoute(trip.id)) }
                 )
                 ActionCard(
@@ -455,8 +461,8 @@ private fun TripDetailContent(
                     emoji = "💰",
                     title = "Chi phí",
                     subtitle = if (totalPlanned > 0) MoneyUtils.formatShort(totalPlanned) else "Chưa có",
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    containerColor = pastelColors[3],
+                    contentColor = pastelColors[4],
                     onClick = { navController.navigate(Screen.Expense.createRoute(trip.id)) }
                 )
             }
@@ -467,8 +473,8 @@ private fun TripDetailContent(
                 emoji = "📊",
                 title = "Tổng kết chuyến đi",
                 subtitle = "Chi phí & hành trình",
-                containerColor = MaterialTheme.colorScheme.inverseSurface.copy(alpha = 0.08f),
-                contentColor = MaterialTheme.colorScheme.onSurface,
+                containerColor = pastelColors[5],
+                contentColor = pastelColors[4],
                 onClick = { navController.navigate(Screen.Summary.createRoute(trip.id)) },
                 fullWidth = true
             )
@@ -675,4 +681,57 @@ private fun ActionCard(
     }
 }
 
+/**
+ * Tạo ra 5 màu từ themeColor của chuyến đi:
+ * [0..3] = 4 màu pastel cho 4 ActionCard (hòa 12–20% màu chủ đề với nền trắng)
+ * [4]    = màu chữ (phiên bản đậm hơn của themeColor để đọc được trên nền pastel)
+ */
+private fun buildPastelColors(themeHex: String): List<Color> {
+    return try {
+        if (themeHex.isBlank()) {
+            // Fallback sang màu xám nhạt
+            listOf(
+                Color(0xFFE8EAF6), Color(0xFFE3F2FD),
+                Color(0xFFE8F5E9), Color(0xFFFFF3E0),
+                Color(0xFF37474F)
+            )
+        } else {
+            val base = android.graphics.Color.parseColor(themeHex)
+            val r = android.graphics.Color.red(base)
+            val g = android.graphics.Color.green(base)
+            val b = android.graphics.Color.blue(base)
 
+            // Pastel variants: pha tỉ lệ khác nhau với nền trắng
+            fun pastel(ratio: Float): Color {
+                val pr = ((r * ratio) + (255 * (1f - ratio))).roundToInt().coerceIn(0, 255)
+                val pg = ((g * ratio) + (255 * (1f - ratio))).roundToInt().coerceIn(0, 255)
+                val pb = ((b * ratio) + (255 * (1f - ratio))).roundToInt().coerceIn(0, 255)
+                return Color(android.graphics.Color.rgb(pr, pg, pb))
+            }
+
+            // Màu chữ: dùng themeColor gốc với alpha cao để đủ contrast trên nền pastel
+            val textColor = Color(
+                r / 255f * 0.65f,
+                g / 255f * 0.65f,
+                b / 255f * 0.65f,
+                1f
+            )
+
+            listOf(
+                pastel(0.18f),  // card 1 – Lịch trình
+                pastel(0.14f),  // card 2 – Hôm nay / Trạng thái
+                pastel(0.16f),  // card 3 – Nhật ký
+                pastel(0.12f),  // card 4 – Chi phí
+                textColor,      // màu chữ chung
+                pastel(0.10f)   // card 5 – Tổng kết (nhạt nhất)
+            )
+        }
+    } catch (_: Exception) {
+        listOf(
+            Color(0xFFE8EAF6), Color(0xFFE3F2FD),
+            Color(0xFFE8F5E9), Color(0xFFFFF3E0),
+            Color(0xFF37474F),
+            Color(0xFFF3F4F6)  // fallback Tổng kết
+        )
+    }
+}

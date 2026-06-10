@@ -80,9 +80,12 @@ class WidgetRepository(context: Context) {
         // All activities for large widget (LazyColumn)
         val widgetActivities = activities.map { it.toWidgetItem() }
 
-        // ── Expense summary ───────────────────────────────────────────
+        // ── Expense summary ───────────────────────────────────────────────
         val totalActual  = getTotalActual(trip.id)
         val totalPlanned = getTotalPlanned(trip.id)
+        val todayActual  = if (todayDay != null)
+            expenseDao.getTodayActualOnce(trip.id, todayDay.id) ?: 0L
+        else 0L
 
         return MyTripWidgetState(
             hasActiveTrip    = true,
@@ -105,6 +108,7 @@ class WidgetRepository(context: Context) {
             hasNextActivity  = nextActivity != null,
             totalActual      = totalActual,
             totalPlanned     = totalPlanned,
+            todayActual      = todayActual,
             todayActivities  = widgetActivities
         )
     }

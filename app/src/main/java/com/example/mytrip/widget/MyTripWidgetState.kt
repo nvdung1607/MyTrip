@@ -29,8 +29,9 @@ data class MyTripWidgetState(
     val nextActivityIcon: String = "📍",
     val hasNextActivity: Boolean = false,
     // Expense summary
-    val totalActual: Long = 0L,    // VND
-    val totalPlanned: Long = 0L,   // VND
+    val totalActual: Long = 0L,    // VND - tổng thực tế
+    val totalPlanned: Long = 0L,   // VND - tổng dự kiến
+    val todayActual: Long = 0L,    // VND - chi tiêu hôm nay
     // Today's activity list (scrollable)
     val todayActivities: List<ActivityItem> = emptyList()
 )
