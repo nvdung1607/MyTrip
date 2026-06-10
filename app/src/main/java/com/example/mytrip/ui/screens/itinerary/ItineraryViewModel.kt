@@ -56,34 +56,33 @@ class ItineraryViewModel(application: Application) : AndroidViewModel(applicatio
     val snackbarEvent = MutableSharedFlow<String>(extraBufferCapacity = 1)
 
     // ── Load data ─────────────────────────────────────────────────────
+    private var loadJob: kotlinx.coroutines.Job? = null
+
     fun loadData(tripId: Long) {
         _tripId.value = tripId
-
-        // Observe clusters and initialize expanded state
-        viewModelScope.launch {
-            clusters.collect { clusterList ->
-                if (clusterList.isNotEmpty()) {
-                    expandedClusters.value = clusterList.map { it.id }.toSet()
-                }
-            }
-        }
-
-        // Observe days and for each day observe activities
-        viewModelScope.launch {
-            days.collect { dayList ->
-                if (dayList.isEmpty()) return@collect
-                // Initialize expanded state for all days
-                expandedDays.value = dayList.map { it.id }.toSet()
-                // Start collecting activities for each day
-                dayList.forEach { day ->
-                    launch {
-                        repository.getActivities(day.id).collect { activities ->
-                            val current = _activitiesMap.value.toMutableMap()
-                            current[day.id] = activities
-                            _activitiesMap.value = current
-                        }
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
+            // Initialize expanded clusters once
+            launch {
+                clusters.collect { clusterList ->
+                    if (clusterList.isNotEmpty() && expandedClusters.value.isEmpty()) {
+                        expandedClusters.value = clusterList.map { it.id }.toSet()
                     }
                 }
+            }
+            // Observe days and collect activities reactively
+            days.collect { dayList ->
+                if (dayList.isEmpty()) return@collect
+                // Initialize expanded state only on first load
+                if (expandedDays.value.isEmpty()) {
+                    expandedDays.value = dayList.map { it.id }.toSet()
+                }
+                // Batch-load activities for all days
+                val map = mutableMapOf<Long, List<Activity>>()
+                dayList.forEach { day ->
+                    map[day.id] = repository.getActivitiesOnce(day.id)
+                }
+                _activitiesMap.value = map
             }
         }
     }
@@ -165,7 +164,13 @@ class ItineraryViewModel(application: Application) : AndroidViewModel(applicatio
     fun reorderActivities(dayId: Long, activities: List<Activity>) {
         viewModelScope.launch {
             val reordered = activities.mapIndexed { idx, act -> act.copy(orderIndex = idx) }
-            reordered.forEach { repository.updateActivity(it) }
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                reordered.forEach { repository.updateActivity(it) }
+            }
+            // Refresh activities map immediately
+            val current = _activitiesMap.value.toMutableMap()
+            current[dayId] = reordered
+            _activitiesMap.value = current
             MyTripWidgetUpdater.update(getApplication())
             snackbarEvent.tryEmit("Đã sắp xếp lại! Vui lòng kiểm tra lại giờ giấc của các hoạt động.")
         }

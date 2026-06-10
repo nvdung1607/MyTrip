@@ -35,10 +35,11 @@ class TripRepository(
         val days = generateDays(trip.copy(id = tripId))
         dayDao.insertDays(days)
         // Tạo 6 hạng mục chi phí mặc định = 0
-        val expenses = ExpenseCategory.values().map {
+        val expenses = ExpenseCategory.entries.map {
             Expense(tripId = tripId, category = it, planned = 0)
         }
         expenseDao.insertExpenses(expenses)
+        refreshWidget()
         return tripId
     }
 
@@ -108,8 +109,12 @@ class TripRepository(
     suspend fun deleteDay(day: Day) = dayDao.deleteDay(day)
 
     suspend fun getTodayDay(tripId: Long): Day? {
-        val now = System.currentTimeMillis()
-        val startOfDay = now - (now % 86_400_000L)
+        val cal = java.util.Calendar.getInstance()
+        cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
+        cal.set(java.util.Calendar.MINUTE, 0)
+        cal.set(java.util.Calendar.SECOND, 0)
+        cal.set(java.util.Calendar.MILLISECOND, 0)
+        val startOfDay = cal.timeInMillis
         val endOfDay = startOfDay + 86_399_999L
         return dayDao.getDayByDate(tripId, startOfDay, endOfDay)
     }
@@ -288,11 +293,12 @@ class TripRepository(
         }
 
         // Default expense categories
-        val expenses = ExpenseCategory.values().map {
+        val expenses = ExpenseCategory.entries.map {
             Expense(tripId = tripId, category = it, planned = 0)
         }
         expenseDao.insertExpenses(expenses)
 
+        refreshWidget()
         return tripId
     }
 
@@ -311,7 +317,7 @@ class TripRepository(
         }
 
         val expenses = if (data.expenses.isEmpty()) {
-            ExpenseCategory.values().map { Expense(tripId = tripId, category = it, planned = 0) }
+            ExpenseCategory.entries.map { Expense(tripId = tripId, category = it, planned = 0) }
         } else {
             data.expenses.map { it.copy(tripId = tripId, id = 0L) }
         }
@@ -326,6 +332,7 @@ class TripRepository(
             noteDao.insertNote(note.copy(tripId = tripId, dayId = newDayId, id = 0L))
         }
 
+        refreshWidget()
         return tripId
     }
 
@@ -408,6 +415,7 @@ class TripRepository(
             
             currentDayDate += 86_400_000L
         }
+        refreshWidget()
         return tripId
     }
 }

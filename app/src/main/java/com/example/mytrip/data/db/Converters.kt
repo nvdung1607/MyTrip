@@ -14,6 +14,9 @@ class Converters {
     @TypeConverter fun fromActivityStatus(value: ActivityStatus): String = value.name
     @TypeConverter fun toActivityStatus(value: String): ActivityStatus = ActivityStatus.valueOf(value)
 
+    @TypeConverter fun fromActivityType(value: ActivityType): String = value.name
+    @TypeConverter fun toActivityType(value: String): ActivityType = ActivityType.valueOf(value)
+
     @TypeConverter fun fromNoteTag(value: NoteTag): String = value.name
     @TypeConverter fun toNoteTag(value: String): NoteTag = NoteTag.valueOf(value)
 

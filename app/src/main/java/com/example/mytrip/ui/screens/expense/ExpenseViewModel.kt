@@ -1,15 +1,14 @@
 package com.example.mytrip.ui.screens.expense
 
 import android.app.Application
-import android.content.Context
-import android.content.Intent
+
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.mytrip.MyTripApplication
 import com.example.mytrip.data.db.entities.*
 import com.example.mytrip.data.repository.TripRepository
-import com.example.mytrip.util.ExcelUtils
+
 import com.example.mytrip.util.MoneyUtils
 import com.example.mytrip.widget.MyTripWidgetUpdater
 import kotlinx.coroutines.flow.*
@@ -38,25 +37,30 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
 
     private var tripId = 0L
 
+    private var loadJob: kotlinx.coroutines.Job? = null
+
     fun loadData(id: Long) {
         tripId = id
-        viewModelScope.launch {
-            repository.getTripById(id).collect { t ->
-                _trip.value = t
-                computeBalances()
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
+            launch {
+                repository.getTripById(id).collect { t ->
+                    _trip.value = t
+                    computeBalances()
+                }
             }
-        }
-        viewModelScope.launch {
-            repository.getExpenses(id).collect { list ->
-                _expenses.value = list
-                _totalPlanned.value = list.sumOf { it.planned }
+            launch {
+                repository.getExpenses(id).collect { list ->
+                    _expenses.value = list
+                    _totalPlanned.value = list.sumOf { it.planned }
+                }
             }
-        }
-        viewModelScope.launch {
-            repository.getExpenseRecords(id).collect { list ->
-                _records.value = list
-                _totalActual.value = list.sumOf { it.amount }
-                computeBalances()
+            launch {
+                repository.getExpenseRecords(id).collect { list ->
+                    _records.value = list
+                    _totalActual.value = list.sumOf { it.amount }
+                    computeBalances()
+                }
             }
         }
     }

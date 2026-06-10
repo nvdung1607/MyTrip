@@ -46,11 +46,8 @@ class TodayViewModel(application: Application) : AndroidViewModel(application) {
     private val _todayDay = MutableStateFlow<Day?>(null)
     val todayDay: StateFlow<Day?> = _todayDay.asStateFlow()
 
-    private val _todayActivities = MutableStateFlow<List<Activity>>(emptyList())
-    val todayActivities: StateFlow<List<Activity>> = _todayActivities.asStateFlow()
-
-    private val _todayNotes = MutableStateFlow<List<Note>>(emptyList())
-    val todayNotes: StateFlow<List<Note>> = _todayNotes.asStateFlow()
+    val todayActivities: StateFlow<List<Activity>> = _activitiesFlow
+    val todayNotes: StateFlow<List<Note>> = _notesFlow
 
     private var currentTripId: Long = -1L
 
@@ -67,22 +64,12 @@ class TodayViewModel(application: Application) : AndroidViewModel(application) {
         else repository.getNotesForDay(dayId)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    init {
-        viewModelScope.launch {
-            _activitiesFlow.collect { list ->
-                _todayActivities.value = list
-            }
-        }
-        viewModelScope.launch {
-            _notesFlow.collect { list ->
-                _todayNotes.value = list
-            }
-        }
-    }
+    private var loadJob: kotlinx.coroutines.Job? = null
 
     fun loadData(tripId: Long) {
         currentTripId = tripId
-        viewModelScope.launch {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
             _trip.value = repository.getTripByIdOnce(tripId)
             repository.getDays(tripId).collect { days ->
                 _allDays.value = days

@@ -4,7 +4,9 @@ import android.app.Application
 import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.CreationExtras
 import com.example.mytrip.MyTripApplication
 import com.example.mytrip.data.db.entities.Trip
 import com.example.mytrip.data.db.entities.TripStatus
@@ -193,4 +195,20 @@ class TripViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun clearImportError() { _importError.value = null }
+
+    fun resetImportedTripId() { _importedTripId.value = null }
+
+    companion object {
+        val Factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : androidx.lifecycle.ViewModel> create(
+                modelClass: Class<T>,
+                extras: androidx.lifecycle.viewmodel.CreationExtras
+            ): T {
+                val application =
+                    extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY]!!
+                return TripViewModel(application) as T
+            }
+        }
+    }
 }

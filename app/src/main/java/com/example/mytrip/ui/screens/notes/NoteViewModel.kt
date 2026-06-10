@@ -54,6 +54,8 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun resetSavedNoteId() { _savedNoteId.value = null }
+
     companion object {
         fun factory(app: Application) = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")

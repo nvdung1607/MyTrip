@@ -37,30 +37,35 @@ class SummaryViewModel(application: Application) : AndroidViewModel(application)
     private val _memberBalances = MutableStateFlow<Map<String, Long>>(emptyMap())
     val memberBalances: StateFlow<Map<String, Long>> = _memberBalances.asStateFlow()
 
+    private var loadJob: kotlinx.coroutines.Job? = null
+
     fun loadData(tripId: Long) {
-        viewModelScope.launch {
-            repository.getTripById(tripId).collect { t ->
-                _trip.value = t
-                computeBalances()
-            }
-        }
-        viewModelScope.launch {
-            repository.getDays(tripId).collect { dayList ->
-                _days.value = dayList
-                // Load activities for each day
-                val map = mutableMapOf<Long, List<Activity>>()
-                dayList.forEach { day ->
-                    map[day.id] = repository.getActivitiesOnce(day.id)
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
+            launch {
+                repository.getTripById(tripId).collect { t ->
+                    _trip.value = t
+                    computeBalances()
                 }
-                _activitiesMap.value = map
             }
-        }
-        viewModelScope.launch { repository.getNotes(tripId).collect { _notes.value = it } }
-        viewModelScope.launch { repository.getExpenses(tripId).collect { _expenses.value = it } }
-        viewModelScope.launch {
-            repository.getExpenseRecords(tripId).collect { list ->
-                _records.value = list
-                computeBalances()
+            launch {
+                repository.getDays(tripId).collect { dayList ->
+                    _days.value = dayList
+                    // Batch-load activities for all days in one go
+                    val map = mutableMapOf<Long, List<com.example.mytrip.data.db.entities.Activity>>()
+                    dayList.forEach { day ->
+                        map[day.id] = repository.getActivitiesOnce(day.id)
+                    }
+                    _activitiesMap.value = map
+                }
+            }
+            launch { repository.getNotes(tripId).collect { _notes.value = it } }
+            launch { repository.getExpenses(tripId).collect { _expenses.value = it } }
+            launch {
+                repository.getExpenseRecords(tripId).collect { list ->
+                    _records.value = list
+                    computeBalances()
+                }
             }
         }
     }

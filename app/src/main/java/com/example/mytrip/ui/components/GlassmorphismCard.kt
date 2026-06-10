@@ -27,7 +27,7 @@ fun GlassmorphismCard(
             spotColor = Color(0xFF425454).copy(alpha = 0.05f)
         ),
         shape = MaterialTheme.shapes.large,
-        color = Color.White, // Pure white containers
+        color = MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
     ) {
         Box {
@@ -44,7 +44,7 @@ fun BlurOverlay(
     // A placeholder for blur overlay components like nav bars
     Surface(
         modifier = modifier,
-        color = Color.White.copy(alpha = 0.85f),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
     ) {
         Box {
             content()

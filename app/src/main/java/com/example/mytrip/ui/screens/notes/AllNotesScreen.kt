@@ -537,12 +537,7 @@ fun AllNoteListRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Note image or icon
-            val firstImage = try {
-                val arr = org.json.JSONArray(note.photoPaths)
-                if (arr.length() > 0) arr.getString(0) else null
-            } catch (_: Exception) {
-                null
-            }
+            val firstImage = note.photoPaths.firstOrNull()
 
             if (firstImage != null) {
                 coil.compose.AsyncImage(

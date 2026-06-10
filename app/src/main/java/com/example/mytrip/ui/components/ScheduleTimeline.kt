@@ -110,9 +110,8 @@ private fun TimelineItem(
             // Clickable status dot to quickly toggle/cycle status
             Box(
                 modifier = Modifier
-                    .size(16.dp)
+                    .size(40.dp)
                     .clip(CircleShape)
-                    .background(statusColor)
                     .clickable {
                         val next = when (activity.status) {
                             ActivityStatus.PENDING -> ActivityStatus.DONE
@@ -121,8 +120,16 @@ private fun TimelineItem(
                             ActivityStatus.CHANGED -> ActivityStatus.PENDING
                         }
                         onStatusChange(activity, next)
-                    }
-            )
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(16.dp)
+                        .clip(CircleShape)
+                        .background(statusColor)
+                )
+            }
             if (!isLast) {
                 Box(
                     modifier = Modifier
@@ -353,7 +360,9 @@ private fun ActivityTimelineCard(
                     onClick = {
                         try {
                             context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(activity.mapsLink)))
-                        } catch (_: Exception) {}
+                        } catch (_: Exception) {
+                            android.widget.Toast.makeText(context, "Không thể mở liên kết bản đồ", android.widget.Toast.LENGTH_SHORT).show()
+                        }
                     },
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.height(24.dp)
