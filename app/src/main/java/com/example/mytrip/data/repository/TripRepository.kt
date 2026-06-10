@@ -295,7 +295,7 @@ class TripRepository(
         // We will insert the seed trip as a NEW trip.
         val seedTrip = com.example.mytrip.data.seed.TripSeedData.trip.copy(
             id = 0,
-            name = "Lịch trình mẫu",
+            name = "Hành trình Xuyên Việt",
             startDate = 0L,
             endDate = 0L,
             type = overrideType ?: com.example.mytrip.data.seed.TripSeedData.trip.type,

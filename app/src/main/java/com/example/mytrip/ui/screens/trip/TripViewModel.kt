@@ -164,7 +164,8 @@ class TripViewModel(application: Application) : AndroidViewModel(application) {
     /** Save the template Excel to Downloads folder using ExcelUtils */
     fun downloadTemplateExcel(context: Context): String? {
         return try {
-            val trip = com.example.mytrip.data.seed.TripSeedData.trip.copy(name = "Lịch trình mẫu")
+            val trip =
+                com.example.mytrip.data.seed.TripSeedData.trip.copy(name = "Hành trình Xuyên Việt")
             val days = com.example.mytrip.data.seed.TripSeedData.days.map { daySeed ->
                 com.example.mytrip.data.db.entities.Day(
                     id = 0L,
