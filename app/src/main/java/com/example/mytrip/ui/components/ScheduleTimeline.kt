@@ -375,13 +375,3 @@ private fun ActivityTimelineCard(
         }
     }
 }
-
-private fun parseSpots(json: String): List<String> {
-    if (json.isBlank()) return emptyList()
-    return try {
-        val arr = JSONArray(json)
-        (0 until arr.length()).map { arr.getString(it) }
-    } catch (_: Exception) {
-        emptyList()
-    }
-}

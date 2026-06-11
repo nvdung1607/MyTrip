@@ -1,4 +1,4 @@
-package com.example.mytrip.ui.screens.today
+﻿package com.example.mytrip.ui.screens.today
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
@@ -117,6 +117,7 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
+import com.example.mytrip.ui.components.ActivityEditSheet
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
@@ -219,8 +220,8 @@ fun TodayScreen(
         val act = activityToDelete!!
         AlertDialog(
             onDismissRequest = { activityToDelete = null },
-            title = { Text("Xóa hoạt động?", fontWeight = FontWeight.Bold) },
-            text = { Text("Bạn có chắc chắn muốn xóa hoạt động \"${act.name}\" khỏi lịch trình ngày này?") },
+            title = { Text("XÃ³a hoáº¡t Ä‘á»™ng?", fontWeight = FontWeight.Bold) },
+            text = { Text("Báº¡n cÃ³ cháº¯c cháº¯n muá»‘n xÃ³a hoáº¡t Ä‘á»™ng \"${act.name}\" khá»i lá»‹ch trÃ¬nh ngÃ y nÃ y?") },
             confirmButton = {
                 Button(
                     onClick = {
@@ -228,10 +229,10 @@ fun TodayScreen(
                         activityToDelete = null
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) { Text("Xóa") }
+                ) { Text("XÃ³a") }
             },
             dismissButton = {
-                TextButton(onClick = { activityToDelete = null }) { Text("Hủy") }
+                TextButton(onClick = { activityToDelete = null }) { Text("Há»§y") }
             }
         )
     }
@@ -248,14 +249,14 @@ fun TodayScreen(
         val note = noteOptionsTarget!!
         AlertDialog(
             onDismissRequest = { noteOptionsTarget = null },
-            title = { Text("Tùy chọn nhật ký", fontWeight = FontWeight.Bold) },
-            text = { Text("Bạn muốn làm gì với nhật ký này?") },
+            title = { Text("TÃ¹y chá»n nháº­t kÃ½", fontWeight = FontWeight.Bold) },
+            text = { Text("Báº¡n muá»‘n lÃ m gÃ¬ vá»›i nháº­t kÃ½ nÃ y?") },
             confirmButton = {
                 Button(onClick = {
                     val nId = note.id
                     noteOptionsTarget = null
                     navController.navigate(Screen.AddNote.createRoute(tripId, todayDay?.id, nId))
-                }) { Text("Sửa") }
+                }) { Text("Sá»­a") }
             },
             dismissButton = {
                 Button(
@@ -264,7 +265,7 @@ fun TodayScreen(
                         noteOptionsTarget = null
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) { Text("Xóa") }
+                ) { Text("XÃ³a") }
             }
         )
     }
@@ -273,8 +274,8 @@ fun TodayScreen(
         val note = noteToDelete!!
         AlertDialog(
             onDismissRequest = { noteToDelete = null },
-            title = { Text("Xóa nhật ký?", fontWeight = FontWeight.Bold) },
-            text = { Text("Bạn có chắc chắn muốn xóa nhật ký này không?") },
+            title = { Text("XÃ³a nháº­t kÃ½?", fontWeight = FontWeight.Bold) },
+            text = { Text("Báº¡n cÃ³ cháº¯c cháº¯n muá»‘n xÃ³a nháº­t kÃ½ nÃ y khÃ´ng?") },
             confirmButton = {
                 Button(
                     onClick = {
@@ -282,10 +283,10 @@ fun TodayScreen(
                         noteToDelete = null
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) { Text("Xóa") }
+                ) { Text("XÃ³a") }
             },
             dismissButton = {
-                TextButton(onClick = { noteToDelete = null }) { Text("Hủy") }
+                TextButton(onClick = { noteToDelete = null }) { Text("Há»§y") }
             }
         )
     }
@@ -296,7 +297,7 @@ fun TodayScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = trip?.name ?: "Hôm nay",
+                        text = trip?.name ?: "HÃ´m nay",
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -304,7 +305,7 @@ fun TodayScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay láº¡i")
                     }
                 },
                 actions = {
@@ -324,7 +325,7 @@ fun TodayScreen(
                             calendar.get(java.util.Calendar.DAY_OF_MONTH)
                         ).show()
                     }) {
-                        Icon(Icons.Filled.CalendarMonth, contentDescription = "Chọn ngày", tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Filled.CalendarMonth, contentDescription = "Chá»n ngÃ y", tint = MaterialTheme.colorScheme.primary)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -343,7 +344,7 @@ fun TodayScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 88.dp)
             ) {
-            // ── Day navigator ────────────────────────────────────────────
+            // â”€â”€ Day navigator â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             item {
                 DayNavigatorRow(
                     selectedIndex = selectedIndex,
@@ -352,7 +353,7 @@ fun TodayScreen(
                 )
             }
 
-            // ── Date header ──────────────────────────────────────────────
+            // â”€â”€ Date header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             item {
                 DateHeaderCard(
                     day = todayDay,
@@ -362,17 +363,17 @@ fun TodayScreen(
                 )
             }
 
-            // ── Empty state ──────────────────────────────────────────────
+            // â”€â”€ Empty state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             if (todayDay == null) {
                 item {
                     EmptyDayState(selectedIndex = selectedIndex)
                 }
             } else {
-                // ── Activities timeline ──────────────────────────────────
+                // â”€â”€ Activities timeline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 if (activities.isNotEmpty()) {
                     item {
                         SectionHeader(
-                            title = "📋 Lịch trình",
+                            title = "ðŸ“‹ Lá»‹ch trÃ¬nh",
                             action = {
                                 TextButton(
                                     onClick = { showAddSheet = true },
@@ -381,7 +382,7 @@ fun TodayScreen(
                                 ) {
                                     Icon(Icons.Default.Add, null, modifier = Modifier.size(16.dp))
                                     Spacer(Modifier.width(4.dp))
-                                    Text("Thêm", style = MaterialTheme.typography.labelLarge)
+                                    Text("ThÃªm", style = MaterialTheme.typography.labelLarge)
                                 }
                             },
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -418,7 +419,7 @@ fun TodayScreen(
                                     Box(contentAlignment = Alignment.Center) {
                                         Icon(
                                             imageVector = Icons.Default.Add,
-                                            contentDescription = "Thêm hoạt động",
+                                            contentDescription = "ThÃªm hoáº¡t Ä‘á»™ng",
                                             modifier = Modifier.size(11.dp),
                                             tint = MaterialTheme.colorScheme.outline
                                         )
@@ -431,7 +432,7 @@ fun TodayScreen(
                                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
                                 modifier = Modifier.height(28.dp)
                             ) {
-                                Text("+ Thêm hoạt động", style = MaterialTheme.typography.labelMedium)
+                                Text("+ ThÃªm hoáº¡t Ä‘á»™ng", style = MaterialTheme.typography.labelMedium)
                             }
                         }
                     }
@@ -444,10 +445,10 @@ fun TodayScreen(
                     }
                 }
 
-                // ── Notes section ────────────────────────────────────────
+                // â”€â”€ Notes section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 item {
                     SectionHeader(
-                        title = "📝 Ghi chú ngày này",
+                        title = "ðŸ“ Ghi chÃº ngÃ y nÃ y",
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
                 }
@@ -493,7 +494,7 @@ fun TodayScreen(
 }
 }
 
-// ── Day navigator ────────────────────────────────────────────────────────────
+// â”€â”€ Day navigator â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @Composable
 private fun DayNavigatorRow(
@@ -501,7 +502,7 @@ private fun DayNavigatorRow(
     onSelectDay: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val tabs = listOf("◀ Hôm qua", "Hôm nay", "Ngày mai ▶")
+    val tabs = listOf("â—€ HÃ´m qua", "HÃ´m nay", "NgÃ y mai â–¶")
 
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -550,7 +551,7 @@ private fun DayNavigatorRow(
     }
 }
 
-// ── Date header ──────────────────────────────────────────────────────────────
+// â”€â”€ Date header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @Composable
 private fun DateHeaderCard(
@@ -579,7 +580,7 @@ private fun DateHeaderCard(
         ) {
             if (selectedIndex == 1) {
                 Text(
-                    text = "📍 Hôm nay",
+                    text = "ðŸ“ HÃ´m nay",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.SemiBold
@@ -609,7 +610,7 @@ private fun DateHeaderCard(
                         Spacer(Modifier.width(6.dp))
                         Icon(
                             imageVector = Icons.Default.Edit,
-                            contentDescription = "Sửa",
+                            contentDescription = "Sá»­a",
                             tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
                             modifier = Modifier.size(14.dp)
                         )
@@ -621,7 +622,7 @@ private fun DateHeaderCard(
                         horizontalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = "(Chạm để thêm lộ trình/địa điểm)",
+                            text = "(Cháº¡m Ä‘á»ƒ thÃªm lá»™ trÃ¬nh/Ä‘á»‹a Ä‘iá»ƒm)",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.outline,
                             textAlign = TextAlign.Center
@@ -629,7 +630,7 @@ private fun DateHeaderCard(
                         Spacer(Modifier.width(6.dp))
                         Icon(
                             imageVector = Icons.Default.Edit,
-                            contentDescription = "Sửa",
+                            contentDescription = "Sá»­a",
                             tint = MaterialTheme.colorScheme.outline,
                             modifier = Modifier.size(12.dp)
                         )
@@ -637,7 +638,7 @@ private fun DateHeaderCard(
                 }
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "Ngày ${it.dayNumber}",
+                    text = "NgÃ y ${it.dayNumber}",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -676,7 +677,7 @@ private fun StatusActionButton(
     }
 }
 
-// ── Note card ─────────────────────────────────────────────────────────────────
+// â”€â”€ Note card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
@@ -765,7 +766,7 @@ private fun NoteCard(
                 if (note.cost > 0) {
                     Spacer(Modifier.height(2.dp))
                     Text(
-                        text = "💰 ${MoneyUtils.formatShort(note.cost)}",
+                        text = "ðŸ’° ${MoneyUtils.formatShort(note.cost)}",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -775,7 +776,7 @@ private fun NoteCard(
     }
 }
 
-// ── Section header ────────────────────────────────────────────────────────────
+// â”€â”€ Section header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @Composable
 private fun SectionHeader(
@@ -798,14 +799,14 @@ private fun SectionHeader(
     }
 }
 
-// ── Empty states ──────────────────────────────────────────────────────────────
+// â”€â”€ Empty states â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @Composable
 private fun EmptyDayState(selectedIndex: Int) {
     val message = when (selectedIndex) {
-        0 -> "Không có dữ liệu cho ngày hôm qua."
-        2 -> "Chưa có kế hoạch cho ngày mai."
-        else -> "Hôm nay không có trong lịch trình chuyến đi."
+        0 -> "KhÃ´ng cÃ³ dá»¯ liá»‡u cho ngÃ y hÃ´m qua."
+        2 -> "ChÆ°a cÃ³ káº¿ hoáº¡ch cho ngÃ y mai."
+        else -> "HÃ´m nay khÃ´ng cÃ³ trong lá»‹ch trÃ¬nh chuyáº¿n Ä‘i."
     }
     Column(
         modifier = Modifier
@@ -813,7 +814,7 @@ private fun EmptyDayState(selectedIndex: Int) {
             .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("📅", fontSize = 48.sp, textAlign = TextAlign.Center)
+        Text("ðŸ“…", fontSize = 48.sp, textAlign = TextAlign.Center)
         Spacer(Modifier.height(12.dp))
         Text(
             text = message,
@@ -838,10 +839,10 @@ private fun EmptyActivitiesState(
                 .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("🗓️", fontSize = 32.sp)
+            Text("ðŸ—“ï¸", fontSize = 32.sp)
             Spacer(Modifier.height(8.dp))
             Text(
-                text = "Không có hoạt động nào được lên kế hoạch.",
+                text = "KhÃ´ng cÃ³ hoáº¡t Ä‘á»™ng nÃ o Ä‘Æ°á»£c lÃªn káº¿ hoáº¡ch.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -853,7 +854,7 @@ private fun EmptyActivitiesState(
             ) {
                 Icon(Icons.Default.Add, null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
-                Text("Thêm hoạt động")
+                Text("ThÃªm hoáº¡t Ä‘á»™ng")
             }
         }
     }
@@ -870,10 +871,10 @@ private fun EmptyNotesState(modifier: Modifier = Modifier) {
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("📝", fontSize = 28.sp)
+            Text("ðŸ“", fontSize = 28.sp)
             Spacer(Modifier.height(6.dp))
             Text(
-                text = "Chưa có ghi chú nào.\nNhấn + để thêm note đầu tiên!",
+                text = "ChÆ°a cÃ³ ghi chÃº nÃ o.\nNháº¥n + Ä‘á»ƒ thÃªm note Ä‘áº§u tiÃªn!",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -882,7 +883,7 @@ private fun EmptyNotesState(modifier: Modifier = Modifier) {
     }
 }
 
-// ─── Edit Day Title Dialog ──────────────────────────────────────────────────
+// â”€â”€â”€ Edit Day Title Dialog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @Composable
 private fun EditDayTitleDialog(
     day: Day,
@@ -892,14 +893,14 @@ private fun EditDayTitleDialog(
     var title by remember { mutableStateOf(day.title) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Sửa thông tin ngày", fontWeight = FontWeight.Bold) },
+        title = { Text("Sá»­a thÃ´ng tin ngÃ y", fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Thông tin hành trình / địa điểm trong ngày:", style = MaterialTheme.typography.labelMedium)
+                Text("ThÃ´ng tin hÃ nh trÃ¬nh / Ä‘á»‹a Ä‘iá»ƒm trong ngÃ y:", style = MaterialTheme.typography.labelMedium)
                 MyTripTextField(
                     value = title,
                     onValueChange = { title = it },
-                    placeholder = "VD: Phú Thọ → Nghệ An | 380km",
+                    placeholder = "VD: PhÃº Thá» â†’ Nghá»‡ An | 380km",
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -908,473 +909,11 @@ private fun EditDayTitleDialog(
         confirmButton = {
             Button(onClick = {
                 onSave(day.copy(title = title.trim()))
-            }) { Text("Lưu") }
+            }) { Text("LÆ°u") }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Hủy") }
+            TextButton(onClick = onDismiss) { Text("Há»§y") }
         }
     )
 }
 
-// ─── Helpers copied from ItineraryScreen ──────────────────────────────────────
-private fun parseSpots(json: String): List<String> {
-    if (json.isBlank()) return emptyList()
-    return try {
-        val arr = JSONArray(json)
-        (0 until arr.length()).map { arr.getString(it) }
-    } catch (_: Exception) { emptyList() }
-}
-
-private fun spotsToJson(spots: List<String>): String {
-    val arr = JSONArray()
-    spots.forEach { arr.put(it) }
-    return arr.toString()
-}
-
-private data class MoneyShortcut(val label: String, val valueK: Long)
-private val hotelShortcuts = listOf(
-    MoneyShortcut("300k", 300L),
-    MoneyShortcut("500k", 500L),
-    MoneyShortcut("800k", 800L),
-    MoneyShortcut("1M", 1_000L),
-    MoneyShortcut("1.5M", 1_500L),
-    MoneyShortcut("2M", 2_000L)
-)
-
-private val transitSuggestions = listOf("Đi xe máy", "Đi ô tô", "Bắt xe khách", "Đi tàu hỏa", "Bay", "Đi thuyền", "Thuê xe tuk-tuk")
-private val sightseeingSuggestions = listOf("Bãi biển", "Hồ", "Núi", "Chùa", "Đền", "Phố cổ", "Công viên", "Bảo tàng", "Thác nước", "Hang động")
-private val mealSuggestions = listOf("Ăn sáng", "Ăn trưa", "Ăn tối", "Quán hải sản", "Quán bún bò", "Quán phở", "Nhà hàng địa phương", "Coffee break")
-private val accommodationSuggestions = listOf("Check-in khách sạn", "Check-out khách sạn", "Nhà nghỉ", "Homestay", "Resort")
-private val activitySuggestions = listOf("Tắm biển", "Leo núi", "Chèo thuyền kayak", "Cắm trại", "Mua sắm", "Thăm bạn bè", "Thuê xe đạp")
-
-private fun suggestionsFor(type: ActivityType): List<String> = when (type) {
-    ActivityType.TRANSIT -> transitSuggestions
-    ActivityType.SIGHTSEEING -> sightseeingSuggestions
-    ActivityType.MEAL -> mealSuggestions
-    ActivityType.ACCOMMODATION -> accommodationSuggestions
-    ActivityType.ACTIVITY -> activitySuggestions
-}
-
-// ─── ActivityEditSheet (Copied from ItineraryScreen) ─────────────────────────────────
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun ActivityEditSheet(
-    dayId: Long,
-    existingActivity: Activity?,
-    insertAfterIndex: Int,
-    onSave: (Activity) -> Unit,
-    onDismiss: () -> Unit
-) {
-    val focusManager = LocalFocusManager.current
-    val context = LocalContext.current
-
-    // Activity type selection
-    var selectedType by rememberSaveable { mutableStateOf(existingActivity?.activityType ?: ActivityType.TRANSIT) }
-
-    // Common fields
-    var name by rememberSaveable { mutableStateOf(existingActivity?.name ?: "") }
-    var notes by rememberSaveable { mutableStateOf(existingActivity?.notes ?: "") }
-    var nameError by rememberSaveable { mutableStateOf(false) }
-
-    // Time fields (TRANSIT, SIGHTSEEING, ACCOMMODATION, ACTIVITY)
-    var departureTime by rememberSaveable { mutableStateOf(existingActivity?.departureTime ?: "") }
-    var arrivalTime by rememberSaveable { mutableStateOf(existingActivity?.arrivalTime ?: "") }
-    var departureTimeError by rememberSaveable { mutableStateOf(false) }
-    var arrivalTimeError by rememberSaveable { mutableStateOf(false) }
-
-    val departureTimeValue = remember(departureTime) {
-        TextFieldValue(departureTime, TextRange(departureTime.length))
-    }
-    val arrivalTimeValue = remember(arrivalTime) {
-        TextFieldValue(arrivalTime, TextRange(arrivalTime.length))
-    }
-
-    // Expandable detail view toggle
-    var showMoreDetails by rememberSaveable { mutableStateOf(false) }
-
-    // TRANSIT fields
-    var distanceText by rememberSaveable {
-        mutableStateOf(if ((existingActivity?.distanceKm ?: 0.0) > 0) "%.1f".format(existingActivity?.distanceKm) else "")
-    }
-    var mapsLink by rememberSaveable { mutableStateOf(existingActivity?.mapsLink ?: "") }
-
-    // SIGHTSEEING fields
-    var checkInSpots by rememberSaveable { mutableStateOf(parseSpots(existingActivity?.checkInSpots ?: "")) }
-    var spotInput by rememberSaveable { mutableStateOf("") }
-
-    // ACCOMMODATION fields
-    var hotelName by rememberSaveable { mutableStateOf(existingActivity?.hotelName ?: "") }
-    var hotelPriceText by rememberSaveable {
-        mutableStateOf(if ((existingActivity?.hotelPricePlanned ?: 0L) > 0L) existingActivity!!.hotelPricePlanned.toString() else "")
-    }
-
-    // Helper functions for time validation & formatting
-    fun isValidTime(time: String): Boolean {
-        val clean = time.trim()
-        if (clean.isEmpty()) return true
-        val regex = Regex("^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$")
-        return regex.matches(clean)
-    }
-
-    fun formatDigitsToTime(digits: String): String {
-        return when (digits.length) {
-            0 -> ""
-            1 -> digits
-            2 -> digits
-            3 -> "${digits.substring(0, 2)}:${digits.substring(2)}"
-            else -> "${digits.substring(0, 2)}:${digits.substring(2, 4)}"
-        }
-    }
-
-    fun onTimeValueChange(newVal: String): String {
-        val digits = newVal.filter { it.isDigit() }.take(4)
-        return formatDigitsToTime(digits)
-    }
-
-    fun addTimeToFormatted(time: String, minutesToAdd: Int): String {
-        val parts = time.split(":")
-        if (parts.size != 2) return ""
-        val hour = parts[0].toIntOrNull() ?: return ""
-        val minute = parts[1].toIntOrNull() ?: return ""
-        
-        val totalMinutes = hour * 60 + minute + minutesToAdd
-        val newHour = (totalMinutes / 60) % 24
-        val newMinute = totalMinutes % 60
-        return String.format(Locale.US, "%02d:%02d", newHour, newMinute)
-    }
-
-    fun showTimePicker(currentTime: String, onTimeSelected: (String) -> Unit) {
-        val cal = Calendar.getInstance()
-        val initHour = currentTime.split(":").firstOrNull()?.toIntOrNull() ?: cal.get(Calendar.HOUR_OF_DAY)
-        val initMinute = currentTime.split(":").lastOrNull()?.toIntOrNull() ?: cal.get(Calendar.MINUTE)
-        
-        android.app.TimePickerDialog(
-            context,
-            { _, hour, minute ->
-                val formatted = String.format(Locale.US, "%02d:%02d", hour, minute)
-                onTimeSelected(formatted)
-            },
-            initHour,
-            initMinute,
-            true // 24 hours format
-        ).show()
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .navigationBarsPadding()
-            .imePadding()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp, vertical = 16.dp)
-    ) {
-        // Sheet handle
-        Box(modifier = Modifier.align(Alignment.CenterHorizontally).width(40.dp).height(4.dp).clip(RoundedCornerShape(2.dp)).background(MaterialTheme.colorScheme.outlineVariant))
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        Text(
-            text = if (existingActivity == null) "Tạo hoạt động mới" else "Chỉnh sửa hoạt động",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // ── Loại hoạt động ────────────────────────────────────────────
-        Text("Loại hoạt động", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp))
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 16.dp)) {
-            ActivityType.entries.forEach { type ->
-                val isSelected = selectedType == type
-                MyTripChip(
-                    text = "${type.icon} ${type.label}",
-                    selected = isSelected,
-                    onClick = {
-                        selectedType = type
-                        name = "" // reset name suggestions on type change
-                    }
-                )
-            }
-        }
-
-        // ── Tên hoạt động ─────────────────────────────────────────────
-        MyTripTextField(
-            value = name,
-            onValueChange = { name = it; nameError = false },
-            label = "${selectedType.icon} Tên ${selectedType.label} *",
-            isError = nameError,
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        // Gợi ý tên
-        val suggestions = suggestionsFor(selectedType)
-        Spacer(modifier = Modifier.height(6.dp))
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            suggestions.forEach { s ->
-                SuggestionChip(onClick = { name = s }, label = { Text(s, style = MaterialTheme.typography.labelSmall) })
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // ── Giờ (Basic - Always Visible except MEAL) ──────────────────
-        if (selectedType != ActivityType.MEAL) {
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                MyTripTextField(
-                    value = departureTimeValue,
-                    onValueChange = { 
-                        departureTime = onTimeValueChange(it.text)
-                        departureTimeError = false 
-                    },
-                    label = if (selectedType == ActivityType.ACCOMMODATION) "Check-in" else "Giờ đi",
-                    placeholder = "HH:mm",
-                    isError = departureTimeError,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true,
-                    leadingIcon = {
-                        IconButton(onClick = {
-                            showTimePicker(departureTime) { departureTime = it; departureTimeError = false }
-                        }) {
-                            Icon(Icons.Filled.AccessTime, contentDescription = "Chọn giờ")
-                        }
-                    },
-                    modifier = Modifier.weight(1f)
-                )
-                MyTripTextField(
-                    value = arrivalTimeValue,
-                    onValueChange = { 
-                        arrivalTime = onTimeValueChange(it.text)
-                        arrivalTimeError = false 
-                    },
-                    label = if (selectedType == ActivityType.ACCOMMODATION) "Check-out" else "Giờ đến",
-                    placeholder = "HH:mm",
-                    isError = arrivalTimeError,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true,
-                    leadingIcon = {
-                        IconButton(onClick = {
-                            showTimePicker(arrivalTime) { arrivalTime = it; arrivalTimeError = false }
-                        }) {
-                            Icon(Icons.Filled.AccessTime, contentDescription = "Chọn giờ")
-                        }
-                    },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-            
-            // Smart time offset suggestion chips
-            if (isValidTime(departureTime) && departureTime.isNotBlank()) {
-                Spacer(modifier = Modifier.height(6.dp))
-                LazyRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    items(listOf(
-                        "+30p" to 30,
-                        "+1h" to 60,
-                        "+2h" to 120,
-                        "+3h" to 180,
-                        "+4h" to 240
-                    )) { (label, mins) ->
-                        SuggestionChip(
-                            onClick = {
-                                val suggested = addTimeToFormatted(departureTime, mins)
-                                if (suggested.isNotEmpty()) {
-                                    arrivalTime = suggested
-                                    arrivalTimeError = false
-                                }
-                            },
-                            label = { Text(label, style = MaterialTheme.typography.labelSmall) }
-                        )
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-        }
-
-        // ACCOMMODATION: Khách sạn (Tên là Basic - Always Visible)
-        if (selectedType == ActivityType.ACCOMMODATION) {
-            MyTripTextField(
-                value = hotelName,
-                onValueChange = { hotelName = it },
-                label = "Tên khách sạn",
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-        }
-
-        // ── Nút mở rộng thông tin chi tiết ────────────────────────────
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            TextButton(onClick = { showMoreDetails = !showMoreDetails }) {
-                Icon(
-                    imageVector = if (showMoreDetails) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                    contentDescription = null
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(if (showMoreDetails) "Ẩn bớt thông tin chi tiết" else "Thêm thông tin chi tiết")
-            }
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // ── Phân hệ thông tin chi tiết ──────────────────────────────────
-        androidx.compose.animation.AnimatedVisibility(
-            visible = showMoreDetails,
-            enter = androidx.compose.animation.expandVertically(),
-            exit = androidx.compose.animation.shrinkVertically()
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-
-                // ACCOMMODATION: Giá phòng (Detailed)
-                if (selectedType == ActivityType.ACCOMMODATION) {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        MyTripTextField(
-                            value = hotelPriceText,
-                            onValueChange = { hotelPriceText = it },
-                            label = "Giá phòng dự kiến (nghìn ₫)",
-                            placeholder = "VD: 500 = 500.000 ₫",
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            hotelShortcuts.forEach { sc ->
-                                SuggestionChip(onClick = { hotelPriceText = sc.valueK.toString() }, label = { Text(sc.label, style = MaterialTheme.typography.labelSmall) })
-                            }
-                        }
-                    }
-                }
-
-                // TRANSIT: Khoảng cách (Detailed)
-                if (selectedType == ActivityType.TRANSIT) {
-                    MyTripTextField(
-                        value = distanceText,
-                        onValueChange = { distanceText = it },
-                        label = "Khoảng cách (km)",
-                        placeholder = "0.0",
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                // SIGHTSEEING: Check-in spots (Detailed)
-                if (selectedType == ActivityType.SIGHTSEEING) {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Điểm check-in cần ghé", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        if (checkInSpots.isNotEmpty()) {
-                            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                checkInSpots.forEach { spot ->
-                                    InputChip(
-                                        selected = false,
-                                        onClick = { checkInSpots = checkInSpots.filter { it != spot } },
-                                        label = { Text(spot, style = MaterialTheme.typography.labelSmall) },
-                                        trailingIcon = {
-                                            Icon(Icons.Filled.Close, null, modifier = Modifier.size(14.dp))
-                                        }
-                                    )
-                                }
-                            }
-                        }
-                        MyTripTextField(
-                            value = spotInput,
-                            onValueChange = { spotInput = it },
-                            label = "Thêm điểm check-in",
-                            placeholder = "Nhập tên rồi nhấn Enter",
-                            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
-                            keyboardActions = KeyboardActions(onDone = {
-                                val t = spotInput.trim()
-                                if (t.isNotBlank() && !checkInSpots.contains(t)) checkInSpots = checkInSpots + t
-                                spotInput = ""
-                            }),
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
-
-                // Link Google Maps (Detailed, shown for Transit, Sightseeing, Accommodation)
-                if (selectedType == ActivityType.TRANSIT || selectedType == ActivityType.SIGHTSEEING || selectedType == ActivityType.ACCOMMODATION) {
-                    MyTripTextField(
-                        value = mapsLink,
-                        onValueChange = { mapsLink = it },
-                        label = "Link Google Maps",
-                        placeholder = "https://maps.google.com/...",
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-                        singleLine = true,
-                        trailingIcon = {
-                            if (mapsLink.isNotBlank()) {
-                                IconButton(onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(mapsLink))) }) {
-                                    Icon(Icons.Filled.OpenInNew, "Mở bản đồ", modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
-                                }
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                // Ghi chú thêm (Detailed)
-                MyTripTextField(
-                    value = notes,
-                    onValueChange = { notes = it },
-                    label = "Ghi chú thêm",
-                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-                    singleLine = false,
-                    maxLines = 4,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Action buttons
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            MyTripSecondaryButton(onClick = onDismiss, modifier = Modifier.weight(1f)) { Text("Huỷ") }
-            MyTripPrimaryButton(
-                onClick = {
-                    if (name.isBlank()) { nameError = true; return@MyTripPrimaryButton }
-                    
-                    val isDepValid = isValidTime(departureTime)
-                    val isArrValid = isValidTime(arrivalTime)
-                    if (!isDepValid) { departureTimeError = true }
-                    if (!isArrValid) { arrivalTimeError = true }
-                    if (!isDepValid || !isArrValid) return@MyTripPrimaryButton
-
-                    focusManager.clearFocus()
-                    val activity = Activity(
-                        id = existingActivity?.id ?: 0L,
-                        dayId = dayId,
-                        orderIndex = existingActivity?.orderIndex ?: 0,
-                        activityType = selectedType,
-                        name = name.trim(),
-                        departureTime = departureTime.trim(),
-                        arrivalTime = arrivalTime.trim(),
-                        distanceKm = distanceText.toDoubleOrNull() ?: 0.0,
-                        hotelName = hotelName.trim(),
-                        hotelPricePlanned = hotelPriceText.toLongOrNull() ?: 0L,
-                        checkInSpots = spotsToJson(checkInSpots),
-                        mapsLink = mapsLink.trim(),
-                        notes = notes.trim(),
-                        status = existingActivity?.status ?: ActivityStatus.PENDING,
-                        actualDepartureTime = existingActivity?.actualDepartureTime ?: "",
-                        actualArrivalTime = existingActivity?.actualArrivalTime ?: "",
-                        actualNotes = existingActivity?.actualNotes ?: ""
-                    )
-                    onSave(activity)
-                },
-                modifier = Modifier.weight(1f)
-            ) { Text("Lưu") }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-    }
-}
