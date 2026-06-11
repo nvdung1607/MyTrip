@@ -503,119 +503,91 @@ fun TripCard(
                     .background(MaterialTheme.colorScheme.outlineVariant)
             )
 
-            // ── Action buttons ────────────────────────────────────────────
-            Column(
+            // ── Action buttons — 4 nút cùng 1 hàng ──────────────────────────
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 6.dp)
+                    .padding(horizontal = 4.dp, vertical = 2.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                // Row 1: Lịch trình | Hôm nay | Chi phí
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                // Lịch trình
+                TextButton(
+                    onClick = onItineraryClick,
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.primary
+                    )
                 ) {
-                    // Lịch trình
-                    TextButton(
-                        onClick = onItineraryClick,
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.primary
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.CalendarMonth,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "Lịch trình",
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                    }
-
-                    // Hôm nay
-                    TextButton(
-                        onClick = onTodayClick,
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.tertiary
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.WbSunny,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "Hôm nay",
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                    }
-
-                    // Chi phí
-                    TextButton(
-                        onClick = onExpenseClick,
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = Color(0xFF2E7D32)
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.AccountBalanceWallet,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "Chi phí",
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Filled.CalendarMonth,
+                        contentDescription = null,
+                        modifier = Modifier.size(15.dp)
+                    )
+                    Spacer(modifier = Modifier.width(3.dp))
+                    Text(
+                        text = "Lịch trình",
+                        style = MaterialTheme.typography.labelSmall
+                    )
                 }
 
-                // Row 2: Nhật ký | Tổng kết (only for DONE trips)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = if (onSummaryClick != null) Arrangement.SpaceEvenly else Arrangement.Start
+                // Hôm nay
+                TextButton(
+                    onClick = onTodayClick,
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.tertiary
+                    )
                 ) {
-                    // Nhật ký
-                    TextButton(
-                        onClick = onNotesClick,
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = Color(0xFF7B1FA2)
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.MenuBook,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "Nhật ký",
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Filled.WbSunny,
+                        contentDescription = null,
+                        modifier = Modifier.size(15.dp)
+                    )
+                    Spacer(modifier = Modifier.width(3.dp))
+                    Text(
+                        text = "Hôm nay",
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
 
-                    // Tổng kết (only visible for DONE trips)
-                    if (onSummaryClick != null) {
-                        TextButton(
-                            onClick = onSummaryClick,
-                            colors = ButtonDefaults.textButtonColors(
-                                contentColor = Color(0xFF0277BD)
-                            )
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Assessment,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "Tổng kết",
-                                style = MaterialTheme.typography.labelMedium
-                            )
-                        }
-                    }
+                // Chi phí
+                TextButton(
+                    onClick = onExpenseClick,
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = Color(0xFF2E7D32)
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.AccountBalanceWallet,
+                        contentDescription = null,
+                        modifier = Modifier.size(15.dp)
+                    )
+                    Spacer(modifier = Modifier.width(3.dp))
+                    Text(
+                        text = "Chi phí",
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
+
+                // Nhật ký
+                TextButton(
+                    onClick = onNotesClick,
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = Color(0xFF7B1FA2)
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.MenuBook,
+                        contentDescription = null,
+                        modifier = Modifier.size(15.dp)
+                    )
+                    Spacer(modifier = Modifier.width(3.dp))
+                    Text(
+                        text = "Nhật ký",
+                        style = MaterialTheme.typography.labelSmall
+                    )
                 }
             }
         }
