@@ -56,6 +56,8 @@ fun TripDetailScreen(
     val totalPlanned by viewModel.totalPlanned.collectAsStateWithLifecycle()
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
+    var showSettingsSheet by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var pendingStatusChange by remember { mutableStateOf<TripStatus?>(null) }
     val datePickerState = rememberDatePickerState()
     val context = LocalContext.current
@@ -131,6 +133,114 @@ fun TripDetailScreen(
             DatePicker(state = datePickerState)
         }
     }
+    
+    // ─── Settings Modal Bottom Sheet ──────────────────────────────────────────
+    if (showSettingsSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showSettingsSheet = false },
+            sheetState = sheetState,
+            containerColor = MaterialTheme.colorScheme.surface
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 32.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = "Tùy chọn chuyến đi",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                // Hành động
+                ListItem(
+                    headlineContent = { Text("Chỉnh sửa thông tin", fontWeight = FontWeight.Medium) },
+                    leadingContent = { Icon(Icons.Rounded.Edit, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+                    modifier = Modifier.clickable {
+                        showSettingsSheet = false
+                        navController.navigate(Screen.EditTrip.createRoute(tripId))
+                    }.padding(horizontal = 8.dp)
+                )
+                
+                ListItem(
+                    headlineContent = { Text("Xuất backup (JSON)", fontWeight = FontWeight.Medium) },
+                    leadingContent = { Icon(Icons.Rounded.Download, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+                    modifier = Modifier.clickable {
+                        showSettingsSheet = false
+                        trip?.let { t ->
+                            scope.launch {
+                                try {
+                                    val json = viewModel.exportBackupJson(tripId)
+                                    val tripName = t.name
+                                    val uri = BackupUtils.saveToCache(context, json, tripName)
+                                    if (uri != null) BackupUtils.shareBackup(context, uri, tripName)
+                                    BackupUtils.saveToDownloads(context, json, tripName)
+                                } catch (_: Exception) {}
+                            }
+                        }
+                    }.padding(horizontal = 8.dp)
+                )
+
+                ListItem(
+                    headlineContent = { Text("Xóa chuyến đi", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold) },
+                    leadingContent = { Icon(Icons.Rounded.DeleteForever, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+                    modifier = Modifier.clickable {
+                        showSettingsSheet = false
+                        showDeleteDialog = true
+                    }.padding(horizontal = 8.dp)
+                )
+
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+                // Trạng thái
+                Text(
+                    text = "Trạng thái",
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                ListItem(
+                    headlineContent = { Text("Sắp đi", fontWeight = FontWeight.Medium) },
+                    leadingContent = { Icon(Icons.Rounded.Schedule, contentDescription = null, tint = if (trip?.status == TripStatus.PLANNING) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant) },
+                    trailingContent = { if (trip?.status == TripStatus.PLANNING) Icon(Icons.Rounded.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                    modifier = Modifier.clickable {
+                        if (trip?.status != TripStatus.PLANNING) {
+                            showSettingsSheet = false
+                            handleStatusChange(TripStatus.PLANNING)
+                        }
+                    }.padding(horizontal = 8.dp)
+                )
+
+                ListItem(
+                    headlineContent = { Text("Đang đi", fontWeight = FontWeight.Medium) },
+                    leadingContent = { Icon(Icons.Rounded.DirectionsCar, contentDescription = null, tint = if (trip?.status == TripStatus.ONGOING) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant) },
+                    trailingContent = { if (trip?.status == TripStatus.ONGOING) Icon(Icons.Rounded.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                    modifier = Modifier.clickable {
+                        if (trip?.status != TripStatus.ONGOING) {
+                            showSettingsSheet = false
+                            handleStatusChange(TripStatus.ONGOING)
+                        }
+                    }.padding(horizontal = 8.dp)
+                )
+
+                ListItem(
+                    headlineContent = { Text("Hoàn thành", fontWeight = FontWeight.Medium) },
+                    leadingContent = { Icon(Icons.Rounded.TaskAlt, contentDescription = null, tint = if (trip?.status == TripStatus.DONE) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant) },
+                    trailingContent = { if (trip?.status == TripStatus.DONE) Icon(Icons.Rounded.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                    modifier = Modifier.clickable {
+                        if (trip?.status != TripStatus.DONE) {
+                            showSettingsSheet = false
+                            handleStatusChange(TripStatus.DONE)
+                        }
+                    }.padding(horizontal = 8.dp)
+                )
+            }
+        }
+    }
 
     TripThemeProvider(trip = trip) {
         Scaffold(
@@ -154,76 +264,12 @@ fun TripDetailScreen(
                 actions = {
                     val t = trip
                     if (t != null) {
-                        Box {
-                            var showMenu by remember { mutableStateOf(false) }
-                            IconButton(onClick = { showMenu = true }) {
-                                Icon(
-                                    Icons.Rounded.Settings,
-                                    contentDescription = "Cài đặt",
-                                    tint = Color.White
-                                )
-                            }
-                            DropdownMenu(
-                                expanded = showMenu,
-                                onDismissRequest = { showMenu = false }
-                            ) {
-                                DropdownMenuItem(
-                                    text = { Text("Chỉnh sửa thông tin") },
-                                    onClick = {
-                                        showMenu = false
-                                        navController.navigate(Screen.EditTrip.createRoute(tripId))
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Xóa chuyến đi", color = MaterialTheme.colorScheme.error) },
-                                    onClick = {
-                                        showMenu = false
-                                        showDeleteDialog = true
-                                    }
-                                )
-                                HorizontalDivider()
-                                DropdownMenuItem(
-                                    text = { Text("📤 Xuất backup (JSON)") },
-                                    onClick = {
-                                        showMenu = false
-                                        scope.launch {
-                                            try {
-                                                val json = viewModel.exportBackupJson(tripId)
-                                                val tripName = t.name
-                                                val uri = BackupUtils.saveToCache(context, json, tripName)
-                                                if (uri != null) BackupUtils.shareBackup(context, uri, tripName)
-                                                // Also save to Downloads silently
-                                                BackupUtils.saveToDownloads(context, json, tripName)
-                                            } catch (_: Exception) {}
-                                        }
-                                    }
-                                )
-                                HorizontalDivider()
-                                DropdownMenuItem(
-                                    text = { Text("🔵 Đặt trạng thái: Sắp đi") },
-                                    enabled = t.status != TripStatus.PLANNING,
-                                    onClick = {
-                                        showMenu = false
-                                        handleStatusChange(TripStatus.PLANNING)
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("🟢 Đặt trạng thái: Đang đi") },
-                                    enabled = t.status != TripStatus.ONGOING,
-                                    onClick = {
-                                        showMenu = false
-                                        handleStatusChange(TripStatus.ONGOING)
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("⚫ Đặt trạng thái: Hoàn thành") },
-                                    enabled = t.status != TripStatus.DONE,
-                                    onClick = {
-                                        showMenu = false
-                                        handleStatusChange(TripStatus.DONE)
-                                    }
-                                )
-                            }
+                        IconButton(onClick = { showSettingsSheet = true }) {
+                            Icon(
+                                Icons.Rounded.Settings,
+                                contentDescription = "Cài đặt",
+                                tint = Color.White
+                            )
                         }
                     }
                 },

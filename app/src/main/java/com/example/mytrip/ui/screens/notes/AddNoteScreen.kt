@@ -264,8 +264,8 @@ fun AddNoteScreen(
                     .padding(padding)
                     .imePadding()
                     .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(horizontal = 20.dp, vertical = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(32.dp)
             ) {
                 // Photo layout (horizontal list if not empty, otherwise action card)
                 if (photoPaths.isNotEmpty()) {
@@ -371,121 +371,112 @@ fun AddNoteScreen(
                 }
 
                 // 📝 Tên ghi chú
-                GlassmorphismCard(modifier = Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("📝 Tên ghi chú / địa điểm", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                        MyTripTextField(
-                            value = name,
-                            onValueChange = { name = it },
-                            modifier = Modifier.fillMaxWidth(),
-                            placeholder = "VD: Ăn trưa hải sản, Vé cáp treo...",
-                            leadingIcon = { Icon(Icons.Rounded.Place, null) },
-                            singleLine = true
-                        )
-                    }
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Tên ghi chú / địa điểm", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    MyTripTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = "VD: Ăn trưa hải sản, Vé cáp treo...",
+                        leadingIcon = { Icon(Icons.Rounded.Place, null) },
+                        singleLine = true
+                    )
                 }
 
                 // ⭐ Rating
-                GlassmorphismCard(modifier = Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("⭐ Đánh giá *", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
-                        ) {
-                            (1..5).forEach { star ->
-                                IconButton(onClick = { rating = star }) {
-                                    Icon(
-                                        imageVector = if (star <= rating) Icons.Rounded.Star else Icons.Rounded.StarBorder,
-                                        contentDescription = null,
-                                        tint = if (star <= rating) Color(0xFFFFC107) else MaterialTheme.colorScheme.outline,
-                                        modifier = Modifier.size(36.dp)
-                                    )
-                                }
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Đánh giá *", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start)
+                    ) {
+                        (1..5).forEach { star ->
+                            IconButton(onClick = { rating = star }) {
+                                Icon(
+                                    imageVector = if (star <= rating) Icons.Rounded.Star else Icons.Rounded.StarBorder,
+                                    contentDescription = null,
+                                    tint = if (star <= rating) Color(0xFFFFC107) else MaterialTheme.colorScheme.outline,
+                                    modifier = Modifier.size(40.dp)
+                                )
                             }
                         }
-                        if (rating == 0) {
-                            Text(
-                                text = "Bắt buộc chọn đánh giá",
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.labelSmall,
-                                modifier = Modifier.align(Alignment.CenterHorizontally)
-                            )
-                        }
+                    }
+                    if (rating == 0) {
+                        Text(
+                            text = "Bắt buộc chọn đánh giá",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.labelMedium,
+                            modifier = Modifier.padding(start = 12.dp)
+                        )
                     }
                 }
 
                 // 🏷️ Tag
-                GlassmorphismCard(modifier = Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("🏷️ Loại *", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                        FlowRow(
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                                    NoteTag.entries.forEach { tag ->
-                                        val isSelected = selectedTag == tag
-                                        MyTripChip(
-                                            text = "${tag.icon} ${tag.label}",
-                                            selected = isSelected,
-                                            onClick = { selectedTag = tag }
-                                        )
-                                    }
-                                }
-                    }
-                }
-
-                // 💰 Chi phí
-                GlassmorphismCard(modifier = Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text("💰 Chi phí *", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                        MyTripTextField(
-                            value = costInput,
-                            onValueChange = { costInput = it.filter { c -> c.isDigit() } },
-                            modifier = Modifier.fillMaxWidth(),
-                            label = "Số tiền",
-                            placeholder = "VD: 150 = 150.000₫",
-                            suffix = "k",
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            singleLine = true
-                        )
-                        // Shortcuts
-                        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            items(MoneyUtils.SHORTCUTS) { amount ->
-                                MyTripChip(
-                                    text = if (amount >= 1000) "${amount/1000}M" else "${amount}k",
-                                    selected = false,
-                                    onClick = { costInput = amount.toString() }
-                                )
-                            }
-                        }
-                        if (costInput.isNotEmpty()) {
-                            Text(
-                                "= ${MoneyUtils.formatVnd(MoneyUtils.inputToVnd(MoneyUtils.parseInput(costInput)))}",
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Loại *", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        NoteTag.entries.forEach { tag ->
+                            val isSelected = selectedTag == tag
+                            MyTripChip(
+                                text = "${tag.icon} ${tag.label}",
+                                selected = isSelected,
+                                onClick = { selectedTag = tag }
                             )
                         }
                     }
                 }
 
+                // 💰 Chi phí
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Chi phí *", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    MyTripTextField(
+                        value = costInput,
+                        onValueChange = { costInput = it.filter { c -> c.isDigit() } },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = "Số tiền",
+                        placeholder = "VD: 150 = 150.000₫",
+                        suffix = "k",
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true
+                    )
+                    // Shortcuts
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(MoneyUtils.SHORTCUTS) { amount ->
+                            MyTripChip(
+                                text = if (amount >= 1000) "${amount/1000}M" else "${amount}k",
+                                selected = false,
+                                onClick = { costInput = amount.toString() }
+                            )
+                        }
+                    }
+                    if (costInput.isNotEmpty()) {
+                        Text(
+                            "= ${MoneyUtils.formatVnd(MoneyUtils.inputToVnd(MoneyUtils.parseInput(costInput)))}",
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(start = 4.dp)
+                        )
+                    }
+                }
+
                 // 👤 Ai trả
-                GlassmorphismCard(modifier = Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("👤 Ai trả *", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                        FlowRow(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    memberNames.forEach { member ->
-                                        val isSelected = paidBy == member
-                                        MyTripChip(
-                                            text = member,
-                                            selected = isSelected,
-                                            onClick = { paidBy = member }
-                                        )
-                                    }
-                                }
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Ai trả *", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        memberNames.forEach { member ->
+                            val isSelected = paidBy == member
+                            MyTripChip(
+                                text = member,
+                                selected = isSelected,
+                                onClick = { paidBy = member }
+                            )
+                        }
                     }
                 }
 
