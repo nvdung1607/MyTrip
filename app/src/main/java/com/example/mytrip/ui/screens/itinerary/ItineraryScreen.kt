@@ -110,6 +110,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import androidx.navigation.NavController
 import com.example.mytrip.data.db.entities.Activity
 import com.example.mytrip.data.db.entities.ActivityStatus
@@ -152,12 +154,12 @@ fun ItineraryScreen(
 ) {
     LaunchedEffect(tripId) { viewModel.loadData(tripId) }
 
-    val trip by viewModel.trip.collectAsState()
-    val days by viewModel.days.collectAsState()
-    val clusters by viewModel.clusters.collectAsState()
-    val expandedDays by viewModel.expandedDays.collectAsState()
-    val expandedClusters by viewModel.expandedClusters.collectAsState()
-    val activitiesMap by viewModel.activitiesMap.collectAsState()
+    val trip by viewModel.trip.collectAsStateWithLifecycle()
+    val days by viewModel.days.collectAsStateWithLifecycle()
+    val clusters by viewModel.clusters.collectAsStateWithLifecycle()
+    val expandedDays by viewModel.expandedDays.collectAsStateWithLifecycle()
+    val expandedClusters by viewModel.expandedClusters.collectAsStateWithLifecycle()
+    val activitiesMap by viewModel.activitiesMap.collectAsStateWithLifecycle()
 
     // Bottom sheet state
     var showSheet by rememberSaveable { mutableStateOf(false) }

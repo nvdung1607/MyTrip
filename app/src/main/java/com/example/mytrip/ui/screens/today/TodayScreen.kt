@@ -85,6 +85,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.mytrip.data.db.entities.Activity
@@ -147,11 +149,11 @@ fun TodayScreen(
 ) {
     LaunchedEffect(tripId) { viewModel.loadData(tripId) }
 
-    val trip by viewModel.trip.collectAsState()
-    val todayDay by viewModel.todayDay.collectAsState()
-    val activities by viewModel.todayActivities.collectAsState()
-    val notes by viewModel.todayNotes.collectAsState()
-    val selectedIndex by viewModel.selectedDayIndex.collectAsState()
+    val trip by viewModel.trip.collectAsStateWithLifecycle()
+    val todayDay by viewModel.todayDay.collectAsStateWithLifecycle()
+    val activities by viewModel.todayActivities.collectAsStateWithLifecycle()
+    val notes by viewModel.todayNotes.collectAsStateWithLifecycle()
+    val selectedIndex by viewModel.selectedDayIndex.collectAsStateWithLifecycle()
 
     var selectedNoteForDetail by remember { mutableStateOf<Note?>(null) }
     var noteOptionsTarget by remember { mutableStateOf<Note?>(null) }

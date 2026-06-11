@@ -82,6 +82,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import com.example.mytrip.R
 import androidx.navigation.NavController
 import com.example.mytrip.data.db.entities.Trip
@@ -105,8 +107,8 @@ fun HomeScreen(
     navController: NavController,
     viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)
 ) {
-    val trips by viewModel.allTrips.collectAsState()
-    val activeFilter by viewModel.filter.collectAsState()
+    val trips by viewModel.allTrips.collectAsStateWithLifecycle()
+    val activeFilter by viewModel.filter.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -168,7 +170,7 @@ fun HomeScreen(
             )
 
             // ── Search bar ────────────────────────────────────────────────
-            val searchQuery by viewModel.searchQuery.collectAsState()
+            val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { viewModel.setSearchQuery(it) },

@@ -72,8 +72,9 @@ dependencies {
     // Navigation
     implementation(libs.androidx.navigation.compose)
 
-    // ViewModel
+    // ViewModel & Lifecycle
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
 
     // CameraX
     implementation(libs.androidx.camera.core)

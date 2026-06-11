@@ -24,6 +24,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import androidx.navigation.NavController
 import com.example.mytrip.MyTripApplication
 import org.json.JSONArray
@@ -47,21 +49,21 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
 
     LaunchedEffect(tripId) { vm.loadData(tripId) }
 
-    val trip by vm.trip.collectAsState()
-    val expenses by vm.expenses.collectAsState()
-    val records by vm.records.collectAsState()
-    val totalPlanned by vm.totalPlanned.collectAsState()
-    val totalActual by vm.totalActual.collectAsState()
-    val memberBalances by vm.memberBalances.collectAsState()
+    val trip by vm.trip.collectAsStateWithLifecycle()
+    val expenses by vm.expenses.collectAsStateWithLifecycle()
+    val records by vm.records.collectAsStateWithLifecycle()
+    val totalPlanned by vm.totalPlanned.collectAsStateWithLifecycle()
+    val totalActual by vm.totalActual.collectAsStateWithLifecycle()
+    val memberBalances by vm.memberBalances.collectAsStateWithLifecycle()
 
     val memberNames = remember(trip) {
         try {
-            val raw = trip?.memberNames ?: return@remember listOf("Tôi")
+            val raw = trip?.memberNames ?: return@remember listOf("TÃ´i")
             val arr = JSONArray(raw)
             (0 until arr.length()).map { arr.getString(it) }.filter { it.isNotBlank() }
-                .ifEmpty { listOf("Tôi") }
+                .ifEmpty { listOf("TÃ´i") }
         } catch (_: Exception) {
-            listOf("Tôi")
+            listOf("TÃ´i")
         }
     }
 
@@ -75,7 +77,7 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
         Scaffold(
             topBar = {
             TopAppBar(
-                title = { Text("💰 Chi phí") },
+                title = { Text("ðŸ’° Chi phÃ­") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, null)
@@ -92,7 +94,7 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
                         showAddRecord = true
                     },
                     icon = { Icon(Icons.Default.Add, null) },
-                    text = { Text("Thêm chi tiêu") },
+                    text = { Text("ThÃªm chi tiÃªu") },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 )
@@ -102,9 +104,9 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
         Column(Modifier.fillMaxSize().padding(padding)) {
             TabRow(selectedTabIndex = selectedTab) {
                 Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 },
-                    text = { Text("📊 Ngân sách") })
+                    text = { Text("ðŸ“Š NgÃ¢n sÃ¡ch") })
                 Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 },
-                    text = { Text("📝 Thực tế") })
+                    text = { Text("ðŸ“ Thá»±c táº¿") })
             }
 
             when (selectedTab) {
@@ -206,12 +208,12 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         MyTripChip(
-                            text = "Nhập nhanh",
+                            text = "Nháº­p nhanh",
                             selected = !isDetailedMode,
                             onClick = { isDetailedMode = false }
                         )
                         MyTripChip(
-                            text = "🧮 Tính chi tiết",
+                            text = "ðŸ§® TÃ­nh chi tiáº¿t",
                             selected = isDetailedMode,
                             onClick = { isDetailedMode = true }
                         )
@@ -221,9 +223,9 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
                         MyTripTextField(
                             value = input,
                             onValueChange = { input = it.filter { c -> c.isDigit() } },
-                            label = "Dự kiến",
+                            label = "Dá»± kiáº¿n",
                             suffix = "k",
-                            placeholder = "VD: 500 = 500.000₫",
+                            placeholder = "VD: 500 = 500.000â‚«",
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -234,16 +236,16 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
                                 MyTripTextField(
                                     value = hotelPrice,
                                     onValueChange = { hotelPrice = it.filter { c -> c.isDigit() } },
-                                    label = "Giá phòng / đêm (k)",
+                                    label = "GiÃ¡ phÃ²ng / Ä‘Ãªm (k)",
                                     suffix = "k",
-                                    placeholder = "VD: 500 = 500.000₫",
+                                    placeholder = "VD: 500 = 500.000â‚«",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     modifier = Modifier.fillMaxWidth()
                                 )
                                 MyTripTextField(
                                     value = hotelNights,
                                     onValueChange = { hotelNights = it.filter { c -> c.isDigit() } },
-                                    label = "Số đêm",
+                                    label = "Sá»‘ Ä‘Ãªm",
                                     placeholder = "VD: 3",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     modifier = Modifier.fillMaxWidth()
@@ -253,23 +255,23 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
                                 MyTripTextField(
                                     value = foodCostPerPersonPerDay,
                                     onValueChange = { foodCostPerPersonPerDay = it.filter { c -> c.isDigit() } },
-                                    label = "Tiền ăn / người / ngày (k)",
+                                    label = "Tiá»n Äƒn / ngÆ°á»i / ngÃ y (k)",
                                     suffix = "k",
-                                    placeholder = "VD: 150 = 150.000₫",
+                                    placeholder = "VD: 150 = 150.000â‚«",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     modifier = Modifier.fillMaxWidth()
                                 )
                                 MyTripTextField(
                                     value = foodDays,
                                     onValueChange = { foodDays = it.filter { c -> c.isDigit() } },
-                                    label = "Số ngày",
+                                    label = "Sá»‘ ngÃ y",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     modifier = Modifier.fillMaxWidth()
                                 )
                                 MyTripTextField(
                                     value = foodPeople,
                                     onValueChange = { foodPeople = it.filter { c -> c.isDigit() } },
-                                    label = "Số người ăn",
+                                    label = "Sá»‘ ngÆ°á»i Äƒn",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     modifier = Modifier.fillMaxWidth()
                                 )
@@ -278,16 +280,16 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
                                 MyTripTextField(
                                     value = ticketPrice,
                                     onValueChange = { ticketPrice = it.filter { c -> c.isDigit() } },
-                                    label = "Giá vé / người (k)",
+                                    label = "GiÃ¡ vÃ© / ngÆ°á»i (k)",
                                     suffix = "k",
-                                    placeholder = "VD: 100 = 100.000₫",
+                                    placeholder = "VD: 100 = 100.000â‚«",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     modifier = Modifier.fillMaxWidth()
                                 )
                                 MyTripTextField(
                                     value = ticketCount,
                                     onValueChange = { ticketCount = it.filter { c -> c.isDigit() } },
-                                    label = "Số vé",
+                                    label = "Sá»‘ vÃ©",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     modifier = Modifier.fillMaxWidth()
                                 )
@@ -296,16 +298,16 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
                                 MyTripTextField(
                                     value = genericPrice,
                                     onValueChange = { genericPrice = it.filter { c -> c.isDigit() } },
-                                    label = "Đơn giá / khoản chi (k)",
+                                    label = "ÄÆ¡n giÃ¡ / khoáº£n chi (k)",
                                     suffix = "k",
-                                    placeholder = "VD: 200 = 200.000₫",
+                                    placeholder = "VD: 200 = 200.000â‚«",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     modifier = Modifier.fillMaxWidth()
                                 )
                                 MyTripTextField(
                                     value = genericQuantity,
                                     onValueChange = { genericQuantity = it.filter { c -> c.isDigit() } },
-                                    label = "Số lượng / Số chặng",
+                                    label = "Sá»‘ lÆ°á»£ng / Sá»‘ cháº·ng",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     modifier = Modifier.fillMaxWidth()
                                 )
@@ -335,9 +337,9 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
                 MyTripPrimaryButton(onClick = {
                     vm.updatePlanned(exp.copy(planned = MoneyUtils.inputToVnd(MoneyUtils.parseInput(input))))
                     editExpense = null
-                }) { Text("Lưu") }
+                }) { Text("LÆ°u") }
             },
-            dismissButton = { MyTripSecondaryButton(onClick = { editExpense = null }) { Text("Hủy") } }
+            dismissButton = { MyTripSecondaryButton(onClick = { editExpense = null }) { Text("Há»§y") } }
         )
     }
 
@@ -372,298 +374,3 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
 }
 }
 
-@Composable
-private fun BudgetTab(
-    trip: Trip?,
-    expenses: List<Expense>,
-    records: List<ExpenseRecord>,
-    totalPlanned: Long,
-    totalActual: Long,
-    onCategoryClick: (ExpenseCategory) -> Unit
-) {
-    val numPeople = trip?.numPeople ?: 1
-    val ratio = if (totalPlanned > 0) (totalActual.toFloat() / totalPlanned).coerceIn(0f, 1f) else 0f
-    val overBudget = totalActual > totalPlanned
-
-    LazyColumn(
-        Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 100.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        item {
-            // Summary card
-            GlassmorphismCard(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Column {
-                            Text("Dự kiến", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(0.7f))
-                            Text(MoneyUtils.formatShort(totalPlanned), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                        }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text("Thực tế", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(0.7f))
-                            Text(MoneyUtils.formatShort(totalActual),
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = if (overBudget) MaterialTheme.colorScheme.error else Color(0xFF2E7D32))
-                        }
-                    }
-                    LinearProgressIndicator(
-                        progress = { ratio },
-                        modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(8.dp)),
-                        color = if (overBudget) MaterialTheme.colorScheme.error else Color(0xFF4CAF50),
-                        trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(0.2f)
-                    )
-                    if (overBudget)
-                        Text("⚠️ Vượt ngân sách ${MoneyUtils.formatShort(totalActual - totalPlanned)}", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelMedium)
-                }
-            }
-        }
-
-        items(expenses, key = { it.id }) { exp ->
-            val actual = records.filter { it.category == exp.category }.sumOf { it.amount }
-            val isOngoing = trip?.status == TripStatus.ONGOING
-            val isDone = trip?.status == TripStatus.DONE
-            val subtitle = when {
-                isOngoing -> "Nhấn để thêm chi tiêu thực tế"
-                isDone -> "Chuyến đi đã kết thúc"
-                else -> "Nhấn để chỉnh dự kiến"
-            }
-            GlassmorphismCard(
-                modifier = Modifier.fillMaxWidth().clickable(enabled = !isDone) {
-                    onCategoryClick(exp.category)
-                }
-            ) {
-                Row(Modifier.fillMaxWidth().padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically) {
-                    Text(exp.category.icon, fontSize = 28.sp)
-                    Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(exp.category.label, fontWeight = FontWeight.Medium)
-                        Text(subtitle, style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(MoneyUtils.formatShort(exp.planned),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-                        Text(MoneyUtils.formatShort(actual), fontWeight = FontWeight.Bold,
-                            color = if (actual > exp.planned && exp.planned > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
-                    }
-                }
-            }
-        }
-
-        item {
-            // Per person
-            GlassmorphismCard(modifier = Modifier.fillMaxWidth()) {
-                Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Column {
-                        Text("Dự kiến/người", style = MaterialTheme.typography.labelSmall)
-                        Text(MoneyUtils.formatShort(if (numPeople > 0) totalPlanned / numPeople else 0), fontWeight = FontWeight.Bold)
-                    }
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text("Thực tế/người", style = MaterialTheme.typography.labelSmall)
-                        Text(MoneyUtils.formatShort(if (numPeople > 0) totalActual / numPeople else 0), fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary)
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ActualTab(
-    records: List<ExpenseRecord>,
-    memberBalances: Map<String, Long>,
-    memberNames: List<String>,
-    isEditable: Boolean,
-    onDeleteRecord: (ExpenseRecord) -> Unit,
-    onEditRecord: (ExpenseRecord) -> Unit = {}
-) {
-    var deleteTarget by remember { mutableStateOf<ExpenseRecord?>(null) }
-    // Group by actual day date if dayId is set, otherwise fall back to timestamp date
-    val grouped = records.groupBy { rec ->
-        DateUtils.formatDate(rec.timestamp)
-    }.toSortedMap(compareByDescending { it })
-
-    LazyColumn(
-        Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 88.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        grouped.forEach { (date, dayRecords) ->
-            item { Text(date, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold) }
-            items(dayRecords, key = { it.id }) { rec ->
-                GlassmorphismCard(modifier = Modifier.fillMaxWidth()) {
-                    Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(rec.category.icon, fontSize = 24.sp)
-                        Spacer(Modifier.width(12.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(rec.description.ifEmpty { rec.category.label }, fontWeight = FontWeight.Medium)
-                            Surface(
-                                shape = RoundedCornerShape(50),
-                                color = MaterialTheme.colorScheme.secondaryContainer,
-                                modifier = Modifier.padding(top = 4.dp)
-                            ) {
-                                Text(
-                                    text = rec.paidBy,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                                )
-                            }
-                        }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text(MoneyUtils.formatShort(rec.amount), fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp, color = MaterialTheme.colorScheme.primary)
-                            if (isEditable) {
-                                Row {
-                                    IconButton(onClick = { onEditRecord(rec) }, modifier = Modifier.size(28.dp)) {
-                                        Icon(Icons.Default.Edit, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
-                                    }
-                                    IconButton(onClick = { deleteTarget = rec }, modifier = Modifier.size(28.dp)) {
-                                        Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(16.dp))
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // Balance summary
-        if (memberBalances.isNotEmpty()) {
-            item { Spacer(Modifier.height(8.dp)) }
-            item {
-                Text("⚖️ Quyết toán", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            }
-            items(memberNames) { name ->
-                val balance = memberBalances[name] ?: 0L
-                GlassmorphismCard(modifier = Modifier.fillMaxWidth()) {
-                    Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text(name, fontWeight = FontWeight.Medium)
-                        if (balance >= 0) {
-                            Text("✅ Được hoàn ${MoneyUtils.formatShort(balance)}", color = Color(0xFF2E7D32), fontWeight = FontWeight.Bold)
-                        } else {
-                            Text("❗ Cần trả thêm ${MoneyUtils.formatShort(-balance)}", color = Color(0xFFC62828), fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    deleteTarget?.let { rec ->
-        AlertDialog(
-            onDismissRequest = { deleteTarget = null },
-            title = { Text("Xóa chi tiêu?") },
-            text = { Text("Bạn có chắc muốn xóa khoản ${MoneyUtils.formatShort(rec.amount)} (${rec.category.label})?") },
-            confirmButton = { Button(onClick = { onDeleteRecord(rec); deleteTarget = null },
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) { Text("Xóa") } },
-            dismissButton = { TextButton(onClick = { deleteTarget = null }) { Text("Hủy") } }
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun AddExpenseRecordSheet(
-    initialCategory: ExpenseCategory = ExpenseCategory.FOOD,
-    initialAmount: String = "",
-    initialPaidBy: String = "",
-    initialDescription: String = "",
-    memberNames: List<String>,
-    onDismiss: () -> Unit,
-    onSave: (ExpenseRecord) -> Unit
-) {
-    var category by remember { mutableStateOf(initialCategory) }
-    var amountInput by remember { mutableStateOf(initialAmount) }
-    var paidBy by remember { mutableStateOf(initialPaidBy.ifBlank { memberNames.firstOrNull() ?: "Tôi" }) }
-    var description by remember { mutableStateOf(initialDescription) }
-
-    ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .imePadding()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text(
-                text = if (initialAmount.isNotEmpty()) "Sửa chi tiêu" else "Thêm chi tiêu",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-
-            Text("Hạng mục", style = MaterialTheme.typography.labelLarge)
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(ExpenseCategory.values()) { cat ->
-                    MyTripChip(
-                        text = "${cat.icon} ${cat.label}",
-                        selected = category == cat,
-                        onClick = { category = cat }
-                    )
-                }
-            }
-
-            MyTripTextField(
-                value = amountInput,
-                onValueChange = { amountInput = it.filter { c -> c.isDigit() } },
-                modifier = Modifier.fillMaxWidth(),
-                label = "Số tiền",
-                suffix = "k",
-                placeholder = "VD: 200 = 200.000₫",
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-            )
-            if (amountInput.isNotEmpty())
-                Text("= ${MoneyUtils.formatVnd(MoneyUtils.inputToVnd(MoneyUtils.parseInput(amountInput)))}",
-                    color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(MoneyUtils.SHORTCUTS) { a ->
-                    SuggestionChip(onClick = { amountInput = a.toString() },
-                        label = { Text(if (a >= 1000) "${a/1000}M" else "${a}k") })
-                }
-            }
-
-            Text("Ai trả", style = MaterialTheme.typography.labelLarge)
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(memberNames) { m ->
-                    MyTripChip(
-                        text = m,
-                        selected = paidBy == m,
-                        onClick = { paidBy = m }
-                    )
-                }
-            }
-
-            MyTripTextField(
-                value = description,
-                onValueChange = { description = it },
-                modifier = Modifier.fillMaxWidth(),
-                label = "Mô tả (tùy chọn)",
-                singleLine = true
-            )
-
-            MyTripPrimaryButton(
-                onClick = {
-                    onSave(ExpenseRecord(
-                        tripId = 0L, category = category,
-                        amount = MoneyUtils.inputToVnd(MoneyUtils.parseInput(amountInput)),
-                        paidBy = paidBy, description = description,
-                        timestamp = System.currentTimeMillis()
-                    ))
-                },
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-                enabled = amountInput.isNotEmpty()
-            ) { Text(if (initialAmount.isNotEmpty()) "Cập nhật" else "Lưu chi tiêu", fontWeight = FontWeight.Bold) }
-
-            Spacer(Modifier.height(8.dp))
-        }
-    }
-}

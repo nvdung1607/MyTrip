@@ -25,6 +25,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import androidx.navigation.NavController
 import com.example.mytrip.data.db.entities.Trip
 import com.example.mytrip.data.db.entities.TripStatus
@@ -49,9 +51,9 @@ fun TripDetailScreen(
     tripId: Long,
     viewModel: TripViewModel = viewModel()
 ) {
-    val trip by viewModel.trip.collectAsState()
-    val uiState by viewModel.uiState.collectAsState()
-    val totalPlanned by viewModel.totalPlanned.collectAsState()
+    val trip by viewModel.trip.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val totalPlanned by viewModel.totalPlanned.collectAsStateWithLifecycle()
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
     var pendingStatusChange by remember { mutableStateOf<TripStatus?>(null) }

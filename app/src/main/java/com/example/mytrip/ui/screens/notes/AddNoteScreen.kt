@@ -41,6 +41,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.mytrip.MyTripApplication
@@ -78,10 +80,10 @@ fun AddNoteScreen(
         override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>) = TripViewModel(app) as T
     })
 
-    val trip by tripVm.trip.collectAsState()
-    LaunchedEffect(tripId) { tripVm.loadTrip(tripId) }
-
-    val savedId by noteVm.savedNoteId.collectAsState()
+    val trip by tripVm.trip.collectAsStateWithLifecycle()
+    
+    // Watch for saved ID
+    val savedId by noteVm.savedNoteId.collectAsStateWithLifecycle()
     LaunchedEffect(savedId) {
         if (savedId != null) {
             // Kiểm tra màn hình trước: nếu không phải TripDetail (ví dụ mở từ widget),
@@ -127,7 +129,7 @@ fun AddNoteScreen(
     }
 
     // Tải note nếu noteId != null
-    val noteToEdit by noteVm.noteToEdit.collectAsState()
+    val noteToEdit by noteVm.noteToEdit.collectAsStateWithLifecycle()
     var isInitialized by remember { mutableStateOf(false) }
 
     LaunchedEffect(noteId) {

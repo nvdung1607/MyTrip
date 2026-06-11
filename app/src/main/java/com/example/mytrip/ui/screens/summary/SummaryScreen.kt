@@ -23,6 +23,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.mytrip.MyTripApplication
@@ -45,14 +47,14 @@ fun SummaryScreen(navController: NavController, tripId: Long) {
 
     LaunchedEffect(tripId) { vm.loadData(tripId) }
 
-    val trip by vm.trip.collectAsState()
-    val days by vm.days.collectAsState()
-    val activitiesMap by vm.activitiesMap.collectAsState()
-    val notes by vm.notes.collectAsState()
-    val expenses by vm.expenses.collectAsState()
-    val records by vm.records.collectAsState()
-    val memberBalances by vm.memberBalances.collectAsState()
-    val isExportingPhotos by vm.isExportingPhotos.collectAsState()
+    val trip by vm.trip.collectAsStateWithLifecycle()
+    val days by vm.days.collectAsStateWithLifecycle()
+    val activitiesMap by vm.activitiesMap.collectAsStateWithLifecycle()
+    val notes by vm.notes.collectAsStateWithLifecycle()
+    val expenses by vm.expenses.collectAsStateWithLifecycle()
+    val records by vm.records.collectAsStateWithLifecycle()
+    val memberBalances by vm.memberBalances.collectAsStateWithLifecycle()
+    val isExportingPhotos by vm.isExportingPhotos.collectAsStateWithLifecycle()
 
     val totalPlanned = expenses.sumOf { it.planned }
     val totalActual = records.sumOf { it.amount }

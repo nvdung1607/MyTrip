@@ -43,6 +43,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import androidx.navigation.NavController
 import com.example.mytrip.data.db.entities.Trip
 import com.example.mytrip.data.db.entities.TripType
@@ -62,10 +64,10 @@ fun CreateEditTripScreen(
     viewModel: TripViewModel = viewModel()
 ) {
     val isEditMode = tripId != null
-    val trip by viewModel.trip.collectAsState()
-    val uiState by viewModel.uiState.collectAsState()
-    val importedTripId by viewModel.importedTripId.collectAsState()
-    val importError by viewModel.importError.collectAsState()
+    val trip by viewModel.trip.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val importedTripId by viewModel.importedTripId.collectAsStateWithLifecycle()
+    val importError by viewModel.importError.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -711,21 +713,6 @@ fun CreateEditTripScreen(
 
 // ─── Helper composables ───────────────────────────────────────────────────────
 
-@Composable
-private fun FormSection(
-    title: String,
-    content: @Composable ColumnScope.() -> Unit
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        content()
-    }
-}
 
 @Composable
 private fun DateButton(

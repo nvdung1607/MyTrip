@@ -33,6 +33,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.mytrip.data.db.entities.Day
@@ -59,10 +61,10 @@ fun AllNotesScreen(
         viewModel.loadTrip(tripId)
     }
 
-    val trip by viewModel.trip.collectAsState()
-    val days by viewModel.days.collectAsState()
-    val filteredNotes by viewModel.filteredNotes.collectAsState()
-    val currentFilter by viewModel.currentFilter.collectAsState()
+    val trip by viewModel.trip.collectAsStateWithLifecycle()
+    val days by viewModel.days.collectAsStateWithLifecycle()
+    val filteredNotes by viewModel.filteredNotes.collectAsStateWithLifecycle()
+    val currentFilter by viewModel.currentFilter.collectAsStateWithLifecycle()
 
     var noteOptionsTarget by remember { mutableStateOf<Note?>(null) }
     var noteToDelete by remember { mutableStateOf<Note?>(null) }
