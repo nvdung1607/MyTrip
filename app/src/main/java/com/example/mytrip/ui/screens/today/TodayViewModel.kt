@@ -46,9 +46,6 @@ class TodayViewModel(application: Application) : AndroidViewModel(application) {
     private val _todayDay = MutableStateFlow<Day?>(null)
     val todayDay: StateFlow<Day?> = _todayDay.asStateFlow()
 
-    val todayActivities: StateFlow<List<Activity>> = _activitiesFlow
-    val todayNotes: StateFlow<List<Note>> = _notesFlow
-
     private var currentTripId: Long = -1L
 
     // Live flow from the currently selected day's activities
@@ -63,6 +60,9 @@ class TodayViewModel(application: Application) : AndroidViewModel(application) {
         if (dayId == null) flowOf(emptyList())
         else repository.getNotesForDay(dayId)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val todayActivities: StateFlow<List<Activity>> = _activitiesFlow
+    val todayNotes: StateFlow<List<Note>> = _notesFlow
 
     private var loadJob: kotlinx.coroutines.Job? = null
 
@@ -126,7 +126,7 @@ class TodayViewModel(application: Application) : AndroidViewModel(application) {
 
     fun insertActivityAfter(activity: Activity, insertAfterIndex: Int) {
         viewModelScope.launch {
-            val dayActivities = _todayActivities.value
+            val dayActivities = todayActivities.value
                 .sortedBy { it.orderIndex }
                 .toMutableList()
 
