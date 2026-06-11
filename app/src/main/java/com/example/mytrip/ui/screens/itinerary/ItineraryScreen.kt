@@ -53,12 +53,14 @@ import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.ArrowForward
 import java.util.Calendar
 import java.util.Locale
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -532,96 +534,66 @@ private fun ActivityEditSheet(
     val focusManager = LocalFocusManager.current
     val context = LocalContext.current
 
-    // Activity type selection
     var selectedType by rememberSaveable { mutableStateOf(existingActivity?.activityType ?: ActivityType.TRANSIT) }
-
-    // Common fields
     var name by rememberSaveable { mutableStateOf(existingActivity?.name ?: "") }
     var notes by rememberSaveable { mutableStateOf(existingActivity?.notes ?: "") }
     var nameError by rememberSaveable { mutableStateOf(false) }
-
-    // Time fields (TRANSIT, SIGHTSEEING, ACCOMMODATION, ACTIVITY)
     var departureTime by rememberSaveable { mutableStateOf(existingActivity?.departureTime ?: "") }
     var arrivalTime by rememberSaveable { mutableStateOf(existingActivity?.arrivalTime ?: "") }
     var departureTimeError by rememberSaveable { mutableStateOf(false) }
     var arrivalTimeError by rememberSaveable { mutableStateOf(false) }
-
-    val departureTimeValue = remember(departureTime) {
-        TextFieldValue(departureTime, TextRange(departureTime.length))
-    }
-    val arrivalTimeValue = remember(arrivalTime) {
-        TextFieldValue(arrivalTime, TextRange(arrivalTime.length))
-    }
-
-    // Expandable detail view toggle
     var showMoreDetails by rememberSaveable { mutableStateOf(false) }
-
-    // TRANSIT fields
     var distanceText by rememberSaveable {
         mutableStateOf(if ((existingActivity?.distanceKm ?: 0.0) > 0) "%.1f".format(existingActivity?.distanceKm) else "")
     }
     var mapsLink by rememberSaveable { mutableStateOf(existingActivity?.mapsLink ?: "") }
-
-    // SIGHTSEEING fields
     var checkInSpots by rememberSaveable { mutableStateOf(parseSpots(existingActivity?.checkInSpots ?: "")) }
     var spotInput by rememberSaveable { mutableStateOf("") }
-
-    // ACCOMMODATION fields
     var hotelName by rememberSaveable { mutableStateOf(existingActivity?.hotelName ?: "") }
     var hotelPriceText by rememberSaveable {
         mutableStateOf(if ((existingActivity?.hotelPricePlanned ?: 0L) > 0L) existingActivity!!.hotelPricePlanned.toString() else "")
     }
 
-    // Helper functions for time validation & formatting
+    val departureTimeValue = remember(departureTime) { TextFieldValue(departureTime, TextRange(departureTime.length)) }
+    val arrivalTimeValue = remember(arrivalTime) { TextFieldValue(arrivalTime, TextRange(arrivalTime.length)) }
+
     fun isValidTime(time: String): Boolean {
         val clean = time.trim()
         if (clean.isEmpty()) return true
-        val regex = Regex("^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$")
-        return regex.matches(clean)
+        return Regex("^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$").matches(clean)
     }
-
-    fun formatDigitsToTime(digits: String): String {
-        return when (digits.length) {
-            0 -> ""
-            1 -> digits
-            2 -> digits
-            3 -> "${digits.substring(0, 2)}:${digits.substring(2)}"
-            else -> "${digits.substring(0, 2)}:${digits.substring(2, 4)}"
-        }
+    fun formatDigitsToTime(digits: String): String = when (digits.length) {
+        0 -> ""; 1, 2 -> digits
+        3 -> "${digits.substring(0, 2)}:${digits.substring(2)}"
+        else -> "${digits.substring(0, 2)}:${digits.substring(2, 4)}"
     }
-
-    fun onTimeValueChange(newVal: String): String {
-        val digits = newVal.filter { it.isDigit() }.take(4)
-        return formatDigitsToTime(digits)
-    }
-
+    fun onTimeValueChange(newVal: String): String = formatDigitsToTime(newVal.filter { it.isDigit() }.take(4))
     fun addTimeToFormatted(time: String, minutesToAdd: Int): String {
         val parts = time.split(":")
         if (parts.size != 2) return ""
         val hour = parts[0].toIntOrNull() ?: return ""
         val minute = parts[1].toIntOrNull() ?: return ""
-        
         val totalMinutes = hour * 60 + minute + minutesToAdd
-        val newHour = (totalMinutes / 60) % 24
-        val newMinute = totalMinutes % 60
-        return String.format(Locale.US, "%02d:%02d", newHour, newMinute)
+        return String.format(Locale.US, "%02d:%02d", (totalMinutes / 60) % 24, totalMinutes % 60)
     }
-
     fun showTimePicker(currentTime: String, onTimeSelected: (String) -> Unit) {
         val cal = Calendar.getInstance()
-        val initHour = currentTime.split(":").firstOrNull()?.toIntOrNull() ?: cal.get(Calendar.HOUR_OF_DAY)
-        val initMinute = currentTime.split(":").lastOrNull()?.toIntOrNull() ?: cal.get(Calendar.MINUTE)
-        
         android.app.TimePickerDialog(
             context,
-            { _, hour, minute ->
-                val formatted = String.format(Locale.US, "%02d:%02d", hour, minute)
-                onTimeSelected(formatted)
-            },
-            initHour,
-            initMinute,
-            true // 24 hours format
+            { _, hour, minute -> onTimeSelected(String.format(Locale.US, "%02d:%02d", hour, minute)) },
+            currentTime.split(":").firstOrNull()?.toIntOrNull() ?: cal.get(Calendar.HOUR_OF_DAY),
+            currentTime.split(":").lastOrNull()?.toIntOrNull() ?: cal.get(Calendar.MINUTE),
+            true
         ).show()
+    }
+
+    // ── Màu accent theo loại hoạt động ───────────────────────────────────────
+    val typeColor = when (selectedType) {
+        ActivityType.TRANSIT      -> Color(0xFF1565C0)
+        ActivityType.SIGHTSEEING  -> Color(0xFF2E7D32)
+        ActivityType.MEAL         -> Color(0xFFE65100)
+        ActivityType.ACCOMMODATION-> Color(0xFF6A1B9A)
+        ActivityType.ACTIVITY     -> Color(0xFF00695C)
     }
 
     Column(
@@ -630,206 +602,362 @@ private fun ActivityEditSheet(
             .navigationBarsPadding()
             .imePadding()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp, vertical = 16.dp)
     ) {
-        // Sheet handle
-        Box(modifier = Modifier.align(Alignment.CenterHorizontally).width(40.dp).height(4.dp).clip(RoundedCornerShape(2.dp)).background(MaterialTheme.colorScheme.outlineVariant))
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        Text(
-            text = if (existingActivity == null) "Tạo hoạt động mới" else "Chỉnh sửa hoạt động",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
+        // ── Drag handle ───────────────────────────────────────────────────────
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(top = 12.dp)
+                .width(36.dp)
+                .height(4.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(MaterialTheme.colorScheme.outlineVariant)
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // ── Loại hoạt động ────────────────────────────────────────────
-        Text("Loại hoạt động", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp))
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 16.dp)) {
-            ActivityType.values().forEach { type ->
-                MyTripChip(
-                    text = "${type.icon} ${type.label}",
-                    selected = selectedType == type,
-                    onClick = {
-                        selectedType = type
-                        name = "" // reset name suggestions on type change
-                    }
-                )
-            }
-        }
-
-        // ── Tên hoạt động ─────────────────────────────────────────────
-        MyTripTextField(
-            value = name,
-            onValueChange = { name = it; nameError = false },
-            label = "${selectedType.icon} Tên ${selectedType.label} *",
-            isError = nameError,
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        // Gợi ý tên
-        val suggestions = suggestionsFor(selectedType)
-        Spacer(modifier = Modifier.height(6.dp))
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            suggestions.forEach { s ->
-                SuggestionChip(onClick = { name = s }, label = { Text(s, style = MaterialTheme.typography.labelSmall) })
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // ── Giờ (Basic - Always Visible except MEAL) ──────────────────
-        if (selectedType != ActivityType.MEAL) {
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                MyTripTextField(
-                    value = departureTimeValue,
-                    onValueChange = { 
-                        departureTime = onTimeValueChange(it.text)
-                        departureTimeError = false 
-                    },
-                    label = if (selectedType == ActivityType.ACCOMMODATION) "Check-in" else "Giờ đi",
-                    placeholder = "HH:mm",
-                    isError = departureTimeError,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true,
-                    leadingIcon = {
-                        IconButton(onClick = {
-                            showTimePicker(departureTime) { departureTime = it; departureTimeError = false }
-                        }) {
-                            Icon(Icons.Filled.AccessTime, contentDescription = "Chọn giờ")
-                        }
-                    },
-                    modifier = Modifier.weight(1f)
-                )
-                MyTripTextField(
-                    value = arrivalTimeValue,
-                    onValueChange = { 
-                        arrivalTime = onTimeValueChange(it.text)
-                        arrivalTimeError = false 
-                    },
-                    label = if (selectedType == ActivityType.ACCOMMODATION) "Check-out" else "Giờ đến",
-                    placeholder = "HH:mm",
-                    isError = arrivalTimeError,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true,
-                    leadingIcon = {
-                        IconButton(onClick = {
-                            showTimePicker(arrivalTime) { arrivalTime = it; arrivalTimeError = false }
-                        }) {
-                            Icon(Icons.Filled.AccessTime, contentDescription = "Chọn giờ")
-                        }
-                    },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-            
-            // Smart time offset suggestion chips
-            if (isValidTime(departureTime) && departureTime.isNotBlank()) {
-                Spacer(modifier = Modifier.height(6.dp))
-                LazyRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+        // ── Header với màu gradient theo loại ────────────────────────────────
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 16.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(typeColor.copy(alpha = 0.12f)),
+                    contentAlignment = Alignment.Center
                 ) {
-                    items(listOf(
-                        "+30p" to 30,
-                        "+1h" to 60,
-                        "+2h" to 120,
-                        "+3h" to 180,
-                        "+4h" to 240
-                    )) { (label, mins) ->
-                        SuggestionChip(
-                            onClick = {
-                                val suggested = addTimeToFormatted(departureTime, mins)
-                                if (suggested.isNotEmpty()) {
-                                    arrivalTime = suggested
-                                    arrivalTimeError = false
-                                }
-                            },
-                            label = { Text(label, style = MaterialTheme.typography.labelSmall) }
+                    Text(selectedType.icon, fontSize = 22.sp)
+                }
+                Spacer(Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = if (existingActivity == null) "Tạo hoạt động mới" else "Chỉnh sửa hoạt động",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = selectedType.label,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = typeColor
+                    )
+                }
+            }
+        }
+
+        // ── Loại hoạt động — Icon card selector ───────────────────────────────
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            ActivityType.values().forEach { type ->
+                val isSelected = selectedType == type
+                val tColor = when (type) {
+                    ActivityType.TRANSIT      -> Color(0xFF1565C0)
+                    ActivityType.SIGHTSEEING  -> Color(0xFF2E7D32)
+                    ActivityType.MEAL         -> Color(0xFFE65100)
+                    ActivityType.ACCOMMODATION-> Color(0xFF6A1B9A)
+                    ActivityType.ACTIVITY     -> Color(0xFF00695C)
+                }
+                Surface(
+                    onClick = { selectedType = type; name = "" },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (isSelected) tColor.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant,
+                    border = if (isSelected) androidx.compose.foundation.BorderStroke(1.5.dp, tColor) else null,
+                    tonalElevation = 0.dp
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(vertical = 8.dp, horizontal = 2.dp)
+                    ) {
+                        Text(type.icon, fontSize = 18.sp)
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            text = type.label,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (isSelected) tColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(12.dp))
         }
 
-        // ACCOMMODATION: Khách sạn (Tên là Basic - Always Visible)
-        if (selectedType == ActivityType.ACCOMMODATION) {
-            MyTripTextField(
-                value = hotelName,
-                onValueChange = { hotelName = it },
-                label = "Tên khách sạn",
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+        Spacer(Modifier.height(20.dp))
+
+        // ── Tên hoạt động ─────────────────────────────────────────────────────
+        Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+            Text(
+                "Tên hoạt động *",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 6.dp)
+            )
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it; nameError = false },
+                placeholder = { Text("Nhập tên ${selectedType.label.lowercase()}...") },
+                isError = nameError,
+                supportingText = if (nameError) { { Text("Vui lòng nhập tên", color = MaterialTheme.colorScheme.error) } } else null,
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                 singleLine = true,
+                shape = RoundedCornerShape(12.dp),
+                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = typeColor,
+                    focusedLabelColor = typeColor
+                ),
                 modifier = Modifier.fillMaxWidth()
             )
-            Spacer(modifier = Modifier.height(12.dp))
-        }
 
-        // ── Nút mở rộng thông tin chi tiết ────────────────────────────
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            TextButton(onClick = { showMoreDetails = !showMoreDetails }) {
-                Icon(
-                    imageVector = if (showMoreDetails) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                    contentDescription = null
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(if (showMoreDetails) "Ẩn bớt thông tin chi tiết" else "Thêm thông tin chi tiết")
+            // Gợi ý tên
+            val suggestions = suggestionsFor(selectedType)
+            if (suggestions.isNotEmpty()) {
+                Spacer(Modifier.height(8.dp))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    items(suggestions) { s ->
+                        SuggestionChip(
+                            onClick = { name = s },
+                            label = { Text(s, style = MaterialTheme.typography.labelSmall) }
+                        )
+                    }
+                }
             }
         }
-        Spacer(modifier = Modifier.height(8.dp))
 
-        // ── Phân hệ thông tin chi tiết ──────────────────────────────────
-        AnimatedVisibility(
-            visible = showMoreDetails,
-            enter = expandVertically(),
-            exit = shrinkVertically()
+        Spacer(Modifier.height(16.dp))
+
+        // ── Thời gian ─────────────────────────────────────────────────────────
+        if (selectedType != ActivityType.MEAL) {
+            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                Text(
+                    if (selectedType == ActivityType.ACCOMMODATION) "Check-in / Check-out" else "Thời gian",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 6.dp)
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    // Giờ đi / Check-in
+                    Surface(
+                        onClick = { showTimePicker(departureTime) { departureTime = it; departureTimeError = false } },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        border = androidx.compose.foundation.BorderStroke(
+                            1.dp,
+                            if (departureTimeError) MaterialTheme.colorScheme.error
+                            else if (departureTime.isNotBlank()) typeColor
+                            else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+                        ),
+                        color = if (departureTime.isNotBlank()) typeColor.copy(alpha = 0.07f)
+                                else MaterialTheme.colorScheme.surfaceVariant
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.padding(vertical = 14.dp, horizontal = 8.dp)
+                        ) {
+                            Icon(
+                                Icons.Filled.AccessTime,
+                                contentDescription = null,
+                                tint = if (departureTime.isNotBlank()) typeColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = if (departureTime.isNotBlank()) departureTime else "--:--",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = if (departureTime.isNotBlank()) typeColor else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = if (selectedType == ActivityType.ACCOMMODATION) "Check-in" else "Giờ đi",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    // Mũi tên ở giữa
+                    Box(
+                        modifier = Modifier.align(Alignment.CenterVertically),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Default.ArrowForward,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+
+                    // Giờ đến / Check-out
+                    Surface(
+                        onClick = { showTimePicker(arrivalTime) { arrivalTime = it; arrivalTimeError = false } },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        border = androidx.compose.foundation.BorderStroke(
+                            1.dp,
+                            if (arrivalTimeError) MaterialTheme.colorScheme.error
+                            else if (arrivalTime.isNotBlank()) typeColor
+                            else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+                        ),
+                        color = if (arrivalTime.isNotBlank()) typeColor.copy(alpha = 0.07f)
+                                else MaterialTheme.colorScheme.surfaceVariant
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.padding(vertical = 14.dp, horizontal = 8.dp)
+                        ) {
+                            Icon(
+                                Icons.Filled.AccessTime,
+                                contentDescription = null,
+                                tint = if (arrivalTime.isNotBlank()) typeColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = if (arrivalTime.isNotBlank()) arrivalTime else "--:--",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = if (arrivalTime.isNotBlank()) typeColor else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = if (selectedType == ActivityType.ACCOMMODATION) "Check-out" else "Giờ đến",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+
+                // Smart time offset chips
+                if (isValidTime(departureTime) && departureTime.isNotBlank()) {
+                    Spacer(Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Thêm:", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Spacer(Modifier.width(6.dp))
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            items(listOf("+30p" to 30, "+1h" to 60, "+2h" to 120, "+3h" to 180, "+4h" to 240)) { (label, mins) ->
+                                SuggestionChip(
+                                    onClick = {
+                                        val suggested = addTimeToFormatted(departureTime, mins)
+                                        if (suggested.isNotEmpty()) { arrivalTime = suggested; arrivalTimeError = false }
+                                    },
+                                    label = { Text(label, style = MaterialTheme.typography.labelSmall) }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+        }
+
+        // ── ACCOMMODATION: Tên khách sạn ──────────────────────────────────────
+        if (selectedType == ActivityType.ACCOMMODATION) {
+            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                Text("Khách sạn", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
+                OutlinedTextField(
+                    value = hotelName,
+                    onValueChange = { hotelName = it },
+                    placeholder = { Text("Tên khách sạn / homestay...") },
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = typeColor, focusedLabelColor = typeColor
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            Spacer(Modifier.height(16.dp))
+        }
+
+        // ── Divider + Nút mở thêm chi tiết ───────────────────────────────────
+        HorizontalDivider(modifier = Modifier.padding(horizontal = 20.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+        Surface(
+            onClick = { showMoreDetails = !showMoreDetails },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 4.dp),
+            shape = RoundedCornerShape(8.dp),
+            color = Color.Transparent
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(
+                modifier = Modifier.padding(vertical = 10.dp, horizontal = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = if (showMoreDetails) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = if (showMoreDetails) "Ẩn thông tin chi tiết" else "Thêm thông tin chi tiết",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
 
-                // ACCOMMODATION: Giá phòng (Detailed)
+        // ── Chi tiết mở rộng ──────────────────────────────────────────────────
+        AnimatedVisibility(visible = showMoreDetails, enter = expandVertically(), exit = shrinkVertically()) {
+            Column(
+                modifier = Modifier.padding(horizontal = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                // ACCOMMODATION: Giá phòng
                 if (selectedType == ActivityType.ACCOMMODATION) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        MyTripTextField(
+                        Text("Giá phòng (nghìn ₫)", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        OutlinedTextField(
                             value = hotelPriceText,
                             onValueChange = { hotelPriceText = it },
-                            label = "Giá phòng dự kiến (nghìn ₫)",
-                            placeholder = "VD: 500 = 500.000 ₫",
+                            placeholder = { Text("VD: 500 = 500.000 ₫") },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(focusedBorderColor = typeColor),
                             modifier = Modifier.fillMaxWidth()
                         )
-                        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            hotelShortcuts.forEach { sc ->
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            items(hotelShortcuts) { sc ->
                                 SuggestionChip(onClick = { hotelPriceText = sc.valueK.toString() }, label = { Text(sc.label, style = MaterialTheme.typography.labelSmall) })
                             }
                         }
                     }
                 }
 
-                // TRANSIT: Khoảng cách (Detailed)
+                // TRANSIT: Khoảng cách
                 if (selectedType == ActivityType.TRANSIT) {
-                    MyTripTextField(
+                    Text("Khoảng cách", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    OutlinedTextField(
                         value = distanceText,
                         onValueChange = { distanceText = it },
-                        label = "Khoảng cách (km)",
-                        placeholder = "0.0",
+                        placeholder = { Text("km") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(focusedBorderColor = typeColor),
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
 
-                // SIGHTSEEING: Check-in spots (Detailed)
+                // SIGHTSEEING: Check-in spots
                 if (selectedType == ActivityType.SIGHTSEEING) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("Điểm check-in cần ghé", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -840,18 +968,15 @@ private fun ActivityEditSheet(
                                         selected = false,
                                         onClick = { checkInSpots = checkInSpots.filter { it != spot } },
                                         label = { Text(spot, style = MaterialTheme.typography.labelSmall) },
-                                        trailingIcon = {
-                                            Icon(Icons.Filled.Close, null, modifier = Modifier.size(14.dp))
-                                        }
+                                        trailingIcon = { Icon(Icons.Filled.Close, null, modifier = Modifier.size(14.dp)) }
                                     )
                                 }
                             }
                         }
-                        MyTripTextField(
+                        OutlinedTextField(
                             value = spotInput,
                             onValueChange = { spotInput = it },
-                            label = "Thêm điểm check-in",
-                            placeholder = "Nhập tên rồi nhấn Enter",
+                            placeholder = { Text("Nhập tên điểm rồi nhấn Enter") },
                             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
                             keyboardActions = KeyboardActions(onDone = {
                                 val t = spotInput.trim()
@@ -859,24 +984,28 @@ private fun ActivityEditSheet(
                                 spotInput = ""
                             }),
                             singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(focusedBorderColor = typeColor),
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
                 }
 
-                // Link Google Maps (Detailed, shown for Transit, Sightseeing, Accommodation)
+                // Link Google Maps
                 if (selectedType == ActivityType.TRANSIT || selectedType == ActivityType.SIGHTSEEING || selectedType == ActivityType.ACCOMMODATION) {
-                    MyTripTextField(
+                    Text("Link Google Maps", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    OutlinedTextField(
                         value = mapsLink,
                         onValueChange = { mapsLink = it },
-                        label = "Link Google Maps",
-                        placeholder = "https://maps.google.com/...",
+                        placeholder = { Text("https://maps.google.com/...") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
                         singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(focusedBorderColor = typeColor),
                         trailingIcon = {
                             if (mapsLink.isNotBlank()) {
                                 IconButton(onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(mapsLink))) }) {
-                                    Icon(Icons.Filled.OpenInNew, null, tint = MaterialTheme.colorScheme.primary)
+                                    Icon(Icons.Filled.OpenInNew, null, tint = typeColor)
                                 }
                             }
                         },
@@ -884,36 +1013,48 @@ private fun ActivityEditSheet(
                     )
                 }
 
-                // Ghi chú thêm (Detailed)
-                MyTripTextField(
+                // Ghi chú
+                Text("Ghi chú", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                OutlinedTextField(
                     value = notes,
                     onValueChange = { notes = it },
-                    label = "Ghi chú thêm",
+                    placeholder = { Text("Thêm ghi chú cho hoạt động...") },
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                     singleLine = false,
                     maxLines = 4,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(focusedBorderColor = typeColor),
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                Spacer(Modifier.height(4.dp))
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Action buttons
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            MyTripSecondaryButton(onClick = onDismiss, modifier = Modifier.weight(1f)) { Text("Huỷ") }
-            MyTripPrimaryButton(
+        // ── Action buttons ────────────────────────────────────────────────────
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            OutlinedButton(
+                onClick = onDismiss,
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Huỷ")
+            }
+            Button(
                 onClick = {
-                    if (name.isBlank()) { nameError = true; return@MyTripPrimaryButton }
-                    
+                    if (name.isBlank()) { nameError = true; return@Button }
                     val isDepValid = isValidTime(departureTime)
                     val isArrValid = isValidTime(arrivalTime)
-                    if (!isDepValid) { departureTimeError = true }
-                    if (!isArrValid) { arrivalTimeError = true }
-                    if (!isDepValid || !isArrValid) return@MyTripPrimaryButton
-
+                    if (!isDepValid) departureTimeError = true
+                    if (!isArrValid) arrivalTimeError = true
+                    if (!isDepValid || !isArrValid) return@Button
                     focusManager.clearFocus()
-                    val activity = Activity(
+                    onSave(Activity(
                         id = existingActivity?.id ?: 0L,
                         dayId = dayId,
                         orderIndex = existingActivity?.orderIndex ?: 0,
@@ -931,14 +1072,15 @@ private fun ActivityEditSheet(
                         actualDepartureTime = existingActivity?.actualDepartureTime ?: "",
                         actualArrivalTime = existingActivity?.actualArrivalTime ?: "",
                         actualNotes = existingActivity?.actualNotes ?: ""
-                    )
-                    onSave(activity)
+                    ))
                 },
-                modifier = Modifier.weight(1f)
-            ) { Text(if (existingActivity == null) "Thêm" else "Lưu") }
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = typeColor)
+            ) {
+                Text(if (existingActivity == null) "✓  Thêm" else "✓  Lưu")
+            }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
