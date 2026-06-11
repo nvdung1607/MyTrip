@@ -1,4 +1,4 @@
-﻿package com.example.mytrip.ui.screens.itinerary
+package com.example.mytrip.ui.screens.itinerary
 
 import android.content.Intent
 import android.net.Uri
@@ -130,9 +130,9 @@ import com.example.mytrip.ui.components.MyTripSecondaryButton
 import com.example.mytrip.ui.components.GlassmorphismCard
 import com.example.mytrip.ui.theme.TripThemeProvider
 import com.example.mytrip.ui.theme.spacing
-
 import com.example.mytrip.ui.components.ActivityEditSheet
-// â”€â”€â”€ Palette for day number circles â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+// ─── Palette for day number circles ───────────────────────────────────────────
 private val dayColors = listOf(
     Color(0xFF6750A4), Color(0xFF0288D1), Color(0xFF2E7D32),
     Color(0xFFC62828), Color(0xFFE65100), Color(0xFF6A1B9A),
@@ -141,14 +141,8 @@ private val dayColors = listOf(
 
 private fun dayColor(dayNumber: Int): Color = dayColors[(dayNumber - 1) % dayColors.size]
 
-private fun statusColor(status: ActivityStatus): Color = when (status) {
-    ActivityStatus.PENDING -> Color(0xFF9E9E9E)
-    ActivityStatus.DONE    -> Color(0xFF4CAF50)
-    ActivityStatus.SKIPPED -> Color(0xFFF44336)
-    ActivityStatus.CHANGED -> Color(0xFFFF9800)
-}
 
-// â”€â”€â”€ Main screen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Main screen ──────────────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun ItineraryScreen(
@@ -193,14 +187,14 @@ fun ItineraryScreen(
                 title = {
                     Column {
                         Text(
-                            text = trip?.name ?: "Lá»‹ch trÃ¬nh",
+                            text = trip?.name ?: "Lịch trình",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
-                            text = "${days.size} ngÃ y",
+                            text = "${days.size} ngày",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -208,7 +202,7 @@ fun ItineraryScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay láº¡i")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
                     }
                 },
                 actions = {
@@ -221,17 +215,17 @@ fun ItineraryScreen(
                             if (t != null) {
                                 val uri = ShareUtils.buildItineraryPdf(context, t, d, am)
                                 if (uri != null) ShareUtils.sharePdf(context, uri, t.name)
-                                else snackbarHostState.showSnackbar("KhÃ´ng thá»ƒ táº¡o PDF")
+                                else snackbarHostState.showSnackbar("Không thể tạo PDF")
                             }
                         }
                     }) {
-                        Icon(Icons.Filled.Share, contentDescription = "Chia sáº» lá»‹ch trÃ¬nh", tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Filled.Share, contentDescription = "Chia sẻ lịch trình", tint = MaterialTheme.colorScheme.primary)
                     }
                     IconButton(onClick = { viewModel.expandAll() }) {
-                        Icon(Icons.Filled.UnfoldMore, contentDescription = "Má»Ÿ rá»™ng táº¥t cáº£", tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Filled.UnfoldMore, contentDescription = "Mở rộng tất cả", tint = MaterialTheme.colorScheme.primary)
                     }
                     IconButton(onClick = { viewModel.collapseAll() }) {
-                        Icon(Icons.Filled.UnfoldLess, contentDescription = "Thu gá»n táº¥t cáº£", tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Filled.UnfoldLess, contentDescription = "Thu gọn tất cả", tint = MaterialTheme.colorScheme.primary)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
@@ -241,7 +235,7 @@ fun ItineraryScreen(
     ) { innerPadding ->
         if (days.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
-                Text(text = "ChÆ°a cÃ³ ngÃ y nÃ o trong lá»‹ch trÃ¬nh", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(text = "Chưa có ngày nào trong lịch trình", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         } else {
             LazyColumn(
@@ -327,24 +321,24 @@ fun ItineraryScreen(
         }
     }
 
-    // â”€â”€ Delete confirmation dialog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Delete confirmation dialog ────────────────────────────────────
     if (deleteTarget != null) {
         AlertDialog(
             onDismissRequest = { deleteTarget = null },
             icon = { Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error) },
-            title = { Text("XoÃ¡ hoáº¡t Ä‘á»™ng?") },
-            text = { Text("Báº¡n cÃ³ cháº¯c muá»‘n xoÃ¡ \"${deleteTarget?.name}\" khÃ´ng?") },
+            title = { Text("Xoá hoạt động?") },
+            text = { Text("Bạn có chắc muốn xoá \"${deleteTarget?.name}\" không?") },
             confirmButton = {
                 Button(
                     onClick = { deleteTarget?.let { viewModel.deleteActivity(it) }; deleteTarget = null },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) { Text("XoÃ¡") }
+                ) { Text("Xoá") }
             },
-            dismissButton = { TextButton(onClick = { deleteTarget = null }) { Text("Huá»·") } }
+            dismissButton = { TextButton(onClick = { deleteTarget = null }) { Text("Huỷ") } }
         )
     }
 
-    // â”€â”€ Add / Edit bottom sheet â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Add / Edit bottom sheet ───────────────────────────────────────
     if (showSheet) {
         ModalBottomSheet(
             onDismissRequest = { scope.launch { sheetState.hide() }; showSheet = false },
@@ -376,7 +370,7 @@ fun ItineraryScreen(
     }
 }
 
-// â”€â”€â”€ Day section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Day section ──────────────────────────────────────────────────────────────
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun DaySection(
@@ -407,11 +401,11 @@ private fun DaySection(
                 }
                 Spacer(modifier = Modifier.width(14.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("NgÃ y ${day.dayNumber} â€” ${DateUtils.formatFull(day.date)}", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                    Text("Ngày ${day.dayNumber} — ${DateUtils.formatFull(day.date)}", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                     if (day.title.isNotBlank()) {
                         Text(day.title, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
-                    Text("${activities.size} hoáº¡t Ä‘á»™ng", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("${activities.size} hoạt động", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Icon(
                     imageVector = if (isExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
@@ -458,7 +452,7 @@ private fun DaySection(
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     imageVector = Icons.Default.Add,
-                                    contentDescription = "ThÃªm hoáº¡t Ä‘á»™ng",
+                                    contentDescription = "Thêm hoạt động",
                                     modifier = Modifier.size(11.dp),
                                     tint = MaterialTheme.colorScheme.outline
                                 )
@@ -471,7 +465,7 @@ private fun DaySection(
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
                         modifier = Modifier.height(28.dp)
                     ) {
-                        Text("+ ThÃªm hoáº¡t Ä‘á»™ng", style = MaterialTheme.typography.labelMedium)
+                        Text("+ Thêm hoạt động", style = MaterialTheme.typography.labelMedium)
                     }
                 }
             }
@@ -479,7 +473,10 @@ private fun DaySection(
     }
 }
 
-// â”€â”€â”€ Cluster header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+
+// ─── Add / Edit Activity bottom sheet ────────────────────────────────────────
+// ─── Cluster header ──────────────────────────────────────────────────────────
 @Composable
 private fun ClusterHeader(cluster: Cluster, daysCount: Int, isExpanded: Boolean, onToggle: () -> Unit) {
     GlassmorphismCard(
@@ -489,10 +486,10 @@ private fun ClusterHeader(cluster: Cluster, daysCount: Int, isExpanded: Boolean,
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("ðŸ“¦", fontSize = 20.sp, modifier = Modifier.padding(end = 12.dp))
+            Text("📦", fontSize = 20.sp, modifier = Modifier.padding(end = 12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(cluster.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSecondaryContainer)
-                Text("Gá»“m $daysCount ngÃ y â€¢ ${if (isExpanded) "Cháº¡m Ä‘á»ƒ áº©n" else "Cháº¡m Ä‘á»ƒ xem chi tiáº¿t"}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f))
+                Text("Gồm $daysCount ngày • ${if (isExpanded) "Chạm để ẩn" else "Chạm để xem chi tiết"}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f))
             }
             Icon(
                 imageVector = if (isExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,

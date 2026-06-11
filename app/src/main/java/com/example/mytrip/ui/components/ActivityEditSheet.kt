@@ -42,7 +42,9 @@ import org.json.JSONArray
 import java.util.Calendar
 import java.util.Locale
 
-// â”€â”€â”€ Helper: parse checkInSpots JSON â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+data class MoneyShortcut(val label: String, val valueK: Long)
+
+// ─── Helper: parse checkInSpots JSON ──────────────────────────────────────────
 fun parseSpots(json: String): List<String> {
     if (json.isBlank()) return emptyList()
     return try {
@@ -57,8 +59,8 @@ fun spotsToJson(spots: List<String>): String {
     return arr.toString()
 }
 
-// â”€â”€â”€ Money shortcuts for hotel price â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-data class MoneyShortcut(val label: String, val valueK: Long)
+// ─── Money shortcuts for hotel price ─────────────────────────────────────────
+
 val hotelShortcuts = listOf(
     MoneyShortcut("300k", 300L),
     MoneyShortcut("500k", 500L),
@@ -68,12 +70,12 @@ val hotelShortcuts = listOf(
     MoneyShortcut("2M", 2_000L)
 )
 
-// â”€â”€â”€ Suggestion lists per type â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-private val transitSuggestions = listOf("Äi xe mÃ¡y", "Äi Ã´ tÃ´", "Báº¯t xe khÃ¡ch", "Äi tÃ u há»a", "Bay", "Äi thuyá»n", "ThuÃª xe tuk-tuk")
-private val sightseeingSuggestions = listOf("BÃ£i biá»ƒn", "Há»“", "NÃºi", "ChÃ¹a", "Äá»n", "Phá»‘ cá»•", "CÃ´ng viÃªn", "Báº£o tÃ ng", "ThÃ¡c nÆ°á»›c", "Hang Ä‘á»™ng")
-private val mealSuggestions = listOf("Ä‚n sÃ¡ng", "Ä‚n trÆ°a", "Ä‚n tá»‘i", "QuÃ¡n háº£i sáº£n", "QuÃ¡n bÃºn bÃ²", "QuÃ¡n phá»Ÿ", "NhÃ  hÃ ng Ä‘á»‹a phÆ°Æ¡ng", "Coffee break")
-private val accommodationSuggestions = listOf("Check-in khÃ¡ch sáº¡n", "Check-out khÃ¡ch sáº¡n", "NhÃ  nghá»‰", "Homestay", "Resort")
-private val activitySuggestions = listOf("Táº¯m biá»ƒn", "Leo nÃºi", "ChÃ¨o thuyá»n kayak", "Cáº¯m tráº¡i", "Mua sáº¯m", "ThÄƒm báº¡n bÃ¨", "ThuÃª xe Ä‘áº¡p")
+// ─── Suggestion lists per type ────────────────────────────────────────────────
+private val transitSuggestions = listOf("Đi xe máy", "Đi ô tô", "Bắt xe khách", "Đi tàu hỏa", "Bay", "Đi thuyền", "Thuê xe tuk-tuk")
+private val sightseeingSuggestions = listOf("Bãi biển", "Hồ", "Núi", "Chùa", "Đền", "Phố cổ", "Công viên", "Bảo tàng", "Thác nước", "Hang động")
+private val mealSuggestions = listOf("Ăn sáng", "Ăn trưa", "Ăn tối", "Quán hải sản", "Quán bún bò", "Quán phở", "Nhà hàng địa phương", "Coffee break")
+private val accommodationSuggestions = listOf("Check-in khách sạn", "Check-out khách sạn", "Nhà nghỉ", "Homestay", "Resort")
+private val activitySuggestions = listOf("Tắm biển", "Leo núi", "Chèo thuyền kayak", "Cắm trại", "Mua sắm", "Thăm bạn bè", "Thuê xe đạp")
 
 fun suggestionsFor(type: ActivityType): List<String> = when (type) {
     ActivityType.TRANSIT -> transitSuggestions
@@ -148,7 +150,7 @@ fun ActivityEditSheet(
         ).show()
     }
 
-    // â”€â”€ MÃ u accent theo loáº¡i hoáº¡t Ä‘á»™ng â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Màu accent theo loại hoạt động ───────────────────────────────────────
     val typeColor = when (selectedType) {
         ActivityType.TRANSIT      -> Color(0xFF1565C0)
         ActivityType.SIGHTSEEING  -> Color(0xFF2E7D32)
@@ -164,7 +166,7 @@ fun ActivityEditSheet(
             .imePadding()
             .verticalScroll(rememberScrollState())
     ) {
-        // â”€â”€ Drag handle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Drag handle ───────────────────────────────────────────────────────
         Box(
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
@@ -175,7 +177,7 @@ fun ActivityEditSheet(
                 .background(MaterialTheme.colorScheme.outlineVariant)
         )
 
-        // â”€â”€ Header vá»›i mÃ u gradient theo loáº¡i â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Header với màu gradient theo loại ────────────────────────────────
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -194,7 +196,7 @@ fun ActivityEditSheet(
                 Spacer(Modifier.width(12.dp))
                 Column {
                     Text(
-                        text = if (existingActivity == null) "Táº¡o hoáº¡t Ä‘á»™ng má»›i" else "Chá»‰nh sá»­a hoáº¡t Ä‘á»™ng",
+                        text = if (existingActivity == null) "Tạo hoạt động mới" else "Chỉnh sửa hoạt động",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -207,7 +209,7 @@ fun ActivityEditSheet(
             }
         }
 
-        // â”€â”€ Loáº¡i hoáº¡t Ä‘á»™ng â€” Icon card selector â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Loại hoạt động — Icon card selector ───────────────────────────────
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -252,10 +254,10 @@ fun ActivityEditSheet(
 
         Spacer(Modifier.height(20.dp))
 
-        // â”€â”€ TÃªn hoáº¡t Ä‘á»™ng â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Tên hoạt động ─────────────────────────────────────────────────────
         Column(modifier = Modifier.padding(horizontal = 20.dp)) {
             Text(
-                "TÃªn hoáº¡t Ä‘á»™ng *",
+                "Tên hoạt động *",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 6.dp)
@@ -263,9 +265,9 @@ fun ActivityEditSheet(
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it; nameError = false },
-                placeholder = { Text("Nháº­p tÃªn ${selectedType.label.lowercase()}...") },
+                placeholder = { Text("Nhập tên ${selectedType.label.lowercase()}...") },
                 isError = nameError,
-                supportingText = if (nameError) { { Text("Vui lÃ²ng nháº­p tÃªn", color = MaterialTheme.colorScheme.error) } } else null,
+                supportingText = if (nameError) { { Text("Vui lòng nhập tên", color = MaterialTheme.colorScheme.error) } } else null,
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp),
@@ -276,7 +278,7 @@ fun ActivityEditSheet(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // Gá»£i Ã½ tÃªn
+            // Gợi ý tên
             val suggestions = suggestionsFor(selectedType)
             if (suggestions.isNotEmpty()) {
                 Spacer(Modifier.height(8.dp))
@@ -293,11 +295,11 @@ fun ActivityEditSheet(
 
         Spacer(Modifier.height(16.dp))
 
-        // â”€â”€ Thá»i gian â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Thời gian ─────────────────────────────────────────────────────────
         if (selectedType != ActivityType.MEAL) {
             Column(modifier = Modifier.padding(horizontal = 20.dp)) {
                 Text(
-                    if (selectedType == ActivityType.ACCOMMODATION) "Check-in / Check-out" else "Thá»i gian",
+                    if (selectedType == ActivityType.ACCOMMODATION) "Check-in / Check-out" else "Thời gian",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 6.dp)
@@ -306,7 +308,7 @@ fun ActivityEditSheet(
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    // Giá» Ä‘i / Check-in
+                    // Giờ đi / Check-in
                     Surface(
                         onClick = { showTimePicker(departureTime) { departureTime = it; departureTimeError = false } },
                         modifier = Modifier.weight(1f),
@@ -338,14 +340,14 @@ fun ActivityEditSheet(
                                 color = if (departureTime.isNotBlank()) typeColor else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = if (selectedType == ActivityType.ACCOMMODATION) "Check-in" else "Giá» Ä‘i",
+                                text = if (selectedType == ActivityType.ACCOMMODATION) "Check-in" else "Giờ đi",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
 
-                    // MÅ©i tÃªn á»Ÿ giá»¯a
+                    // Mũi tên ở giữa
                     Box(
                         modifier = Modifier.align(Alignment.CenterVertically),
                         contentAlignment = Alignment.Center
@@ -358,7 +360,7 @@ fun ActivityEditSheet(
                         )
                     }
 
-                    // Giá» Ä‘áº¿n / Check-out
+                    // Giờ đến / Check-out
                     Surface(
                         onClick = { showTimePicker(arrivalTime) { arrivalTime = it; arrivalTimeError = false } },
                         modifier = Modifier.weight(1f),
@@ -390,7 +392,7 @@ fun ActivityEditSheet(
                                 color = if (arrivalTime.isNotBlank()) typeColor else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = if (selectedType == ActivityType.ACCOMMODATION) "Check-out" else "Giá» Ä‘áº¿n",
+                                text = if (selectedType == ActivityType.ACCOMMODATION) "Check-out" else "Giờ đến",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -405,7 +407,7 @@ fun ActivityEditSheet(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("ThÃªm:", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Thêm:", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Spacer(Modifier.width(6.dp))
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             items(listOf("+30p" to 30, "+1h" to 60, "+2h" to 120, "+3h" to 180, "+4h" to 240)) { (label, mins) ->
@@ -425,14 +427,14 @@ fun ActivityEditSheet(
             Spacer(Modifier.height(16.dp))
         }
 
-        // â”€â”€ ACCOMMODATION: TÃªn khÃ¡ch sáº¡n â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── ACCOMMODATION: Tên khách sạn ──────────────────────────────────────
         if (selectedType == ActivityType.ACCOMMODATION) {
             Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-                Text("KhÃ¡ch sáº¡n", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
+                Text("Khách sạn", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
                 OutlinedTextField(
                     value = hotelName,
                     onValueChange = { hotelName = it },
-                    placeholder = { Text("TÃªn khÃ¡ch sáº¡n / homestay...") },
+                    placeholder = { Text("Tên khách sạn / homestay...") },
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
@@ -445,7 +447,7 @@ fun ActivityEditSheet(
             Spacer(Modifier.height(16.dp))
         }
 
-        // â”€â”€ Divider + NÃºt má»Ÿ thÃªm chi tiáº¿t â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Divider + Nút mở thêm chi tiết ───────────────────────────────────
         HorizontalDivider(modifier = Modifier.padding(horizontal = 20.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
         Surface(
@@ -468,27 +470,27 @@ fun ActivityEditSheet(
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    text = if (showMoreDetails) "áº¨n thÃ´ng tin chi tiáº¿t" else "ThÃªm thÃ´ng tin chi tiáº¿t",
+                    text = if (showMoreDetails) "Ẩn thông tin chi tiết" else "Thêm thông tin chi tiết",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
             }
         }
 
-        // â”€â”€ Chi tiáº¿t má»Ÿ rá»™ng â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Chi tiết mở rộng ──────────────────────────────────────────────────
         AnimatedVisibility(visible = showMoreDetails, enter = expandVertically(), exit = shrinkVertically()) {
             Column(
                 modifier = Modifier.padding(horizontal = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                // ACCOMMODATION: GiÃ¡ phÃ²ng
+                // ACCOMMODATION: Giá phòng
                 if (selectedType == ActivityType.ACCOMMODATION) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("GiÃ¡ phÃ²ng (nghÃ¬n â‚«)", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Giá phòng (nghìn ₫)", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         OutlinedTextField(
                             value = hotelPriceText,
                             onValueChange = { hotelPriceText = it },
-                            placeholder = { Text("VD: 500 = 500.000 â‚«") },
+                            placeholder = { Text("VD: 500 = 500.000 ₫") },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp),
@@ -503,9 +505,9 @@ fun ActivityEditSheet(
                     }
                 }
 
-                // TRANSIT: Khoáº£ng cÃ¡ch
+                // TRANSIT: Khoảng cách
                 if (selectedType == ActivityType.TRANSIT) {
-                    Text("Khoáº£ng cÃ¡ch", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Khoảng cách", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     OutlinedTextField(
                         value = distanceText,
                         onValueChange = { distanceText = it },
@@ -521,7 +523,7 @@ fun ActivityEditSheet(
                 // SIGHTSEEING: Check-in spots
                 if (selectedType == ActivityType.SIGHTSEEING) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Äiá»ƒm check-in cáº§n ghÃ©", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Điểm check-in cần ghé", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         if (checkInSpots.isNotEmpty()) {
                             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 checkInSpots.forEach { spot ->
@@ -537,7 +539,7 @@ fun ActivityEditSheet(
                         OutlinedTextField(
                             value = spotInput,
                             onValueChange = { spotInput = it },
-                            placeholder = { Text("Nháº­p tÃªn Ä‘iá»ƒm rá»“i nháº¥n Enter") },
+                            placeholder = { Text("Nhập tên điểm rồi nhấn Enter") },
                             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
                             keyboardActions = KeyboardActions(onDone = {
                                 val t = spotInput.trim()
@@ -574,12 +576,12 @@ fun ActivityEditSheet(
                     )
                 }
 
-                // Ghi chÃº
-                Text("Ghi chÃº", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                // Ghi chú
+                Text("Ghi chú", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 OutlinedTextField(
                     value = notes,
                     onValueChange = { notes = it },
-                    placeholder = { Text("ThÃªm ghi chÃº cho hoáº¡t Ä‘á»™ng...") },
+                    placeholder = { Text("Thêm ghi chú cho hoạt động...") },
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                     singleLine = false,
                     maxLines = 4,
@@ -592,7 +594,7 @@ fun ActivityEditSheet(
             }
         }
 
-        // â”€â”€ Action buttons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Action buttons ────────────────────────────────────────────────────
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -604,7 +606,7 @@ fun ActivityEditSheet(
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Huá»·")
+                Text("Huỷ")
             }
             Button(
                 onClick = {
@@ -639,8 +641,9 @@ fun ActivityEditSheet(
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = typeColor)
             ) {
-                Text(if (existingActivity == null) "âœ“  ThÃªm" else "âœ“  LÆ°u")
+                Text(if (existingActivity == null) "✓  Thêm" else "✓  Lưu")
             }
         }
     }
 }
+

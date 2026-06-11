@@ -1,4 +1,4 @@
-﻿package com.example.mytrip.ui.screens.today
+package com.example.mytrip.ui.screens.today
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import com.example.mytrip.ui.components.ActivityEditSheet
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -117,7 +118,6 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
-import com.example.mytrip.ui.components.ActivityEditSheet
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
@@ -220,8 +220,8 @@ fun TodayScreen(
         val act = activityToDelete!!
         AlertDialog(
             onDismissRequest = { activityToDelete = null },
-            title = { Text("XÃ³a hoáº¡t Ä‘á»™ng?", fontWeight = FontWeight.Bold) },
-            text = { Text("Báº¡n cÃ³ cháº¯c cháº¯n muá»‘n xÃ³a hoáº¡t Ä‘á»™ng \"${act.name}\" khá»i lá»‹ch trÃ¬nh ngÃ y nÃ y?") },
+            title = { Text("Xóa hoạt động?", fontWeight = FontWeight.Bold) },
+            text = { Text("Bạn có chắc chắn muốn xóa hoạt động \"${act.name}\" khỏi lịch trình ngày này?") },
             confirmButton = {
                 Button(
                     onClick = {
@@ -229,10 +229,10 @@ fun TodayScreen(
                         activityToDelete = null
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) { Text("XÃ³a") }
+                ) { Text("Xóa") }
             },
             dismissButton = {
-                TextButton(onClick = { activityToDelete = null }) { Text("Há»§y") }
+                TextButton(onClick = { activityToDelete = null }) { Text("Hủy") }
             }
         )
     }
@@ -249,14 +249,14 @@ fun TodayScreen(
         val note = noteOptionsTarget!!
         AlertDialog(
             onDismissRequest = { noteOptionsTarget = null },
-            title = { Text("TÃ¹y chá»n nháº­t kÃ½", fontWeight = FontWeight.Bold) },
-            text = { Text("Báº¡n muá»‘n lÃ m gÃ¬ vá»›i nháº­t kÃ½ nÃ y?") },
+            title = { Text("Tùy chọn nhật ký", fontWeight = FontWeight.Bold) },
+            text = { Text("Bạn muốn làm gì với nhật ký này?") },
             confirmButton = {
                 Button(onClick = {
                     val nId = note.id
                     noteOptionsTarget = null
                     navController.navigate(Screen.AddNote.createRoute(tripId, todayDay?.id, nId))
-                }) { Text("Sá»­a") }
+                }) { Text("Sửa") }
             },
             dismissButton = {
                 Button(
@@ -265,7 +265,7 @@ fun TodayScreen(
                         noteOptionsTarget = null
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) { Text("XÃ³a") }
+                ) { Text("Xóa") }
             }
         )
     }
@@ -274,8 +274,8 @@ fun TodayScreen(
         val note = noteToDelete!!
         AlertDialog(
             onDismissRequest = { noteToDelete = null },
-            title = { Text("XÃ³a nháº­t kÃ½?", fontWeight = FontWeight.Bold) },
-            text = { Text("Báº¡n cÃ³ cháº¯c cháº¯n muá»‘n xÃ³a nháº­t kÃ½ nÃ y khÃ´ng?") },
+            title = { Text("Xóa nhật ký?", fontWeight = FontWeight.Bold) },
+            text = { Text("Bạn có chắc chắn muốn xóa nhật ký này không?") },
             confirmButton = {
                 Button(
                     onClick = {
@@ -283,10 +283,10 @@ fun TodayScreen(
                         noteToDelete = null
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) { Text("XÃ³a") }
+                ) { Text("Xóa") }
             },
             dismissButton = {
-                TextButton(onClick = { noteToDelete = null }) { Text("Há»§y") }
+                TextButton(onClick = { noteToDelete = null }) { Text("Hủy") }
             }
         )
     }
@@ -297,7 +297,7 @@ fun TodayScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = trip?.name ?: "HÃ´m nay",
+                        text = trip?.name ?: "Hôm nay",
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -305,7 +305,7 @@ fun TodayScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay láº¡i")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
                     }
                 },
                 actions = {
@@ -325,7 +325,7 @@ fun TodayScreen(
                             calendar.get(java.util.Calendar.DAY_OF_MONTH)
                         ).show()
                     }) {
-                        Icon(Icons.Filled.CalendarMonth, contentDescription = "Chá»n ngÃ y", tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Filled.CalendarMonth, contentDescription = "Chọn ngày", tint = MaterialTheme.colorScheme.primary)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -344,7 +344,7 @@ fun TodayScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 88.dp)
             ) {
-            // â”€â”€ Day navigator â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // ── Day navigator ────────────────────────────────────────────
             item {
                 DayNavigatorRow(
                     selectedIndex = selectedIndex,
@@ -353,7 +353,7 @@ fun TodayScreen(
                 )
             }
 
-            // â”€â”€ Date header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // ── Date header ──────────────────────────────────────────────
             item {
                 DateHeaderCard(
                     day = todayDay,
@@ -363,17 +363,17 @@ fun TodayScreen(
                 )
             }
 
-            // â”€â”€ Empty state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // ── Empty state ──────────────────────────────────────────────
             if (todayDay == null) {
                 item {
                     EmptyDayState(selectedIndex = selectedIndex)
                 }
             } else {
-                // â”€â”€ Activities timeline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                // ── Activities timeline ──────────────────────────────────
                 if (activities.isNotEmpty()) {
                     item {
                         SectionHeader(
-                            title = "ðŸ“‹ Lá»‹ch trÃ¬nh",
+                            title = "📋 Lịch trình",
                             action = {
                                 TextButton(
                                     onClick = { showAddSheet = true },
@@ -382,7 +382,7 @@ fun TodayScreen(
                                 ) {
                                     Icon(Icons.Default.Add, null, modifier = Modifier.size(16.dp))
                                     Spacer(Modifier.width(4.dp))
-                                    Text("ThÃªm", style = MaterialTheme.typography.labelLarge)
+                                    Text("Thêm", style = MaterialTheme.typography.labelLarge)
                                 }
                             },
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -419,7 +419,7 @@ fun TodayScreen(
                                     Box(contentAlignment = Alignment.Center) {
                                         Icon(
                                             imageVector = Icons.Default.Add,
-                                            contentDescription = "ThÃªm hoáº¡t Ä‘á»™ng",
+                                            contentDescription = "Thêm hoạt động",
                                             modifier = Modifier.size(11.dp),
                                             tint = MaterialTheme.colorScheme.outline
                                         )
@@ -432,7 +432,7 @@ fun TodayScreen(
                                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
                                 modifier = Modifier.height(28.dp)
                             ) {
-                                Text("+ ThÃªm hoáº¡t Ä‘á»™ng", style = MaterialTheme.typography.labelMedium)
+                                Text("+ Thêm hoạt động", style = MaterialTheme.typography.labelMedium)
                             }
                         }
                     }
@@ -445,10 +445,10 @@ fun TodayScreen(
                     }
                 }
 
-                // â”€â”€ Notes section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                // ── Notes section ────────────────────────────────────────
                 item {
                     SectionHeader(
-                        title = "ðŸ“ Ghi chÃº ngÃ y nÃ y",
+                        title = "📝 Ghi chú ngày này",
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
                 }
@@ -494,7 +494,7 @@ fun TodayScreen(
 }
 }
 
-// â”€â”€ Day navigator â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Day navigator ────────────────────────────────────────────────────────────
 
 @Composable
 private fun DayNavigatorRow(
@@ -502,7 +502,7 @@ private fun DayNavigatorRow(
     onSelectDay: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val tabs = listOf("â—€ HÃ´m qua", "HÃ´m nay", "NgÃ y mai â–¶")
+    val tabs = listOf("◀ Hôm qua", "Hôm nay", "Ngày mai ▶")
 
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -551,7 +551,7 @@ private fun DayNavigatorRow(
     }
 }
 
-// â”€â”€ Date header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Date header ──────────────────────────────────────────────────────────────
 
 @Composable
 private fun DateHeaderCard(
@@ -580,7 +580,7 @@ private fun DateHeaderCard(
         ) {
             if (selectedIndex == 1) {
                 Text(
-                    text = "ðŸ“ HÃ´m nay",
+                    text = "📍 Hôm nay",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.SemiBold
@@ -610,7 +610,7 @@ private fun DateHeaderCard(
                         Spacer(Modifier.width(6.dp))
                         Icon(
                             imageVector = Icons.Default.Edit,
-                            contentDescription = "Sá»­a",
+                            contentDescription = "Sửa",
                             tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
                             modifier = Modifier.size(14.dp)
                         )
@@ -622,7 +622,7 @@ private fun DateHeaderCard(
                         horizontalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = "(Cháº¡m Ä‘á»ƒ thÃªm lá»™ trÃ¬nh/Ä‘á»‹a Ä‘iá»ƒm)",
+                            text = "(Chạm để thêm lộ trình/địa điểm)",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.outline,
                             textAlign = TextAlign.Center
@@ -630,7 +630,7 @@ private fun DateHeaderCard(
                         Spacer(Modifier.width(6.dp))
                         Icon(
                             imageVector = Icons.Default.Edit,
-                            contentDescription = "Sá»­a",
+                            contentDescription = "Sửa",
                             tint = MaterialTheme.colorScheme.outline,
                             modifier = Modifier.size(12.dp)
                         )
@@ -638,7 +638,7 @@ private fun DateHeaderCard(
                 }
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "NgÃ y ${it.dayNumber}",
+                    text = "Ngày ${it.dayNumber}",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -677,7 +677,7 @@ private fun StatusActionButton(
     }
 }
 
-// â”€â”€ Note card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Note card ─────────────────────────────────────────────────────────────────
 
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
@@ -766,7 +766,7 @@ private fun NoteCard(
                 if (note.cost > 0) {
                     Spacer(Modifier.height(2.dp))
                     Text(
-                        text = "ðŸ’° ${MoneyUtils.formatShort(note.cost)}",
+                        text = "💰 ${MoneyUtils.formatShort(note.cost)}",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -776,7 +776,7 @@ private fun NoteCard(
     }
 }
 
-// â”€â”€ Section header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Section header ────────────────────────────────────────────────────────────
 
 @Composable
 private fun SectionHeader(
@@ -799,14 +799,14 @@ private fun SectionHeader(
     }
 }
 
-// â”€â”€ Empty states â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Empty states ──────────────────────────────────────────────────────────────
 
 @Composable
 private fun EmptyDayState(selectedIndex: Int) {
     val message = when (selectedIndex) {
-        0 -> "KhÃ´ng cÃ³ dá»¯ liá»‡u cho ngÃ y hÃ´m qua."
-        2 -> "ChÆ°a cÃ³ káº¿ hoáº¡ch cho ngÃ y mai."
-        else -> "HÃ´m nay khÃ´ng cÃ³ trong lá»‹ch trÃ¬nh chuyáº¿n Ä‘i."
+        0 -> "Không có dữ liệu cho ngày hôm qua."
+        2 -> "Chưa có kế hoạch cho ngày mai."
+        else -> "Hôm nay không có trong lịch trình chuyến đi."
     }
     Column(
         modifier = Modifier
@@ -814,7 +814,7 @@ private fun EmptyDayState(selectedIndex: Int) {
             .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("ðŸ“…", fontSize = 48.sp, textAlign = TextAlign.Center)
+        Text("📅", fontSize = 48.sp, textAlign = TextAlign.Center)
         Spacer(Modifier.height(12.dp))
         Text(
             text = message,
@@ -839,10 +839,10 @@ private fun EmptyActivitiesState(
                 .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("ðŸ—“ï¸", fontSize = 32.sp)
+            Text("🗓️", fontSize = 32.sp)
             Spacer(Modifier.height(8.dp))
             Text(
-                text = "KhÃ´ng cÃ³ hoáº¡t Ä‘á»™ng nÃ o Ä‘Æ°á»£c lÃªn káº¿ hoáº¡ch.",
+                text = "Không có hoạt động nào được lên kế hoạch.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -854,7 +854,7 @@ private fun EmptyActivitiesState(
             ) {
                 Icon(Icons.Default.Add, null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
-                Text("ThÃªm hoáº¡t Ä‘á»™ng")
+                Text("Thêm hoạt động")
             }
         }
     }
@@ -871,10 +871,10 @@ private fun EmptyNotesState(modifier: Modifier = Modifier) {
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("ðŸ“", fontSize = 28.sp)
+            Text("📝", fontSize = 28.sp)
             Spacer(Modifier.height(6.dp))
             Text(
-                text = "ChÆ°a cÃ³ ghi chÃº nÃ o.\nNháº¥n + Ä‘á»ƒ thÃªm note Ä‘áº§u tiÃªn!",
+                text = "Chưa có ghi chú nào.\nNhấn + để thêm note đầu tiên!",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -883,7 +883,7 @@ private fun EmptyNotesState(modifier: Modifier = Modifier) {
     }
 }
 
-// â”€â”€â”€ Edit Day Title Dialog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Edit Day Title Dialog ──────────────────────────────────────────────────
 @Composable
 private fun EditDayTitleDialog(
     day: Day,
@@ -893,14 +893,14 @@ private fun EditDayTitleDialog(
     var title by remember { mutableStateOf(day.title) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Sá»­a thÃ´ng tin ngÃ y", fontWeight = FontWeight.Bold) },
+        title = { Text("Sửa thông tin ngày", fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("ThÃ´ng tin hÃ nh trÃ¬nh / Ä‘á»‹a Ä‘iá»ƒm trong ngÃ y:", style = MaterialTheme.typography.labelMedium)
+                Text("Thông tin hành trình / địa điểm trong ngày:", style = MaterialTheme.typography.labelMedium)
                 MyTripTextField(
                     value = title,
                     onValueChange = { title = it },
-                    placeholder = "VD: PhÃº Thá» â†’ Nghá»‡ An | 380km",
+                    placeholder = "VD: Phú Thọ → Nghệ An | 380km",
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -909,10 +909,10 @@ private fun EditDayTitleDialog(
         confirmButton = {
             Button(onClick = {
                 onSave(day.copy(title = title.trim()))
-            }) { Text("LÆ°u") }
+            }) { Text("Lưu") }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Há»§y") }
+            TextButton(onClick = onDismiss) { Text("Hủy") }
         }
     )
 }
