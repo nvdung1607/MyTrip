@@ -286,8 +286,8 @@ private fun EmptyState(
     onCreateSampleTrip: () -> Unit
 ) {
     Box(
-        modifier = modifier.padding(24.dp),
-        contentAlignment = Alignment.Center
+        modifier = modifier.padding(top = 40.dp, start = 24.dp, end = 24.dp, bottom = 24.dp),
+        contentAlignment = Alignment.TopCenter
     ) {
         GlassmorphismCard(
             modifier = Modifier.fillMaxWidth().padding(16.dp)

@@ -1,4 +1,4 @@
-﻿package com.example.mytrip.ui.screens.notes
+package com.example.mytrip.ui.screens.notes
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -81,7 +81,7 @@ fun AllNotesScreen(
                 title = {
                     Column {
                         Text(
-                            text = "Nhật ký & Ảnh",
+                            text = "Nhật ký",
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.titleMedium
                         )

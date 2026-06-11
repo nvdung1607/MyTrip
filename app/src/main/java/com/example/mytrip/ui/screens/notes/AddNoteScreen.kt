@@ -1,4 +1,4 @@
-﻿package com.example.mytrip.ui.screens.notes
+package com.example.mytrip.ui.screens.notes
 
 import android.Manifest
 import android.content.Context
@@ -173,9 +173,25 @@ fun AddNoteScreen(
     }
 
     val memberNames = remember(trip) {
-        trip?.memberNames?.trim('[', ']')
+        val names = trip?.memberNames?.trim('[', ']')
             ?.split(",")?.map { it.trim().trim('"') }?.filter { it.isNotBlank() }
-            ?: listOf("Tôi")
+            ?.toMutableList() ?: mutableListOf()
+        
+        val count = trip?.numPeople ?: 1
+        if (names.isEmpty()) {
+            if (count <= 1) {
+                names.add("Tôi")
+            } else {
+                for (i in 1..count) {
+                    names.add("Người $i")
+                }
+            }
+        } else if (names.size < count) {
+             for (i in (names.size + 1)..count) {
+                 names.add("Người $i")
+             }
+        }
+        names.toList()
     }
     LaunchedEffect(memberNames) { if (paidBy.isEmpty() && memberNames.isNotEmpty()) paidBy = memberNames[0] }
 
@@ -237,7 +253,7 @@ fun AddNoteScreen(
                     ) {
                         Icon(Icons.Rounded.Save, null)
                         Spacer(Modifier.width(8.dp))
-                        Text("Lưu ghi chú", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Text("Lưu nhật ký", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }

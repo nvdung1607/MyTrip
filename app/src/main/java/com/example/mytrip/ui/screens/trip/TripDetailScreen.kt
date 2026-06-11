@@ -1,4 +1,4 @@
-﻿package com.example.mytrip.ui.screens.trip
+package com.example.mytrip.ui.screens.trip
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -317,7 +317,7 @@ private fun TripDetailContent(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .defaultMinSize(minHeight = 280.dp)
+                .defaultMinSize(minHeight = 180.dp)
                 .background(com.example.mytrip.ui.theme.TripThemeColors.getThemeGradient(trip.themeColor))
         ) {
             // Overlay scrim for readability
@@ -418,12 +418,7 @@ private fun TripDetailContent(
             modifier = Modifier.padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(
-                text = "Tính năng",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 4.dp)
-            )
+            // Removed "Tính năng" text as requested
 
             // Row 1: Lịch trình + Hôm nay
             Row(
@@ -475,7 +470,7 @@ private fun TripDetailContent(
                 ActionCard(
                     modifier = Modifier.weight(1f),
                     emoji = "📖",
-                    title = "Nhật ký & Ảnh",
+                    title = "Nhật ký",
                     subtitle = "Tất cả ghi chép",
                     containerColor = pastelColors[2],
                     contentColor = pastelColors[4],

@@ -135,9 +135,9 @@ private fun DayBadge(
         modifier = GlanceModifier
             .cornerRadius(20.dp)
             .background(accentColor)
-            .padding(horizontal = if (compact) 8.dp else 10.dp, vertical = if (compact) 3.dp else 4.dp)
+            .padding(horizontal = if (compact) 8.dp else 10.dp, vertical = if (compact) 4.dp else 6.dp)
     ) {
-        Text(label, style = TextStyle(color = TextOnDark, fontSize = if (compact) 11.sp else 13.sp, fontWeight = FontWeight.Bold))
+        Text(label, style = TextStyle(color = TextOnDark, fontSize = if (compact) 12.sp else 14.sp, fontWeight = FontWeight.Bold))
     }
 }
 
@@ -185,7 +185,7 @@ private fun ActivityRow(
             .fillMaxWidth()
             .cornerRadius(8.dp)
             .background(if (item.isDone) CardColor else BgColor)
-            .padding(horizontal = 8.dp, vertical = if (compact) 3.dp else 5.dp),
+            .padding(horizontal = 8.dp, vertical = if (compact) 2.dp else 3.dp),
         verticalAlignment = Alignment.Vertical.CenterVertically
     ) {
         Box(
@@ -197,7 +197,7 @@ private fun ActivityRow(
             item.name,
             style = TextStyle(
                 color      = if (item.isDone) TextMuted else TextPrimary,
-                fontSize   = if (compact) 10.sp else 11.sp,
+                fontSize   = if (compact) 11.sp else 13.sp,
                 fontWeight = if (item.isDone) FontWeight.Normal else FontWeight.Medium
             ),
             maxLines = 1,
@@ -205,12 +205,12 @@ private fun ActivityRow(
         )
         Spacer(GlanceModifier.width(4.dp))
         if (item.time.isNotBlank()) {
-            Box(modifier = GlanceModifier.cornerRadius(4.dp).background(timeCardColor).padding(horizontal = 5.dp, vertical = 1.dp)) {
-                Text(item.time, style = TextStyle(color = accentColor, fontSize = 9.sp, fontWeight = FontWeight.Bold))
+            Box(modifier = GlanceModifier.cornerRadius(4.dp).background(timeCardColor).padding(horizontal = 5.dp, vertical = 2.dp)) {
+                Text(item.time, style = TextStyle(color = accentColor, fontSize = 10.sp, fontWeight = FontWeight.Bold))
             }
             Spacer(GlanceModifier.width(3.dp))
         }
-        Text(if (item.isDone) "✅" else item.icon, style = TextStyle(fontSize = if (compact) 10.sp else 11.sp))
+        Text(if (item.isDone) "✅" else item.icon, style = TextStyle(fontSize = if (compact) 11.sp else 13.sp))
     }
 }
 
@@ -588,41 +588,42 @@ fun MediumWidget(state: MyTripWidgetState) {
             .fillMaxSize()
             .cornerRadius(16.dp)
             .background(BgColor)
-            .padding(14.dp),
+            .padding(12.dp),
         verticalAlignment = Alignment.Vertical.Top
     ) {
         // ── LEFT: trip info (✔ clickable — không chứa LazyColumn) ───────
         Column(
             modifier = GlanceModifier
-                .width(120.dp)
+                .width(115.dp)
                 .fillMaxHeight()
                 .clickable(openApp),     // ← chỉ đặt clickable ở phần tĩnh
-            verticalAlignment = Alignment.Vertical.CenterVertically
+            verticalAlignment = Alignment.Vertical.CenterVertically,
+            horizontalAlignment = Alignment.Horizontal.CenterHorizontally
         ) {
             Spacer(GlanceModifier.defaultWeight())
             Text(
                 state.tripName,
-                style    = TextStyle(color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold),
+                style    = TextStyle(color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center),
                 maxLines = 2
             )
-            Spacer(GlanceModifier.height(6.dp))
+            Spacer(GlanceModifier.height(8.dp))
             when {
                 state.tripStatus == TripStatus.ONGOING && state.currentDay > 0 -> {
                     val label = if (state.totalDays > 0) "Ngày ${state.currentDay}/${state.totalDays}" else "Ngày ${state.currentDay}"
-                    DayBadge(label, accent, compact = true)
+                    DayBadge(label, accent, compact = false)
                     if (state.todayTitle.isNotBlank()) {
-                        Spacer(GlanceModifier.height(4.dp))
-                        Text(state.todayTitle, style = TextStyle(color = TextSecondary, fontSize = 10.sp), maxLines = 2)
+                        Spacer(GlanceModifier.height(6.dp))
+                        Text(state.todayTitle, style = TextStyle(color = TextSecondary, fontSize = 12.sp, textAlign = TextAlign.Center), maxLines = 2)
                     }
                     if (state.totalDays > 0) {
-                        Spacer(GlanceModifier.height(6.dp))
+                        Spacer(GlanceModifier.height(8.dp))
                         DayProgressBar(state.currentDay, state.totalDays, accent)
                     }
                 }
                 state.tripStatus == TripStatus.PLANNING ->
-                    DayBadge("Còn ${state.daysUntilTrip} ngày", PlanningBg, compact = true)
+                    DayBadge("Còn ${state.daysUntilTrip} ngày", PlanningBg, compact = false)
                 else ->
-                    DayBadge("Đã xong", DoneBg, compact = true)
+                    DayBadge("Đã xong", DoneBg, compact = false)
             }
             Spacer(GlanceModifier.defaultWeight())
         }
@@ -646,7 +647,7 @@ fun MediumWidget(state: MyTripWidgetState) {
             ) {
                 Text(
                     "Lịch hôm nay",
-                    style    = TextStyle(color = TextMuted, fontSize = 11.sp, fontWeight = FontWeight.Bold),
+                    style    = TextStyle(color = TextMuted, fontSize = 13.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center),
                     modifier = GlanceModifier.defaultWeight()
                 )
                 AddNoteButton(tripId = state.tripId, accentColor = accent, size = 28)
@@ -657,8 +658,8 @@ fun MediumWidget(state: MyTripWidgetState) {
             if (state.todayActivities.isNotEmpty()) {
                 LazyColumn(modifier = GlanceModifier.defaultWeight().fillMaxWidth()) {
                     items(state.todayActivities) { item ->
-                        ActivityRow(item, accent, accentCard, compact = true)
-                        Spacer(GlanceModifier.height(4.dp))
+                        ActivityRow(item, accent, accentCard, compact = false)
+                        Spacer(GlanceModifier.height(1.dp))
                     }
                 }
             } else if (state.hasNextActivity) {

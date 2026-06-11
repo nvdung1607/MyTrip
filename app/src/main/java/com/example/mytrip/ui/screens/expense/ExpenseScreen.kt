@@ -1,4 +1,4 @@
-﻿package com.example.mytrip.ui.screens.expense
+package com.example.mytrip.ui.screens.expense
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -58,12 +58,12 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
 
     val memberNames = remember(trip) {
         try {
-            val raw = trip?.memberNames ?: return@remember listOf("TÃ´i")
+            val raw = trip?.memberNames ?: return@remember listOf("Tôi")
             val arr = JSONArray(raw)
             (0 until arr.length()).map { arr.getString(it) }.filter { it.isNotBlank() }
-                .ifEmpty { listOf("TÃ´i") }
+                .ifEmpty { listOf("Tôi") }
         } catch (_: Exception) {
-            listOf("TÃ´i")
+            listOf("Tôi")
         }
     }
 
@@ -77,7 +77,7 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
         Scaffold(
             topBar = {
             TopAppBar(
-                title = { Text("ðŸ’° Chi phÃ­") },
+                title = { Text("💰 Chi phí") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Rounded.ArrowBack, null)
@@ -94,7 +94,7 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
                         showAddRecord = true
                     },
                     icon = { Icon(Icons.Rounded.Add, null) },
-                    text = { Text("ThÃªm chi tiÃªu") },
+                    text = { Text("Thêm chi tiêu") },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 )
@@ -104,9 +104,9 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
         Column(Modifier.fillMaxSize().padding(padding)) {
             TabRow(selectedTabIndex = selectedTab) {
                 Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 },
-                    text = { Text("ðŸ“Š NgÃ¢n sÃ¡ch") })
+                    text = { Text("📊 Ngân sách") })
                 Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 },
-                    text = { Text("ðŸ“ Thá»±c táº¿") })
+                    text = { Text("📝 Thực tế") })
             }
 
             when (selectedTab) {
@@ -208,12 +208,12 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         MyTripChip(
-                            text = "Nháº­p nhanh",
+                            text = "Nhập nhanh",
                             selected = !isDetailedMode,
                             onClick = { isDetailedMode = false }
                         )
                         MyTripChip(
-                            text = "ðŸ§® TÃ­nh chi tiáº¿t",
+                            text = "🧮 Tính chi tiết",
                             selected = isDetailedMode,
                             onClick = { isDetailedMode = true }
                         )
@@ -223,9 +223,9 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
                         MyTripTextField(
                             value = input,
                             onValueChange = { input = it.filter { c -> c.isDigit() } },
-                            label = "Dá»± kiáº¿n",
+                            label = "Dự kiến",
                             suffix = "k",
-                            placeholder = "VD: 500 = 500.000â‚«",
+                            placeholder = "VD: 500 = 500.000₫",
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -236,16 +236,16 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
                                 MyTripTextField(
                                     value = hotelPrice,
                                     onValueChange = { hotelPrice = it.filter { c -> c.isDigit() } },
-                                    label = "GiÃ¡ phÃ²ng / Ä‘Ãªm (k)",
+                                    label = "Giá phòng / đêm (k)",
                                     suffix = "k",
-                                    placeholder = "VD: 500 = 500.000â‚«",
+                                    placeholder = "VD: 500 = 500.000₫",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     modifier = Modifier.fillMaxWidth()
                                 )
                                 MyTripTextField(
                                     value = hotelNights,
                                     onValueChange = { hotelNights = it.filter { c -> c.isDigit() } },
-                                    label = "Sá»‘ Ä‘Ãªm",
+                                    label = "Số đêm",
                                     placeholder = "VD: 3",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     modifier = Modifier.fillMaxWidth()
@@ -255,23 +255,23 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
                                 MyTripTextField(
                                     value = foodCostPerPersonPerDay,
                                     onValueChange = { foodCostPerPersonPerDay = it.filter { c -> c.isDigit() } },
-                                    label = "Tiá»n Äƒn / ngÆ°á»i / ngÃ y (k)",
+                                    label = "Tiền ăn / người / ngày (k)",
                                     suffix = "k",
-                                    placeholder = "VD: 150 = 150.000â‚«",
+                                    placeholder = "VD: 150 = 150.000₫",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     modifier = Modifier.fillMaxWidth()
                                 )
                                 MyTripTextField(
                                     value = foodDays,
                                     onValueChange = { foodDays = it.filter { c -> c.isDigit() } },
-                                    label = "Sá»‘ ngÃ y",
+                                    label = "Số ngày",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     modifier = Modifier.fillMaxWidth()
                                 )
                                 MyTripTextField(
                                     value = foodPeople,
                                     onValueChange = { foodPeople = it.filter { c -> c.isDigit() } },
-                                    label = "Sá»‘ ngÆ°á»i Äƒn",
+                                    label = "Số người ăn",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     modifier = Modifier.fillMaxWidth()
                                 )
@@ -280,16 +280,16 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
                                 MyTripTextField(
                                     value = ticketPrice,
                                     onValueChange = { ticketPrice = it.filter { c -> c.isDigit() } },
-                                    label = "GiÃ¡ vÃ© / ngÆ°á»i (k)",
+                                    label = "Giá vé / người (k)",
                                     suffix = "k",
-                                    placeholder = "VD: 100 = 100.000â‚«",
+                                    placeholder = "VD: 100 = 100.000₫",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     modifier = Modifier.fillMaxWidth()
                                 )
                                 MyTripTextField(
                                     value = ticketCount,
                                     onValueChange = { ticketCount = it.filter { c -> c.isDigit() } },
-                                    label = "Sá»‘ vÃ©",
+                                    label = "Số vé",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     modifier = Modifier.fillMaxWidth()
                                 )
@@ -298,16 +298,16 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
                                 MyTripTextField(
                                     value = genericPrice,
                                     onValueChange = { genericPrice = it.filter { c -> c.isDigit() } },
-                                    label = "ÄÆ¡n giÃ¡ / khoáº£n chi (k)",
+                                    label = "Đơn giá / khoản chi (k)",
                                     suffix = "k",
-                                    placeholder = "VD: 200 = 200.000â‚«",
+                                    placeholder = "VD: 200 = 200.000₫",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     modifier = Modifier.fillMaxWidth()
                                 )
                                 MyTripTextField(
                                     value = genericQuantity,
                                     onValueChange = { genericQuantity = it.filter { c -> c.isDigit() } },
-                                    label = "Sá»‘ lÆ°á»£ng / Sá»‘ cháº·ng",
+                                    label = "Số lượng / Số chặng",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     modifier = Modifier.fillMaxWidth()
                                 )
@@ -337,9 +337,9 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
                 MyTripPrimaryButton(onClick = {
                     vm.updatePlanned(exp.copy(planned = MoneyUtils.inputToVnd(MoneyUtils.parseInput(input))))
                     editExpense = null
-                }) { Text("LÆ°u") }
+                }) { Text("Lưu") }
             },
-            dismissButton = { MyTripSecondaryButton(onClick = { editExpense = null }) { Text("Há»§y") } }
+            dismissButton = { MyTripSecondaryButton(onClick = { editExpense = null }) { Text("Hủy") } }
         )
     }
 
