@@ -1,4 +1,4 @@
-package com.example.mytrip.ui.screens.notes
+﻿package com.example.mytrip.ui.screens.notes
 
 import android.Manifest
 import android.content.Context
@@ -22,9 +22,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Comment
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.Comment
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -191,7 +191,7 @@ fun AddNoteScreen(
         LaunchedEffect(Unit) { cameraPermission.launchPermissionRequest() }
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Icon(Icons.Default.CameraAlt, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
+                Icon(Icons.Rounded.CameraAlt, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
                 Text("Cần quyền camera", style = MaterialTheme.typography.titleMedium)
                 MyTripPrimaryButton(onClick = { cameraPermission.launchPermissionRequest() }) { Text("Cấp quyền") }
                 MyTripSecondaryButton(onClick = { showCamera = false }) { Text("Bỏ qua ảnh") }
@@ -205,7 +205,7 @@ fun AddNoteScreen(
                     title = { Text("Thêm nhật ký") },
                     navigationIcon = {
                         IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
+                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, null)
                         }
                     }
                 )
@@ -235,7 +235,7 @@ fun AddNoteScreen(
                         modifier = Modifier.fillMaxWidth().height(52.dp),
                         enabled = rating > 0
                     ) {
-                        Icon(Icons.Default.Save, null)
+                        Icon(Icons.Rounded.Save, null)
                         Spacer(Modifier.width(8.dp))
                         Text("Lưu ghi chú", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     }
@@ -276,7 +276,7 @@ fun AddNoteScreen(
                                             .background(Color.Black.copy(alpha = 0.6f), CircleShape)
                                     ) {
                                         Icon(
-                                            imageVector = Icons.Default.Close,
+                                            imageVector = Icons.Rounded.Close,
                                             contentDescription = "Xóa",
                                             tint = Color.White,
                                             modifier = Modifier.size(14.dp)
@@ -295,7 +295,7 @@ fun AddNoteScreen(
                                         verticalArrangement = Arrangement.Center,
                                         horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
-                                        Icon(Icons.Default.AddAPhoto, null, tint = MaterialTheme.colorScheme.primary)
+                                        Icon(Icons.Rounded.AddAPhoto, null, tint = MaterialTheme.colorScheme.primary)
                                         Spacer(Modifier.height(4.dp))
                                         Text("Chụp ảnh", style = MaterialTheme.typography.labelSmall)
                                     }
@@ -312,7 +312,7 @@ fun AddNoteScreen(
                                         verticalArrangement = Arrangement.Center,
                                         horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
-                                        Icon(Icons.Default.Image, null, tint = MaterialTheme.colorScheme.primary)
+                                        Icon(Icons.Rounded.Image, null, tint = MaterialTheme.colorScheme.primary)
                                         Spacer(Modifier.height(4.dp))
                                         Text("Chọn ảnh", style = MaterialTheme.typography.labelSmall)
                                     }
@@ -337,7 +337,7 @@ fun AddNoteScreen(
                                     onClick = { if (cameraPermission.status.isGranted) showCamera = true else cameraPermission.launchPermissionRequest() },
                                     modifier = Modifier.weight(1f).height(56.dp)
                                 ) {
-                                    Icon(Icons.Default.AddAPhoto, null)
+                                    Icon(Icons.Rounded.AddAPhoto, null)
                                     Spacer(Modifier.width(8.dp))
                                     Text("Chụp ảnh")
                                 }
@@ -345,7 +345,7 @@ fun AddNoteScreen(
                                     onClick = { galleryLauncher.launch("image/*") },
                                     modifier = Modifier.weight(1f).height(56.dp)
                                 ) {
-                                    Icon(Icons.Default.Image, null)
+                                    Icon(Icons.Rounded.Image, null)
                                     Spacer(Modifier.width(8.dp))
                                     Text("Chọn ảnh")
                                 }
@@ -363,7 +363,7 @@ fun AddNoteScreen(
                             onValueChange = { name = it },
                             modifier = Modifier.fillMaxWidth(),
                             placeholder = "VD: Ăn trưa hải sản, Vé cáp treo...",
-                            leadingIcon = { Icon(Icons.Default.Place, null) },
+                            leadingIcon = { Icon(Icons.Rounded.Place, null) },
                             singleLine = true
                         )
                     }
@@ -380,7 +380,7 @@ fun AddNoteScreen(
                             (1..5).forEach { star ->
                                 IconButton(onClick = { rating = star }) {
                                     Icon(
-                                        imageVector = if (star <= rating) Icons.Default.Star else Icons.Default.StarBorder,
+                                        imageVector = if (star <= rating) Icons.Rounded.Star else Icons.Rounded.StarBorder,
                                         contentDescription = null,
                                         tint = if (star <= rating) Color(0xFFFFC107) else MaterialTheme.colorScheme.outline,
                                         modifier = Modifier.size(36.dp)
@@ -478,7 +478,7 @@ fun AddNoteScreen(
                     onClick = { showOptional = !showOptional },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(if (showOptional) Icons.Default.ExpandLess else Icons.Default.ExpandMore, null)
+                    Icon(if (showOptional) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore, null)
                     Spacer(Modifier.width(8.dp))
                     Text(if (showOptional) "Ẩn bớt thông tin" else "Thêm thông tin")
                 }
@@ -490,11 +490,11 @@ fun AddNoteScreen(
                             onValueChange = { comment = it },
                             modifier = Modifier.fillMaxWidth(),
                             label = "Nhận xét chi tiết",
-                            leadingIcon = { Icon(Icons.AutoMirrored.Filled.Comment, null) }
+                            leadingIcon = { Icon(Icons.AutoMirrored.Rounded.Comment, null) }
                         )
                         if (gpsLat != null && gpsLng != null) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Icon(Icons.Default.GpsFixed, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                                Icon(Icons.Rounded.GpsFixed, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
                                 Text(String.format(Locale.US, "GPS: %.5f, %.5f", gpsLat, gpsLng),
                                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }

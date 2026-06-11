@@ -1,4 +1,4 @@
-package com.example.mytrip.ui.components
+﻿package com.example.mytrip.ui.components
 
 import android.content.Intent
 import android.net.Uri
@@ -11,9 +11,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.OpenInNew
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.OpenInNew
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -235,7 +235,7 @@ private fun ActivityTimelineCard(
                         modifier = Modifier.size(28.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Edit,
+                            imageVector = Icons.Rounded.Edit,
                             contentDescription = "Sửa",
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(16.dp)
@@ -247,7 +247,7 @@ private fun ActivityTimelineCard(
                         modifier = Modifier.size(28.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Delete,
+                            imageVector = Icons.Rounded.Delete,
                             contentDescription = "Xóa",
                             tint = MaterialTheme.colorScheme.error,
                             modifier = Modifier.size(16.dp)
@@ -367,7 +367,7 @@ private fun ActivityTimelineCard(
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.height(24.dp)
                 ) {
-                    Icon(Icons.Filled.OpenInNew, null, modifier = Modifier.size(14.dp))
+                    Icon(Icons.Rounded.OpenInNew, null, modifier = Modifier.size(14.dp))
                     Spacer(Modifier.width(4.dp))
                     Text("Xem bản đồ", style = MaterialTheme.typography.labelSmall)
                 }

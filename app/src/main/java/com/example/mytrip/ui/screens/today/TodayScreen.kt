@@ -1,4 +1,4 @@
-package com.example.mytrip.ui.screens.today
+﻿package com.example.mytrip.ui.screens.today
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
@@ -32,18 +32,18 @@ import sh.calvin.reorderable.rememberReorderableLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.OpenInNew
-import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.ArrowForward
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.CalendarMonth
+import androidx.compose.material.icons.rounded.ExpandLess
+import androidx.compose.material.icons.rounded.ExpandMore
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.OpenInNew
+import androidx.compose.material.icons.rounded.AccessTime
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -105,7 +105,7 @@ import com.example.mytrip.ui.components.MyTripSecondaryButton
 import com.example.mytrip.ui.components.GlassmorphismCard
 import com.example.mytrip.ui.theme.TripThemeProvider
 import com.example.mytrip.ui.theme.spacing
-import androidx.compose.material.icons.automirrored.filled.*
+import androidx.compose.material.icons.automirrored.rounded.*
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.imePadding
@@ -307,7 +307,7 @@ fun TodayScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Quay lại")
                     }
                 },
                 actions = {
@@ -327,7 +327,7 @@ fun TodayScreen(
                             calendar.get(java.util.Calendar.DAY_OF_MONTH)
                         ).show()
                     }) {
-                        Icon(Icons.Filled.CalendarMonth, contentDescription = "Chọn ngày", tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Rounded.CalendarMonth, contentDescription = "Chọn ngày", tint = MaterialTheme.colorScheme.primary)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -382,7 +382,7 @@ fun TodayScreen(
                                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
                                     modifier = Modifier.height(28.dp)
                                 ) {
-                                    Icon(Icons.Default.Add, null, modifier = Modifier.size(16.dp))
+                                    Icon(Icons.Rounded.Add, null, modifier = Modifier.size(16.dp))
                                     Spacer(Modifier.width(4.dp))
                                     Text("Thêm", style = MaterialTheme.typography.labelLarge)
                                 }
@@ -420,7 +420,7 @@ fun TodayScreen(
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
                                         Icon(
-                                            imageVector = Icons.Default.Add,
+                                            imageVector = Icons.Rounded.Add,
                                             contentDescription = "Thêm hoạt động",
                                             modifier = Modifier.size(11.dp),
                                             tint = MaterialTheme.colorScheme.outline
@@ -611,7 +611,7 @@ private fun DateHeaderCard(
                         )
                         Spacer(Modifier.width(6.dp))
                         Icon(
-                            imageVector = Icons.Default.Edit,
+                            imageVector = Icons.Rounded.Edit,
                             contentDescription = "Sửa",
                             tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
                             modifier = Modifier.size(14.dp)
@@ -631,7 +631,7 @@ private fun DateHeaderCard(
                         )
                         Spacer(Modifier.width(6.dp))
                         Icon(
-                            imageVector = Icons.Default.Edit,
+                            imageVector = Icons.Rounded.Edit,
                             contentDescription = "Sửa",
                             tint = MaterialTheme.colorScheme.outline,
                             modifier = Modifier.size(12.dp)
@@ -728,7 +728,7 @@ private fun NoteCard(
                 Row {
                     repeat(5) { i ->
                         Icon(
-                            imageVector = Icons.Default.Star,
+                            imageVector = Icons.Rounded.Star,
                             contentDescription = null,
                             tint = if (i < note.rating) Color(0xFFFFC107)
                             else MaterialTheme.colorScheme.outlineVariant,
@@ -854,7 +854,7 @@ private fun EmptyActivitiesState(
                 onClick = onAddClick,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(Icons.Default.Add, null, modifier = Modifier.size(16.dp))
+                Icon(Icons.Rounded.Add, null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
                 Text("Thêm hoạt động")
             }

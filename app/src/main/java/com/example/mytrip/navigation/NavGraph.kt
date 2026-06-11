@@ -1,5 +1,11 @@
 package com.example.mytrip.navigation
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -11,11 +17,11 @@ import com.example.mytrip.ui.screens.expense.ExpenseScreen
 import com.example.mytrip.ui.screens.home.HomeScreen
 import com.example.mytrip.ui.screens.itinerary.ItineraryScreen
 import com.example.mytrip.ui.screens.notes.AddNoteScreen
+import com.example.mytrip.ui.screens.notes.AllNotesScreen
 import com.example.mytrip.ui.screens.summary.SummaryScreen
 import com.example.mytrip.ui.screens.today.TodayScreen
 import com.example.mytrip.ui.screens.trip.CreateEditTripScreen
 import com.example.mytrip.ui.screens.trip.TripDetailScreen
-import com.example.mytrip.ui.screens.notes.AllNotesScreen
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
@@ -58,7 +64,31 @@ fun MyTripNavGraph(
     NavHost(
         navController = navController,
         startDestination = Screen.Home.route,
-        modifier = modifier
+        modifier = modifier,
+        enterTransition = {
+            slideInHorizontally(
+                initialOffsetX = { it },
+                animationSpec = tween(300)
+            ) + fadeIn(animationSpec = tween(300))
+        },
+        exitTransition = {
+            slideOutHorizontally(
+                targetOffsetX = { -it / 2 },
+                animationSpec = tween(300)
+            ) + fadeOut(animationSpec = tween(300))
+        },
+        popEnterTransition = {
+            slideInHorizontally(
+                initialOffsetX = { -it / 2 },
+                animationSpec = tween(300)
+            ) + fadeIn(animationSpec = tween(300))
+        },
+        popExitTransition = {
+            slideOutHorizontally(
+                targetOffsetX = { it },
+                animationSpec = tween(300)
+            ) + fadeOut(animationSpec = tween(300))
+        }
     ) {
         composable(Screen.Home.route) {
             HomeScreen(navController = navController)

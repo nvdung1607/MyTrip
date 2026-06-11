@@ -1,4 +1,4 @@
-package com.example.mytrip.ui.screens.summary
+﻿package com.example.mytrip.ui.screens.summary
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -8,7 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -75,7 +75,7 @@ fun SummaryScreen(navController: NavController, tripId: Long) {
                 title = { Text("📊 Tổng kết chuyến đi") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, null)
+                        Icon(Icons.Rounded.ArrowBack, null)
                     }
                 }
             )
@@ -254,7 +254,7 @@ fun SummaryScreen(navController: NavController, tripId: Long) {
                         if (isExportingPhotos) {
                             CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White)
                         } else {
-                            Icon(Icons.Default.SaveAlt, contentDescription = null, modifier = Modifier.size(24.dp))
+                            Icon(Icons.Rounded.SaveAlt, contentDescription = null, modifier = Modifier.size(24.dp))
                         }
                         Spacer(Modifier.width(8.dp))
                         Text(if (isExportingPhotos) "Đang lưu ảnh..." else "Lưu toàn bộ ảnh về máy", fontWeight = FontWeight.Bold)
@@ -341,7 +341,7 @@ private fun NoteHighlightCard(note: Note) {
             }
             Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Row {
-                    repeat(note.rating) { Icon(Icons.Default.Star, null, tint = Color(0xFFFFC107), modifier = Modifier.size(14.dp)) }
+                    repeat(note.rating) { Icon(Icons.Rounded.Star, null, tint = Color(0xFFFFC107), modifier = Modifier.size(14.dp)) }
                 }
                 if (note.name.isNotEmpty())
                     Text(note.name, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium, maxLines = 2)

@@ -1,4 +1,4 @@
-package com.example.mytrip.ui.components
+﻿package com.example.mytrip.ui.components
 
 import android.content.Intent
 import android.net.Uri
@@ -14,7 +14,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -101,7 +101,7 @@ fun NoteDetailDialog(
                         modifier = Modifier.size(36.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Close,
+                            imageVector = Icons.Rounded.Close,
                             contentDescription = "Đóng",
                             modifier = Modifier.size(18.dp)
                         )
@@ -202,7 +202,7 @@ fun NoteDetailDialog(
                     ) {
                         repeat(5) { i ->
                             Icon(
-                                imageVector = Icons.Default.Star,
+                                imageVector = Icons.Rounded.Star,
                                 contentDescription = null,
                                 tint = if (i < note.rating) Color(0xFFFFC107) else MaterialTheme.colorScheme.outlineVariant,
                                 modifier = Modifier.size(24.dp)
@@ -288,7 +288,7 @@ fun NoteDetailDialog(
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
-                                        imageVector = Icons.Default.CheckCircle,
+                                        imageVector = Icons.Rounded.CheckCircle,
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.secondary,
                                         modifier = Modifier.size(16.dp)
@@ -363,7 +363,7 @@ fun NoteDetailDialog(
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                                     Icon(
-                                        imageVector = Icons.Default.GpsFixed,
+                                        imageVector = Icons.Rounded.GpsFixed,
                                         contentDescription = "GPS",
                                         tint = MaterialTheme.colorScheme.secondary,
                                         modifier = Modifier.size(20.dp)
@@ -392,7 +392,7 @@ fun NoteDetailDialog(
                                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                                     modifier = Modifier.height(32.dp)
                                 ) {
-                                    Icon(Icons.Default.Map, null, modifier = Modifier.size(14.dp))
+                                    Icon(Icons.Rounded.Map, null, modifier = Modifier.size(14.dp))
                                     Spacer(Modifier.width(4.dp))
                                     Text("Bản đồ", style = MaterialTheme.typography.labelMedium)
                                 }

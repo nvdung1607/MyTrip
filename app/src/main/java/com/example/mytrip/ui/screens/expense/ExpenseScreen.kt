@@ -1,4 +1,4 @@
-package com.example.mytrip.ui.screens.expense
+﻿package com.example.mytrip.ui.screens.expense
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -11,7 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -80,7 +80,7 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
                 title = { Text("ðŸ’° Chi phÃ­") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, null)
+                        Icon(Icons.Rounded.ArrowBack, null)
                     }
                 },
                 actions = {}
@@ -93,7 +93,7 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
                         selectedCategoryForNewRecord = ExpenseCategory.FOOD
                         showAddRecord = true
                     },
-                    icon = { Icon(Icons.Default.Add, null) },
+                    icon = { Icon(Icons.Rounded.Add, null) },
                     text = { Text("ThÃªm chi tiÃªu") },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary

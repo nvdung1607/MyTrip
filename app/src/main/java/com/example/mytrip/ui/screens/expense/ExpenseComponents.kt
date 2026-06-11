@@ -1,4 +1,4 @@
-package com.example.mytrip.ui.screens.expense
+﻿package com.example.mytrip.ui.screens.expense
 
 
 import androidx.compose.foundation.background
@@ -12,7 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -189,10 +189,10 @@ fun ActualTab(
                             if (isEditable) {
                                 Row {
                                     IconButton(onClick = { onEditRecord(rec) }, modifier = Modifier.size(28.dp)) {
-                                        Icon(Icons.Default.Edit, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                                        Icon(Icons.Rounded.Edit, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
                                     }
                                     IconButton(onClick = { deleteTarget = rec }, modifier = Modifier.size(28.dp)) {
-                                        Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(16.dp))
+                                        Icon(Icons.Rounded.Delete, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(16.dp))
                                     }
                                 }
                             }

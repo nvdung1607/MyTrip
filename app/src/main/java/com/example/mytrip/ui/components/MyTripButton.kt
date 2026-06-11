@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.mytrip.ui.components.bounceClick
 
 @Composable
 fun MyTripPrimaryButton(
@@ -19,7 +20,7 @@ fun MyTripPrimaryButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier.bounceClick(),
         enabled = enabled,
         shape = MaterialTheme.shapes.small, // 8dp
         colors = ButtonDefaults.buttonColors(
@@ -46,7 +47,7 @@ fun MyTripSecondaryButton(
 ) {
     OutlinedButton(
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier.bounceClick(),
         enabled = enabled,
         shape = MaterialTheme.shapes.small,
         colors = ButtonDefaults.outlinedButtonColors(

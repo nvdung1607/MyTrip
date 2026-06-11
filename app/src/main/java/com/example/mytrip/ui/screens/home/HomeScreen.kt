@@ -26,16 +26,16 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Assessment
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Group
-import androidx.compose.material.icons.filled.MenuBook
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.AccountBalanceWallet
-import androidx.compose.material.icons.filled.WbSunny
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Assessment
+import androidx.compose.material.icons.rounded.CalendarMonth
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Group
+import androidx.compose.material.icons.rounded.MenuBook
+import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.AccountBalanceWallet
+import androidx.compose.material.icons.rounded.WbSunny
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -64,6 +64,7 @@ import androidx.compose.runtime.Composable
 import com.example.mytrip.ui.components.MyTripChip
 import com.example.mytrip.ui.components.GlassmorphismCard
 import com.example.mytrip.ui.components.MyTripPrimaryButton
+import com.example.mytrip.ui.components.bounceClick
 import com.example.mytrip.ui.theme.spacing
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -148,7 +149,7 @@ fun HomeScreen(
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { navController.navigate(Screen.CreateTrip.route) },
-                icon = { Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(24.dp)) },
+                icon = { Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(24.dp)) },
                 text = { Text("Tạo chuyến đi", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) },
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -183,7 +184,7 @@ fun HomeScreen(
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
                         IconButton(onClick = { viewModel.setSearchQuery("") }) {
-                            Icon(Icons.Filled.Close, contentDescription = "Xóa")
+                            Icon(Icons.Rounded.Close, contentDescription = "Xóa")
                         }
                     }
                 }
@@ -354,6 +355,7 @@ fun TripCard(
     GlassmorphismCard(
         modifier = Modifier
             .fillMaxWidth()
+            .bounceClick()
             .combinedClickable(
                 onClick = onCardClick,
                 onLongClick = { showDeleteDialog = true }
@@ -419,7 +421,7 @@ fun TripCard(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = Icons.Filled.CalendarMonth,
+                            imageVector = Icons.Rounded.CalendarMonth,
                             contentDescription = null,
                             modifier = Modifier.size(16.dp),
                             tint = MaterialTheme.colorScheme.primary
@@ -453,7 +455,7 @@ fun TripCard(
                 // Num people row
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = Icons.Filled.Group,
+                        imageVector = Icons.Rounded.Group,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
                         tint = MaterialTheme.colorScheme.primary
@@ -521,7 +523,7 @@ fun TripCard(
                     )
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.CalendarMonth,
+                        imageVector = Icons.Rounded.CalendarMonth,
                         contentDescription = null,
                         modifier = Modifier.size(15.dp)
                     )
@@ -541,7 +543,7 @@ fun TripCard(
                     )
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.WbSunny,
+                        imageVector = Icons.Rounded.WbSunny,
                         contentDescription = null,
                         modifier = Modifier.size(15.dp)
                     )
@@ -561,7 +563,7 @@ fun TripCard(
                     )
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.AccountBalanceWallet,
+                        imageVector = Icons.Rounded.AccountBalanceWallet,
                         contentDescription = null,
                         modifier = Modifier.size(15.dp)
                     )
@@ -581,7 +583,7 @@ fun TripCard(
                     )
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.MenuBook,
+                        imageVector = Icons.Rounded.MenuBook,
                         contentDescription = null,
                         modifier = Modifier.size(15.dp)
                     )
@@ -608,7 +610,7 @@ private fun DeleteConfirmDialog(
         onDismissRequest = onDismiss,
         icon = {
             Icon(
-                imageVector = Icons.Filled.Delete,
+                imageVector = Icons.Rounded.Delete,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.error
             )

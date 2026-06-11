@@ -1,4 +1,4 @@
-package com.example.mytrip.ui.screens.trip
+﻿package com.example.mytrip.ui.screens.trip
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -8,8 +8,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -78,7 +78,7 @@ fun TripDetailScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            icon = { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+            icon = { Icon(Icons.Rounded.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
             title = { Text("Xóa chuyến đi?", fontWeight = FontWeight.Bold) },
             text = {
                 Text(
@@ -145,7 +145,7 @@ fun TripDetailScreen(
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
+                            Icons.AutoMirrored.Rounded.ArrowBack,
                             contentDescription = "Quay lại",
                             tint = Color.White
                         )
@@ -158,7 +158,7 @@ fun TripDetailScreen(
                             var showMenu by remember { mutableStateOf(false) }
                             IconButton(onClick = { showMenu = true }) {
                                 Icon(
-                                    Icons.Default.Settings,
+                                    Icons.Rounded.Settings,
                                     contentDescription = "Cài đặt",
                                     tint = Color.White
                                 )
@@ -670,7 +670,7 @@ private fun ActionCard(
                     )
                 }
                 Icon(
-                    Icons.Default.ChevronRight,
+                    Icons.Rounded.ChevronRight,
                     contentDescription = null,
                     tint = contentColor.copy(alpha = 0.5f)
                 )

@@ -1,4 +1,4 @@
-package com.example.mytrip.ui.components
+﻿package com.example.mytrip.ui.components
 
 import android.content.Intent
 import android.net.Uri
@@ -16,7 +16,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -327,7 +327,7 @@ fun ActivityEditSheet(
                             modifier = Modifier.padding(vertical = 14.dp, horizontal = 8.dp)
                         ) {
                             Icon(
-                                Icons.Filled.AccessTime,
+                                Icons.Rounded.AccessTime,
                                 contentDescription = null,
                                 tint = if (departureTime.isNotBlank()) typeColor else MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(20.dp)
@@ -353,7 +353,7 @@ fun ActivityEditSheet(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            Icons.Default.ArrowForward,
+                            Icons.Rounded.ArrowForward,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp)
@@ -379,7 +379,7 @@ fun ActivityEditSheet(
                             modifier = Modifier.padding(vertical = 14.dp, horizontal = 8.dp)
                         ) {
                             Icon(
-                                Icons.Filled.AccessTime,
+                                Icons.Rounded.AccessTime,
                                 contentDescription = null,
                                 tint = if (arrivalTime.isNotBlank()) typeColor else MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(20.dp)
@@ -463,7 +463,7 @@ fun ActivityEditSheet(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = if (showMoreDetails) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                    imageVector = if (showMoreDetails) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(18.dp)
@@ -531,7 +531,7 @@ fun ActivityEditSheet(
                                         selected = false,
                                         onClick = { checkInSpots = checkInSpots.filter { it != spot } },
                                         label = { Text(spot, style = MaterialTheme.typography.labelSmall) },
-                                        trailingIcon = { Icon(Icons.Filled.Close, null, modifier = Modifier.size(14.dp)) }
+                                        trailingIcon = { Icon(Icons.Rounded.Close, null, modifier = Modifier.size(14.dp)) }
                                     )
                                 }
                             }
@@ -568,7 +568,7 @@ fun ActivityEditSheet(
                         trailingIcon = {
                             if (mapsLink.isNotBlank()) {
                                 IconButton(onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(mapsLink))) }) {
-                                    Icon(Icons.Filled.OpenInNew, null, tint = typeColor)
+                                    Icon(Icons.Rounded.OpenInNew, null, tint = typeColor)
                                 }
                             }
                         },

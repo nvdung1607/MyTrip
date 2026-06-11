@@ -1,4 +1,4 @@
-package com.example.mytrip.ui.screens.trip
+﻿package com.example.mytrip.ui.screens.trip
 
 import android.app.DatePickerDialog
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -18,16 +18,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.EditNote
-import androidx.compose.material.icons.filled.FolderOpen
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.UploadFile
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.CalendarToday
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Download
+import androidx.compose.material.icons.rounded.EditNote
+import androidx.compose.material.icons.rounded.FolderOpen
+import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.Remove
+import androidx.compose.material.icons.rounded.UploadFile
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -260,7 +260,7 @@ fun CreateEditTripScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Quay lại")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -291,7 +291,7 @@ fun CreateEditTripScreen(
                                 strokeWidth = 2.dp
                             )
                         } else {
-                            Icon(Icons.Default.Check, contentDescription = null)
+                            Icon(Icons.Rounded.Check, contentDescription = null)
                             Spacer(Modifier.width(8.dp))
                             Text(
                                 text = if (isEditMode) "Lưu thay đổi" else "Tạo chuyến đi",
@@ -321,7 +321,7 @@ fun CreateEditTripScreen(
                     onClick = { useFileImport = !useFileImport },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(if (useFileImport) Icons.Default.Remove else Icons.Default.Add, null)
+                    Icon(if (useFileImport) Icons.Rounded.Remove else Icons.Rounded.Add, null)
                     Spacer(Modifier.width(8.dp))
                     Text("Nhập từ file Excel", fontWeight = FontWeight.Bold)
                 }
@@ -363,7 +363,7 @@ fun CreateEditTripScreen(
                                 },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Icon(Icons.Default.Download, null, modifier = Modifier.size(18.dp))
+                                Icon(Icons.Rounded.Download, null, modifier = Modifier.size(18.dp))
                                 Spacer(Modifier.width(8.dp))
                                 Text("Tải file mẫu (.xlsx)", fontWeight = FontWeight.Medium)
                             }
@@ -373,7 +373,7 @@ fun CreateEditTripScreen(
                                 onClick = { filePickerLauncher.launch("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Icon(Icons.Default.FolderOpen, null, modifier = Modifier.size(18.dp))
+                                Icon(Icons.Rounded.FolderOpen, null, modifier = Modifier.size(18.dp))
                                 Spacer(Modifier.width(8.dp))
                                 Text(
                                     text = if (importFileName != null) "📂 ${if (importFileName!!.length > 25) importFileName!!.substring(0, 25) + "..." else importFileName}"
@@ -396,7 +396,7 @@ fun CreateEditTripScreen(
                                     Spacer(Modifier.width(8.dp))
                                     Text("Đang nhập...")
                                 } else {
-                                    Icon(Icons.Default.UploadFile, null, modifier = Modifier.size(20.dp))
+                                    Icon(Icons.Rounded.UploadFile, null, modifier = Modifier.size(20.dp))
                                     Spacer(Modifier.width(8.dp))
                                     Text("Nhập", fontWeight = FontWeight.Bold)
                                 }
@@ -518,7 +518,7 @@ fun CreateEditTripScreen(
                         )
                     ) {
                         Icon(
-                            Icons.Default.Remove,
+                            Icons.Rounded.Remove,
                             contentDescription = "Giảm",
                             modifier = Modifier.size(18.dp)
                         )
@@ -546,7 +546,7 @@ fun CreateEditTripScreen(
                         )
                     ) {
                         Icon(
-                            Icons.Default.Add,
+                            Icons.Rounded.Add,
                             contentDescription = "Tăng",
                             modifier = Modifier.size(18.dp)
                         )
@@ -574,7 +574,7 @@ fun CreateEditTripScreen(
                                 label = "Thành viên ${index + 1}",
                                 leadingIcon = {
                                     Icon(
-                                        Icons.Default.Person,
+                                        Icons.Rounded.Person,
                                         contentDescription = null,
                                         modifier = Modifier.size(20.dp)
                                     )
@@ -612,7 +612,7 @@ fun CreateEditTripScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             if (isSelected) {
-                                Icon(Icons.Default.Check, contentDescription = null, tint = Color.White)
+                                Icon(Icons.Rounded.Check, contentDescription = null, tint = Color.White)
                             }
                         }
                     }
@@ -734,7 +734,7 @@ private fun DateButton(
         contentPadding = PaddingValues(horizontal = 12.dp)
     ) {
         Icon(
-            imageVector = Icons.Default.CalendarToday,
+            imageVector = Icons.Rounded.CalendarToday,
             contentDescription = null,
             modifier = Modifier.size(16.dp),
             tint = if (isError) MaterialTheme.colorScheme.error

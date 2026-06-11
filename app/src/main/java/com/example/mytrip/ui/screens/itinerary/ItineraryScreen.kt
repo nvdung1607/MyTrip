@@ -1,4 +1,4 @@
-package com.example.mytrip.ui.screens.itinerary
+﻿package com.example.mytrip.ui.screens.itinerary
 
 import android.content.Intent
 import android.net.Uri
@@ -38,22 +38,22 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.DragHandle
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.OpenInNew
-import androidx.compose.material.icons.filled.UnfoldLess
-import androidx.compose.material.icons.filled.UnfoldMore
-import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.DragHandle
+import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.KeyboardArrowUp
+import androidx.compose.material.icons.rounded.OpenInNew
+import androidx.compose.material.icons.rounded.UnfoldLess
+import androidx.compose.material.icons.rounded.UnfoldMore
+import androidx.compose.material.icons.rounded.AccessTime
+import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material.icons.rounded.ExpandLess
+import androidx.compose.material.icons.rounded.ExpandMore
+import androidx.compose.material.icons.rounded.ArrowForward
 import java.util.Calendar
 import java.util.Locale
 import androidx.compose.foundation.BorderStroke
@@ -204,7 +204,7 @@ fun ItineraryScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Quay lại")
                     }
                 },
                 actions = {
@@ -221,13 +221,13 @@ fun ItineraryScreen(
                             }
                         }
                     }) {
-                        Icon(Icons.Filled.Share, contentDescription = "Chia sẻ lịch trình", tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Rounded.Share, contentDescription = "Chia sẻ lịch trình", tint = MaterialTheme.colorScheme.primary)
                     }
                     IconButton(onClick = { viewModel.expandAll() }) {
-                        Icon(Icons.Filled.UnfoldMore, contentDescription = "Mở rộng tất cả", tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Rounded.UnfoldMore, contentDescription = "Mở rộng tất cả", tint = MaterialTheme.colorScheme.primary)
                     }
                     IconButton(onClick = { viewModel.collapseAll() }) {
-                        Icon(Icons.Filled.UnfoldLess, contentDescription = "Thu gọn tất cả", tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Rounded.UnfoldLess, contentDescription = "Thu gọn tất cả", tint = MaterialTheme.colorScheme.primary)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
@@ -327,7 +327,7 @@ fun ItineraryScreen(
     if (deleteTarget != null) {
         AlertDialog(
             onDismissRequest = { deleteTarget = null },
-            icon = { Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error) },
+            icon = { Icon(Icons.Rounded.Delete, null, tint = MaterialTheme.colorScheme.error) },
             title = { Text("Xoá hoạt động?") },
             text = { Text("Bạn có chắc muốn xoá \"${deleteTarget?.name}\" không?") },
             confirmButton = {
@@ -410,7 +410,7 @@ private fun DaySection(
                     Text("${activities.size} hoạt động", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Icon(
-                    imageVector = if (isExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                    imageVector = if (isExpanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary
                 )
@@ -453,7 +453,7 @@ private fun DaySection(
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
-                                    imageVector = Icons.Default.Add,
+                                    imageVector = Icons.Rounded.Add,
                                     contentDescription = "Thêm hoạt động",
                                     modifier = Modifier.size(11.dp),
                                     tint = MaterialTheme.colorScheme.outline
@@ -494,7 +494,7 @@ private fun ClusterHeader(cluster: Cluster, daysCount: Int, isExpanded: Boolean,
                 Text("Gồm $daysCount ngày • ${if (isExpanded) "Chạm để ẩn" else "Chạm để xem chi tiết"}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f))
             }
             Icon(
-                imageVector = if (isExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                imageVector = if (isExpanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSecondaryContainer
             )

@@ -1,4 +1,4 @@
-package com.example.mytrip.ui.screens.notes
+﻿package com.example.mytrip.ui.screens.notes
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -13,13 +13,13 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.GridView
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.ViewList
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.ArrowDropDown
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.GridView
+import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.ViewList
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -96,13 +96,13 @@ fun AllNotesScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Quay lại")
                     }
                 },
                 actions = {
                     IconButton(onClick = { isListView = !isListView }) {
                         Icon(
-                            imageVector = if (isListView) Icons.Default.GridView else Icons.Default.ViewList,
+                            imageVector = if (isListView) Icons.Rounded.GridView else Icons.Rounded.ViewList,
                             contentDescription = "Chuyển chế độ xem"
                         )
                     }
@@ -252,7 +252,7 @@ fun AllNotesScreen(
     if (noteToDelete != null) {
         AlertDialog(
             onDismissRequest = { noteToDelete = null },
-            icon = { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+            icon = { Icon(Icons.Rounded.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
             title = { Text("Xoá ghi chú này?", fontWeight = FontWeight.Bold) },
             text = { Text("Mọi dữ liệu chi phí và hình ảnh liên kết với ghi chú này sẽ bị xoá vĩnh viễn.") },
             confirmButton = {
@@ -499,7 +499,7 @@ private fun AllNoteCard(
                     Row {
                         repeat(5) { i ->
                             Icon(
-                                imageVector = Icons.Default.Star,
+                                imageVector = Icons.Rounded.Star,
                                 contentDescription = null,
                                 tint = if (i < note.rating) Color(0xFFFFC107) else MaterialTheme.colorScheme.outlineVariant,
                                 modifier = Modifier.size(10.dp)
