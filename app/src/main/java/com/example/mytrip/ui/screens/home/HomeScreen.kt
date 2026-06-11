@@ -27,11 +27,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Today
+import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -45,8 +48,10 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
@@ -60,6 +65,7 @@ import com.example.mytrip.ui.components.MyTripChip
 import com.example.mytrip.ui.components.GlassmorphismCard
 import com.example.mytrip.ui.components.MyTripPrimaryButton
 import com.example.mytrip.ui.theme.spacing
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -161,13 +167,33 @@ fun HomeScreen(
                 onFilterSelected = { viewModel.filterByStatus(it) }
             )
 
-            // ── Trip list or empty state ───────────────────────────────────
+            // ── Search bar ────────────────────────────────────────────────
+            val searchQuery by viewModel.searchQuery.collectAsState()
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { viewModel.setSearchQuery(it) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                placeholder = { Text("🔍 Tìm chuyến đi...") },
+                singleLine = true,
+                shape = RoundedCornerShape(16.dp),
+                trailingIcon = {
+                    if (searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { viewModel.setSearchQuery("") }) {
+                            Icon(Icons.Filled.Close, contentDescription = "Xóa")
+                        }
+                    }
+                }
+            )
+
             if (trips.isEmpty()) {
                 EmptyState(
                     modifier = Modifier.fillMaxSize(),
                     onCreateSampleTrip = { viewModel.importSampleTrip() }
                 )
             } else {
+                var visibleIds by remember { mutableStateOf(emptySet<Long>()) }
                 LazyColumn(
                     contentPadding = PaddingValues(
                         start = MaterialTheme.spacing.marginMobile,
@@ -179,8 +205,11 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(trips, key = { it.id }) { trip ->
+                        LaunchedEffect(trip.id) {
+                            visibleIds = visibleIds + trip.id
+                        }
                         AnimatedVisibility(
-                            visible = true,
+                            visible = trip.id in visibleIds,
                             enter = fadeIn(tween(300)) + slideInVertically(tween(300)) { it / 4 },
                             exit = fadeOut(tween(300))
                         ) {
@@ -198,6 +227,12 @@ fun HomeScreen(
                                 onExpenseClick = {
                                     navController.navigate(Screen.Expense.createRoute(trip.id))
                                 },
+                                onNotesClick = {
+                                    navController.navigate(Screen.AllNotes.createRoute(trip.id))
+                                },
+                                onSummaryClick = if (trip.status == TripStatus.DONE) {
+                                    { navController.navigate(Screen.Summary.createRoute(trip.id)) }
+                                } else null,
                                 onDeleteConfirmed = { viewModel.deleteTrip(trip) }
                             )
                         }
@@ -297,6 +332,8 @@ fun TripCard(
     onItineraryClick: () -> Unit,
     onTodayClick: () -> Unit,
     onExpenseClick: () -> Unit,
+    onNotesClick: () -> Unit,
+    onSummaryClick: (() -> Unit)? = null,
     onDeleteConfirmed: () -> Unit
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -426,6 +463,36 @@ fun TripCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+
+                // ── Progress indicator for ONGOING trips ──────────────────
+                if (trip.status == TripStatus.ONGOING) {
+                    val today = DateUtils.todayMillis()
+                    val totalDays = DateUtils.countDays(trip.startDate, trip.endDate)
+                    val daysPassed = DateUtils.countDays(trip.startDate, today).coerceIn(0, totalDays)
+                    val progress = if (totalDays > 0) daysPassed.toFloat() / totalDays else 0f
+
+                    Spacer(Modifier.height(8.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Tiến độ: Ngày $daysPassed/$totalDays",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    LinearProgressIndicator(
+                        progress = { progress },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(50)),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                }
             }
 
             // ── Divider ───────────────────────────────────────────────────
@@ -437,67 +504,118 @@ fun TripCard(
             )
 
             // ── Action buttons ────────────────────────────────────────────
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 6.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                    .padding(horizontal = 8.dp, vertical = 6.dp)
             ) {
-                // Lịch trình
-                TextButton(
-                    onClick = onItineraryClick,
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.primary
-                    )
+                // Row 1: Lịch trình | Hôm nay | Chi phí
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.CalendarMonth,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "Lịch trình",
-                        style = MaterialTheme.typography.labelMedium
-                    )
+                    // Lịch trình
+                    TextButton(
+                        onClick = onItineraryClick,
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.CalendarMonth,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Lịch trình",
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
+
+                    // Hôm nay
+                    TextButton(
+                        onClick = onTodayClick,
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.tertiary
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.WbSunny,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Hôm nay",
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
+
+                    // Chi phí
+                    TextButton(
+                        onClick = onExpenseClick,
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = Color(0xFF2E7D32)
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.AccountBalanceWallet,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Chi phí",
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
                 }
 
-                // Hôm nay
-                TextButton(
-                    onClick = onTodayClick,
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.tertiary
-                    )
+                // Row 2: Nhật ký | Tổng kết (only for DONE trips)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = if (onSummaryClick != null) Arrangement.SpaceEvenly else Arrangement.Start
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.WbSunny,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "Hôm nay",
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                }
+                    // Nhật ký
+                    TextButton(
+                        onClick = onNotesClick,
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = Color(0xFF7B1FA2)
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.MenuBook,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Nhật ký",
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
 
-                // Chi phí
-                TextButton(
-                    onClick = onExpenseClick,
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = Color(0xFF2E7D32)
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Today,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "Chi phí",
-                        style = MaterialTheme.typography.labelMedium
-                    )
+                    // Tổng kết (only visible for DONE trips)
+                    if (onSummaryClick != null) {
+                        TextButton(
+                            onClick = onSummaryClick,
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = Color(0xFF0277BD)
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Assessment,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Tổng kết",
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                        }
+                    }
                 }
             }
         }

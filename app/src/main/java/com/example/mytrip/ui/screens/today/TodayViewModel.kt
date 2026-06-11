@@ -98,6 +98,25 @@ class TodayViewModel(application: Application) : AndroidViewModel(application) {
         _activeDayId.value = day?.id
     }
 
+    /**
+     * Navigate directly to the day matching [dateMillis] (any date, not just ±1 day from today).
+     */
+    fun jumpToDate(dateMillis: Long) {
+        val startOfDay = dateMillis
+        val endOfDay = dateMillis + 86_399_999L
+        val day = _allDays.value.firstOrNull { it.date in startOfDay..endOfDay }
+        _todayDay.value = day
+        _activeDayId.value = day?.id
+        // Also update selectedDayIndex for the tab indicator
+        val today = DateUtils.todayMillis()
+        _selectedDayIndex.value = when {
+            dateMillis in (today - 86_400_000L)..(today - 1L) -> 0
+            dateMillis in today..(today + 86_399_999L) -> 1
+            dateMillis in (today + 86_400_000L)..(today + 2 * 86_400_000L - 1) -> 2
+            else -> 1 // Keep "today" tab selected for other dates (custom mode)
+        }
+    }
+
     fun updateActivityStatus(activityId: Long, status: ActivityStatus) {
         viewModelScope.launch {
             repository.updateActivityStatus(activityId, status)

@@ -36,6 +36,10 @@ import com.example.mytrip.ui.components.DraggableFab
 import com.example.mytrip.ui.components.MyTripPrimaryButton
 import com.example.mytrip.ui.theme.*
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
+import com.example.mytrip.util.BackupUtils
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,6 +56,8 @@ fun TripDetailScreen(
     var showDatePicker by remember { mutableStateOf(false) }
     var pendingStatusChange by remember { mutableStateOf<TripStatus?>(null) }
     val datePickerState = rememberDatePickerState()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(tripId) {
         viewModel.loadTrip(tripId)
@@ -171,6 +177,23 @@ fun TripDetailScreen(
                                     onClick = {
                                         showMenu = false
                                         showDeleteDialog = true
+                                    }
+                                )
+                                HorizontalDivider()
+                                DropdownMenuItem(
+                                    text = { Text("📤 Xuất backup (JSON)") },
+                                    onClick = {
+                                        showMenu = false
+                                        scope.launch {
+                                            try {
+                                                val json = viewModel.exportBackupJson(tripId)
+                                                val tripName = t.name
+                                                val uri = BackupUtils.saveToCache(context, json, tripName)
+                                                if (uri != null) BackupUtils.shareBackup(context, uri, tripName)
+                                                // Also save to Downloads silently
+                                                BackupUtils.saveToDownloads(context, json, tripName)
+                                            } catch (_: Exception) {}
+                                        }
                                     }
                                 )
                                 HorizontalDivider()

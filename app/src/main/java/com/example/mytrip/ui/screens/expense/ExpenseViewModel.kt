@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.mytrip.MyTripApplication
 import com.example.mytrip.data.db.entities.*
 import com.example.mytrip.data.repository.TripRepository
+import org.json.JSONArray
 
 import com.example.mytrip.util.MoneyUtils
 import com.example.mytrip.widget.MyTripWidgetUpdater
@@ -96,9 +97,12 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
     private fun computeBalances() {
         val t = _trip.value ?: return
         val recs = _records.value
-        val names = t.memberNames.trim('[', ']')
-            .split(",").map { it.trim().trim('"') }.filter { it.isNotBlank() }
-            .ifEmpty { listOf("Tôi") }
+        val names = try {
+            val arr = JSONArray(t.memberNames)
+            (0 until arr.length()).map { arr.getString(it) }.filter { it.isNotBlank() }.ifEmpty { listOf("Tôi") }
+        } catch (_: Exception) {
+            listOf("Tôi")
+        }
         val pairs = recs.map { it.paidBy to it.amount }
         _memberBalances.value = MoneyUtils.splitExpenses(pairs, t.numPeople, names)
     }

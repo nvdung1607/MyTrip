@@ -54,5 +54,8 @@ data class Activity(
     val status: ActivityStatus = ActivityStatus.PENDING,
     val actualDepartureTime: String = "",
     val actualArrivalTime: String = "",
-    val actualNotes: String = ""         // Ghi chú thực tế (nếu thay đổi)
+    val actualNotes: String = "",         // Ghi chú thực tế (nếu thay đổi)
+
+    // Nhắc nhở
+    val reminderMinutes: Int = 0          // 0 = không nhắc, 15/30/60 = nhắc trước N phút
 )

@@ -50,6 +50,7 @@ import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.UnfoldLess
 import androidx.compose.material.icons.filled.UnfoldMore
 import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import java.util.Calendar
@@ -116,6 +117,7 @@ import com.example.mytrip.data.db.entities.Day
 import com.example.mytrip.navigation.Screen
 import com.example.mytrip.util.DateUtils
 import com.example.mytrip.util.MoneyUtils
+import com.example.mytrip.util.ShareUtils
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import com.example.mytrip.ui.components.ScheduleTimelineList
@@ -212,6 +214,7 @@ fun ItineraryScreen(
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
     // Observe snackbar events from ViewModel
@@ -247,6 +250,21 @@ fun ItineraryScreen(
                     }
                 },
                 actions = {
+                    // Share PDF
+                    IconButton(onClick = {
+                        scope.launch {
+                            val t = trip
+                            val d = days
+                            val am = activitiesMap
+                            if (t != null) {
+                                val uri = ShareUtils.buildItineraryPdf(context, t, d, am)
+                                if (uri != null) ShareUtils.sharePdf(context, uri, t.name)
+                                else snackbarHostState.showSnackbar("Không thể tạo PDF")
+                            }
+                        }
+                    }) {
+                        Icon(Icons.Filled.Share, contentDescription = "Chia sẻ lịch trình", tint = MaterialTheme.colorScheme.primary)
+                    }
                     IconButton(onClick = { viewModel.expandAll() }) {
                         Icon(Icons.Filled.UnfoldMore, contentDescription = "Mở rộng tất cả", tint = MaterialTheme.colorScheme.primary)
                     }

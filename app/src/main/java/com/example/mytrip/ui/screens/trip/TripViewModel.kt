@@ -12,6 +12,7 @@ import com.example.mytrip.data.db.entities.Trip
 import com.example.mytrip.data.db.entities.TripStatus
 import com.example.mytrip.data.repository.TripRepository
 import com.example.mytrip.util.CsvImportUtils
+import com.example.mytrip.util.BackupUtils
 import com.example.mytrip.widget.MyTripWidgetUpdater
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -197,6 +198,9 @@ class TripViewModel(application: Application) : AndroidViewModel(application) {
     fun clearImportError() { _importError.value = null }
 
     fun resetImportedTripId() { _importedTripId.value = null }
+
+    /** Export trip data to JSON string for backup */
+    suspend fun exportBackupJson(tripId: Long): String = BackupUtils.exportTripToJson(repository, tripId)
 
     companion object {
         val Factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory {

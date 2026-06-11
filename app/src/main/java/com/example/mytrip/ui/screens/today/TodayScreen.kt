@@ -37,6 +37,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Close
@@ -304,6 +305,26 @@ fun TodayScreen(
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
+                    }
+                },
+                actions = {
+                    val ctx = LocalContext.current
+                    IconButton(onClick = {
+                        val calendar = java.util.Calendar.getInstance()
+                        android.app.DatePickerDialog(
+                            ctx,
+                            { _, year, month, dayOfMonth ->
+                                val cal = java.util.Calendar.getInstance()
+                                cal.set(year, month, dayOfMonth, 0, 0, 0)
+                                cal.set(java.util.Calendar.MILLISECOND, 0)
+                                viewModel.jumpToDate(cal.timeInMillis)
+                            },
+                            calendar.get(java.util.Calendar.YEAR),
+                            calendar.get(java.util.Calendar.MONTH),
+                            calendar.get(java.util.Calendar.DAY_OF_MONTH)
+                        ).show()
+                    }) {
+                        Icon(Icons.Filled.CalendarMonth, contentDescription = "Chọn ngày", tint = MaterialTheme.colorScheme.primary)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -673,9 +694,10 @@ private fun NoteCard(
     ) {
         Column {
             // Photo
-            if (note.photoPath != null) {
+            val displayPhoto = note.photoPaths.firstOrNull() ?: note.photoPath
+            if (displayPhoto != null) {
                 AsyncImage(
-                    model = note.photoPath,
+                    model = displayPhoto,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier

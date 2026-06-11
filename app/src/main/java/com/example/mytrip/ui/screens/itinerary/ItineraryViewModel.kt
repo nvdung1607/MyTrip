@@ -18,9 +18,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -55,8 +58,9 @@ class ItineraryViewModel(application: Application) : AndroidViewModel(applicatio
     // ── Snackbar events ───────────────────────────────────────────────
     val snackbarEvent = MutableSharedFlow<String>(extraBufferCapacity = 1)
 
-    // ── Load data ─────────────────────────────────────────────────────
-    private var loadJob: kotlinx.coroutines.Job? = null
+    // ── Load data ─────────────────────────────────────────────────────────────
+    private var loadJob: Job? = null
+    private var currentActivitiesJob: Job? = null
 
     fun loadData(tripId: Long) {
         _tripId.value = tripId
@@ -70,19 +74,34 @@ class ItineraryViewModel(application: Application) : AndroidViewModel(applicatio
                     }
                 }
             }
-            // Observe days and collect activities reactively
+            // Initialize expanded days on first load
+            launch {
+                days.collect { dayList ->
+                    if (dayList.isEmpty()) return@collect
+                    if (expandedDays.value.isEmpty()) {
+                        expandedDays.value = dayList.map { it.id }.toSet()
+                    }
+                }
+            }
+            // Observe days and reactively combine all activity flows
             days.collect { dayList ->
-                if (dayList.isEmpty()) return@collect
-                // Initialize expanded state only on first load
-                if (expandedDays.value.isEmpty()) {
-                    expandedDays.value = dayList.map { it.id }.toSet()
+                if (dayList.isEmpty()) {
+                    _activitiesMap.value = emptyMap()
+                    return@collect
                 }
-                // Batch-load activities for all days
-                val map = mutableMapOf<Long, List<Activity>>()
-                dayList.forEach { day ->
-                    map[day.id] = repository.getActivitiesOnce(day.id)
+                // Build a combined flow that maps each dayId to its activities
+                val flows = dayList.map { day ->
+                    repository.getActivities(day.id).map { activities -> day.id to activities }
                 }
-                _activitiesMap.value = map
+                // Cancel any previous activity observation
+                currentActivitiesJob?.cancel()
+                currentActivitiesJob = launch {
+                    combine(flows) { pairs ->
+                        pairs.toMap()
+                    }.collect { map ->
+                        _activitiesMap.value = map
+                    }
+                }
             }
         }
     }

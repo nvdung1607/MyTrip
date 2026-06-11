@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.mytrip.MyTripApplication
+import org.json.JSONArray
 import com.example.mytrip.data.db.entities.*
 import com.example.mytrip.util.DateUtils
 import com.example.mytrip.util.MoneyUtils
@@ -54,14 +55,20 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
     val memberBalances by vm.memberBalances.collectAsState()
 
     val memberNames = remember(trip) {
-        trip?.memberNames?.trim('[', ']')
-            ?.split(",")?.map { it.trim().trim('"') }?.filter { it.isNotBlank() }
-            ?: listOf("Tôi")
+        try {
+            val raw = trip?.memberNames ?: return@remember listOf("Tôi")
+            val arr = JSONArray(raw)
+            (0 until arr.length()).map { arr.getString(it) }.filter { it.isNotBlank() }
+                .ifEmpty { listOf("Tôi") }
+        } catch (_: Exception) {
+            listOf("Tôi")
+        }
     }
 
     var selectedTab by remember { mutableStateOf(0) }
     var showAddRecord by remember { mutableStateOf(false) }
     var editExpense by remember { mutableStateOf<Expense?>(null) }
+    var editRecord by remember { mutableStateOf<ExpenseRecord?>(null) }
     var selectedCategoryForNewRecord by remember { mutableStateOf(ExpenseCategory.FOOD) }
 
     TripThemeProvider(trip = trip) {
@@ -121,7 +128,8 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
                     memberBalances = memberBalances,
                     memberNames = memberNames,
                     isEditable = trip?.status == TripStatus.ONGOING,
-                    onDeleteRecord = { vm.deleteRecord(it) }
+                    onDeleteRecord = { vm.deleteRecord(it) },
+                    onEditRecord = { editRecord = it }
                 )
             }
         }
@@ -345,6 +353,22 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
             }
         )
     }
+
+    // Edit record bottom sheet
+    editRecord?.let { rec ->
+        AddExpenseRecordSheet(
+            initialCategory = rec.category,
+            initialAmount = (rec.amount / 1000L).toString(),
+            initialPaidBy = rec.paidBy,
+            initialDescription = rec.description,
+            memberNames = memberNames,
+            onDismiss = { editRecord = null },
+            onSave = { updated ->
+                vm.updateRecord(updated.copy(id = rec.id, tripId = tripId, timestamp = rec.timestamp, noteId = rec.noteId))
+                editRecord = null
+            }
+        )
+    }
 }
 }
 
@@ -455,11 +479,13 @@ private fun ActualTab(
     memberBalances: Map<String, Long>,
     memberNames: List<String>,
     isEditable: Boolean,
-    onDeleteRecord: (ExpenseRecord) -> Unit
+    onDeleteRecord: (ExpenseRecord) -> Unit,
+    onEditRecord: (ExpenseRecord) -> Unit = {}
 ) {
     var deleteTarget by remember { mutableStateOf<ExpenseRecord?>(null) }
-    val grouped = records.groupBy {
-        DateUtils.formatDate(it.timestamp)
+    // Group by actual day date if dayId is set, otherwise fall back to timestamp date
+    val grouped = records.groupBy { rec ->
+        DateUtils.formatDate(rec.timestamp)
     }.toSortedMap(compareByDescending { it })
 
     LazyColumn(
@@ -493,8 +519,13 @@ private fun ActualTab(
                             Text(MoneyUtils.formatShort(rec.amount), fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp, color = MaterialTheme.colorScheme.primary)
                             if (isEditable) {
-                                IconButton(onClick = { deleteTarget = rec }, modifier = Modifier.size(24.dp)) {
-                                    Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(16.dp))
+                                Row {
+                                    IconButton(onClick = { onEditRecord(rec) }, modifier = Modifier.size(28.dp)) {
+                                        Icon(Icons.Default.Edit, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                                    }
+                                    IconButton(onClick = { deleteTarget = rec }, modifier = Modifier.size(28.dp)) {
+                                        Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(16.dp))
+                                    }
                                 }
                             }
                         }
@@ -541,14 +572,17 @@ private fun ActualTab(
 @Composable
 private fun AddExpenseRecordSheet(
     initialCategory: ExpenseCategory = ExpenseCategory.FOOD,
+    initialAmount: String = "",
+    initialPaidBy: String = "",
+    initialDescription: String = "",
     memberNames: List<String>,
     onDismiss: () -> Unit,
     onSave: (ExpenseRecord) -> Unit
 ) {
     var category by remember { mutableStateOf(initialCategory) }
-    var amountInput by remember { mutableStateOf("") }
-    var paidBy by remember { mutableStateOf(memberNames.firstOrNull() ?: "Tôi") }
-    var description by remember { mutableStateOf("") }
+    var amountInput by remember { mutableStateOf(initialAmount) }
+    var paidBy by remember { mutableStateOf(initialPaidBy.ifBlank { memberNames.firstOrNull() ?: "Tôi" }) }
+    var description by remember { mutableStateOf(initialDescription) }
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
@@ -560,7 +594,11 @@ private fun AddExpenseRecordSheet(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text("Thêm chi tiêu", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(
+                text = if (initialAmount.isNotEmpty()) "Sửa chi tiêu" else "Thêm chi tiêu",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
 
             Text("Hạng mục", style = MaterialTheme.typography.labelLarge)
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -623,7 +661,7 @@ private fun AddExpenseRecordSheet(
                 },
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 enabled = amountInput.isNotEmpty()
-            ) { Text("Lưu chi tiêu", fontWeight = FontWeight.Bold) }
+            ) { Text(if (initialAmount.isNotEmpty()) "Cập nhật" else "Lưu chi tiêu", fontWeight = FontWeight.Bold) }
 
             Spacer(Modifier.height(8.dp))
         }

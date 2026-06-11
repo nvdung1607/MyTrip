@@ -4,6 +4,7 @@ import android.content.Context
 import com.example.mytrip.data.db.dao.*
 import com.example.mytrip.data.db.entities.*
 import com.example.mytrip.util.CsvImportUtils
+import com.example.mytrip.util.DateUtils
 import com.example.mytrip.util.ExcelImportUtils
 import com.example.mytrip.widget.MyTripWidgetUpdater
 import kotlinx.coroutines.flow.Flow
@@ -105,6 +106,8 @@ class TripRepository(
     fun getDays(tripId: Long): Flow<List<Day>> = dayDao.getDaysForTrip(tripId)
     fun getDaysForCluster(clusterId: Long): Flow<List<Day>> = dayDao.getDaysForCluster(clusterId)
     suspend fun getDayById(id: Long): Day? = dayDao.getDayById(id)
+    suspend fun getDaysForTripOnce(tripId: Long): List<Day> = dayDao.getDaysForTripOnce(tripId)
+    suspend fun insertDayAndGetId(day: Day): Long = dayDao.insertDay(day)
     suspend fun updateDay(day: Day) = dayDao.updateDay(day)
     suspend fun deleteDay(day: Day) = dayDao.deleteDay(day)
 
@@ -147,6 +150,7 @@ class TripRepository(
     fun getNotes(tripId: Long): Flow<List<Note>> = noteDao.getNotesForTrip(tripId)
     fun getNotesForDay(dayId: Long): Flow<List<Note>> = noteDao.getNotesForDay(dayId)
     suspend fun getNoteById(id: Long): Note? = noteDao.getNoteById(id)
+    suspend fun getNotesOnce(tripId: Long): List<Note> = noteDao.getNotesForTripOnce(tripId)
     suspend fun insertNote(note: Note): Long {
         val noteId = noteDao.insertNote(note)
         if (note.cost > 0) {
@@ -212,6 +216,7 @@ class TripRepository(
 
     // ── Expense ───────────────────────────────────────────────────────
     fun getExpenses(tripId: Long): Flow<List<Expense>> = expenseDao.getExpensesForTrip(tripId)
+    suspend fun getExpensesOnce(tripId: Long): List<Expense> = expenseDao.getExpensesForTripOnce(tripId)
     suspend fun updateExpense(expense: Expense) {
         expenseDao.updateExpense(expense)
         refreshWidget()
@@ -340,11 +345,12 @@ class TripRepository(
         // Clear old notes & images if any (simplified: just clear all seed trips)
         // Usually, the easiest way is to let the new trip have its own ID.
         // We will insert the seed trip as a NEW trip.
+        val todayMs = DateUtils.todayMillis()
         val seedTrip = com.example.mytrip.data.seed.TripSeedData.trip.copy(
             id = 0,
             name = "Hành trình Xuyên Việt",
-            startDate = 0L,
-            endDate = 0L,
+            startDate = todayMs,
+            endDate = todayMs + 29 * 86_400_000L,
             type = overrideType ?: com.example.mytrip.data.seed.TripSeedData.trip.type,
             themeColor = com.example.mytrip.ui.theme.TripThemeColors.getRandomColor()
         )
@@ -376,7 +382,7 @@ class TripRepository(
             clusterDao.insertCluster(Cluster(tripId = tripId, name = name, orderIndex = idx))
         }
         
-        var currentDayDate = 0L
+        var currentDayDate = DateUtils.todayMillis()
         for (daySeed in seedDays) {
             val clusterId = when (daySeed.dayNumber) {
                 in 1..3  -> clusterIds[0]   // Bắc Trung Bộ

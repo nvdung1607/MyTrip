@@ -43,6 +43,12 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val _filter = MutableStateFlow<TripStatus?>(null)
     val filter: StateFlow<TripStatus?> = _filter.asStateFlow()
 
+    // Search query
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    fun setSearchQuery(q: String) { _searchQuery.value = q }
+
     private var lastRawTripsSize: Int? = null
 
     // Raw list from DB
@@ -57,8 +63,10 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     // Filtered trips exposed to UI
-    val allTrips: StateFlow<List<Trip>> = combine(_allTripsRaw, _filter) { trips, status ->
-        if (status == null) trips else trips.filter { it.status == status }
+    val allTrips: StateFlow<List<Trip>> = combine(_allTripsRaw, _filter, _searchQuery) { trips, status, query ->
+        trips
+            .filter { if (status == null) true else it.status == status }
+            .filter { if (query.isBlank()) true else it.name.contains(query, ignoreCase = true) }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     fun filterByStatus(status: TripStatus?) {
