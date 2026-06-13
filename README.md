@@ -2,10 +2,6 @@
 
 Chào mừng bạn đến với **MyTrip**! Ứng dụng quản lý chuyến du lịch toàn diện giúp bạn lên kế hoạch, theo dõi hành trình và tổng kết chi phí một cách dễ dàng và hiệu quả nhất.
 
-![Màn hình chính](./screenshots/home_screen.png)
-
----
-
 ## 1. Màn hình chính (Trang chủ)
 
 Khi mở ứng dụng, bạn sẽ thấy danh sách tất cả các chuyến đi của mình.
@@ -38,7 +34,7 @@ Khi mở ứng dụng, bạn sẽ thấy danh sách tất cả các chuyến đi
 - Bạn có thể đánh dấu: ✅ Đã hoàn thành, ⏭️ Bỏ qua, hoặc 🔀 Thay đổi nếu có phát sinh.
 - **Nhắc nhở**: Ứng dụng sẽ gửi thông báo (Push Notification) trước 15-30 phút cho mỗi hoạt động để bạn không bị lỡ kế hoạch.
 
-### Ghi nhận thực tế và Nhật ký (Note)
+### Ghi nhận thực tế và Nhật ký (Note) (Tính năng hay nhất heheeheheheh)
 - Tại bất kỳ thời điểm nào, bạn có thể nhấn nút **Note** (có biểu tượng Camera) để chụp ngay một bức ảnh.
 - Ứng dụng cho phép bạn:
   - Đánh giá (1-5 sao) cho địa điểm.
