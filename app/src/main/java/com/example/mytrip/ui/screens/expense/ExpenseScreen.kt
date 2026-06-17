@@ -55,6 +55,7 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
     val totalPlanned by vm.totalPlanned.collectAsStateWithLifecycle()
     val totalActual by vm.totalActual.collectAsStateWithLifecycle()
     val memberBalances by vm.memberBalances.collectAsStateWithLifecycle()
+    val transfers by vm.transfers.collectAsStateWithLifecycle()
 
     val memberNames = remember(trip) {
         try {
@@ -128,6 +129,7 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
                 1 -> ActualTab(
                     records = records,
                     memberBalances = memberBalances,
+                    transfers = transfers,
                     memberNames = memberNames,
                     isEditable = trip?.status == TripStatus.ONGOING,
                     onDeleteRecord = { vm.deleteRecord(it) },
@@ -362,6 +364,7 @@ fun ExpenseScreen(navController: NavController, tripId: Long) {
             initialCategory = rec.category,
             initialAmount = (rec.amount / 1000L).toString(),
             initialPaidBy = rec.paidBy,
+            initialAdvancedTo = rec.advancedTo ?: "",
             initialDescription = rec.description,
             memberNames = memberNames,
             onDismiss = { editRecord = null },

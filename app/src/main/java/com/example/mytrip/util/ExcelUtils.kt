@@ -377,7 +377,12 @@ object ExcelUtils {
                 cell(0, DateUtils.formatFull(rec.timestamp))
                 cell(1, "${rec.category.icon} ${rec.category.label}")
                 cell(2, rec.description)
-                cell(3, rec.paidBy)
+                val paidByText = if (rec.category == ExpenseCategory.ADVANCE && !rec.advancedTo.isNullOrBlank()) {
+                    "${rec.paidBy} ➡️ ${rec.advancedTo}"
+                } else {
+                    rec.paidBy
+                }
+                cell(3, paidByText)
                 cell(4, MoneyUtils.formatVnd(rec.amount))
             }
         }

@@ -1,4 +1,4 @@
-﻿package com.example.mytrip.ui.screens.summary
+package com.example.mytrip.ui.screens.summary
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -54,10 +54,11 @@ fun SummaryScreen(navController: NavController, tripId: Long) {
     val expenses by vm.expenses.collectAsStateWithLifecycle()
     val records by vm.records.collectAsStateWithLifecycle()
     val memberBalances by vm.memberBalances.collectAsStateWithLifecycle()
+    val transfers by vm.transfers.collectAsStateWithLifecycle()
     val isExportingPhotos by vm.isExportingPhotos.collectAsStateWithLifecycle()
 
     val totalPlanned = expenses.sumOf { it.planned }
-    val totalActual = records.sumOf { it.amount }
+    val totalActual = records.filter { it.category != com.example.mytrip.data.db.entities.ExpenseCategory.ADVANCE }.sumOf { it.amount }
     val totalKm = activitiesMap.values.flatten().sumOf { it.distanceKm }
     val topNotes = notes.filter { it.rating >= 4 }.sortedByDescending { it.rating }.take(6)
     val avgRating = if (notes.isNotEmpty()) notes.map { it.rating }.average() else 0.0
@@ -211,6 +212,23 @@ fun SummaryScreen(navController: NavController, tripId: Long) {
                 }
             }
 
+            // ── Giao dịch chuyển tiền ─────────────────────────────────
+            if (transfers.isNotEmpty()) {
+                item { SectionHeader("💸 Giao dịch chuyển tiền") }
+                items(transfers) { transfer ->
+                    GlassmorphismCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+                        Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Rounded.ArrowForward, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text("${transfer.from} ➡️ ${transfer.to}", fontWeight = FontWeight.Bold)
+                            }
+                            Text(MoneyUtils.formatShort(transfer.amount), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+
             // ── Ảnh nổi bật ───────────────────────────────────────────
             if (topNotes.isNotEmpty()) {
                 item { SectionHeader("📷 Kỷ niệm nổi bật") }
@@ -244,20 +262,13 @@ fun SummaryScreen(navController: NavController, tripId: Long) {
 
                     MyTripPrimaryButton(
                         onClick = {
-                            vm.exportPhotos(ctx) { count ->
-                                android.widget.Toast.makeText(ctx, "Đã lưu $count ảnh vào thư viện", android.widget.Toast.LENGTH_LONG).show()
-                            }
+                            navController.navigate(com.example.mytrip.navigation.Screen.PhotoExport.createRoute(tripId))
                         },
-                        modifier = Modifier.fillMaxWidth().height(52.dp),
-                        enabled = !isExportingPhotos
+                        modifier = Modifier.fillMaxWidth().height(52.dp)
                     ) {
-                        if (isExportingPhotos) {
-                            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White)
-                        } else {
-                            Icon(Icons.Rounded.SaveAlt, contentDescription = null, modifier = Modifier.size(24.dp))
-                        }
+                        Icon(Icons.Rounded.SaveAlt, contentDescription = null, modifier = Modifier.size(24.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text(if (isExportingPhotos) "Đang lưu ảnh..." else "Lưu toàn bộ ảnh về máy", fontWeight = FontWeight.Bold)
+                        Text("Tải ảnh về máy", fontWeight = FontWeight.Bold)
                     }
                 }
             }

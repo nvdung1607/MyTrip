@@ -277,6 +277,7 @@ fun AllNotesScreen(
         NoteDetailDialog(
             note = note,
             dayNumber = noteDay?.dayNumber,
+            tripName = trip?.name ?: "",
             onDismiss = { expandedNote = null }
         )
     }

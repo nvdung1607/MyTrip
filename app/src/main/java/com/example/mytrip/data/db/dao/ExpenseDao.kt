@@ -51,22 +51,22 @@ interface ExpenseDao {
     @Query("DELETE FROM expense_records WHERE noteId = :noteId")
     suspend fun deleteRecordByNoteId(noteId: Long)
 
-    @Query("SELECT SUM(amount) FROM expense_records WHERE tripId = :tripId")
+    @Query("SELECT SUM(amount) FROM expense_records WHERE tripId = :tripId AND category != 'ADVANCE'")
     fun getTotalActual(tripId: Long): Flow<Long?>
 
     @Query("SELECT SUM(planned) FROM expenses WHERE tripId = :tripId")
     fun getTotalPlanned(tripId: Long): Flow<Long?>
 
-    @Query("SELECT SUM(amount) FROM expense_records WHERE tripId = :tripId")
+    @Query("SELECT SUM(amount) FROM expense_records WHERE tripId = :tripId AND category != 'ADVANCE'")
     suspend fun getTotalActualOnce(tripId: Long): Long?
 
     @Query("SELECT SUM(planned) FROM expenses WHERE tripId = :tripId")
     suspend fun getTotalPlannedOnce(tripId: Long): Long?
 
-    @Query("SELECT SUM(amount) FROM expense_records WHERE tripId = :tripId AND dayId = :dayId")
+    @Query("SELECT SUM(amount) FROM expense_records WHERE tripId = :tripId AND dayId = :dayId AND category != 'ADVANCE'")
     suspend fun getTodayActualOnce(tripId: Long, dayId: Long): Long?
 
-    @Query("SELECT SUM(amount) FROM expense_records WHERE tripId = :tripId AND dayId = :dayId")
+    @Query("SELECT SUM(amount) FROM expense_records WHERE tripId = :tripId AND dayId = :dayId AND category != 'ADVANCE'")
     suspend fun getDayActualOnce(tripId: Long, dayId: Long): Long?
 }
 

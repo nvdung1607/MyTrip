@@ -1,4 +1,4 @@
-﻿package com.example.mytrip.ui.screens.today
+package com.example.mytrip.ui.screens.today
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
@@ -243,6 +243,7 @@ fun TodayScreen(
         NoteDetailDialog(
             note = note,
             dayNumber = todayDay?.dayNumber,
+            tripName = trip?.name ?: "",
             onDismiss = { selectedNoteForDetail = null }
         )
     }

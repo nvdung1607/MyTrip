@@ -12,7 +12,8 @@ enum class NoteTag(val label: String, val icon: String) {
     SHOP("Mua sắm", "🛍️"),
     TRANSPORT("Di chuyển", "🚗"),
     PERSON("Gặp gỡ", "👤"),
-    OTHER("Khác", "📌")
+    OTHER("Khác", "📌"),
+    ADVANCE("Ứng tiền", "💳")
 }
 
 @Entity(
@@ -46,5 +47,8 @@ data class Note(
 
     // GPS (auto-fill)
     val gpsLat: Double? = null,
-    val gpsLng: Double? = null
+    val gpsLng: Double? = null,
+
+    // Advance payment
+    val advancedTo: String? = null
 )

@@ -211,6 +211,7 @@ class TripRepository(
         NoteTag.SHOP -> ExpenseCategory.GIFT
         NoteTag.TRANSPORT -> ExpenseCategory.TRANSPORT
         NoteTag.PERSON -> ExpenseCategory.MISC
+        NoteTag.ADVANCE -> ExpenseCategory.ADVANCE
         NoteTag.OTHER -> ExpenseCategory.MISC
     }
 
@@ -341,16 +342,16 @@ class TripRepository(
         return tripId
     }
 
-    suspend fun importSeedTrip(overrideType: TripType? = null): Long {
+    suspend fun importSeedTrip(overrideType: TripType? = null, isTemplate: Boolean = false): Long {
         // Clear old notes & images if any (simplified: just clear all seed trips)
         // Usually, the easiest way is to let the new trip have its own ID.
         // We will insert the seed trip as a NEW trip.
         val todayMs = DateUtils.todayMillis()
         val seedTrip = com.example.mytrip.data.seed.TripSeedData.trip.copy(
             id = 0,
-            name = "Hành trình Xuyên Việt",
-            startDate = todayMs,
-            endDate = todayMs + 29 * 86_400_000L,
+            name = if (isTemplate) "Hành trình Xuyên Việt (Mẫu)" else "Hành trình Xuyên Việt",
+            startDate = if (isTemplate) 0L else todayMs,
+            endDate = if (isTemplate) (29 * 86_400_000L) else (todayMs + 29 * 86_400_000L),
             type = overrideType ?: com.example.mytrip.data.seed.TripSeedData.trip.type,
             themeColor = com.example.mytrip.ui.theme.TripThemeColors.getRandomColor()
         )
@@ -382,7 +383,7 @@ class TripRepository(
             clusterDao.insertCluster(Cluster(tripId = tripId, name = name, orderIndex = idx))
         }
         
-        var currentDayDate = DateUtils.todayMillis()
+        var currentDayDate = if (isTemplate) 0L else DateUtils.todayMillis()
         for (daySeed in seedDays) {
             val clusterId = when (daySeed.dayNumber) {
                 in 1..3  -> clusterIds[0]   // Bắc Trung Bộ
@@ -419,7 +420,9 @@ class TripRepository(
             }
             activityDao.insertActivities(activities)
             
-            currentDayDate += 86_400_000L
+            if (!isTemplate) {
+                currentDayDate += 86_400_000L
+            }
         }
         refreshWidget()
         return tripId

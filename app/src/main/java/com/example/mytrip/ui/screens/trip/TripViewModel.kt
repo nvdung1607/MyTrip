@@ -164,6 +164,21 @@ class TripViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /** Import sample trip as template (no dates) */
+    fun importSampleTemplateTrip() {
+        viewModelScope.launch {
+            _uiState.value = TripUiState.Loading
+            try {
+                val tripId = repository.importSeedTrip(isTemplate = true)
+                _importedTripId.value = tripId
+                _uiState.value = TripUiState.Success
+            } catch (e: Exception) {
+                _importError.value = "Lỗi lưu dữ liệu mẫu: ${e.message}"
+                _uiState.value = TripUiState.Success
+            }
+        }
+    }
+
     /** Save the template Excel to Downloads folder using ExcelUtils */
     fun downloadTemplateExcel(context: Context): String? {
         return try {

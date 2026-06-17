@@ -413,8 +413,13 @@ private fun TripDetailContent(
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                         )
                     }
+                    val dateText = if (trip.startDate == 0L) {
+                        "Chưa xác định ngày"
+                    } else {
+                        "📅 ${DateUtils.formatDate(trip.startDate)} – ${DateUtils.formatDate(trip.endDate)}"
+                    }
                     Text(
-                        text = "📅 ${DateUtils.formatDate(trip.startDate)} – ${DateUtils.formatDate(trip.endDate)}",
+                        text = dateText,
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.White.copy(alpha = 0.9f)
                     )

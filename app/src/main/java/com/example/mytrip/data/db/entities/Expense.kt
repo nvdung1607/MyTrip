@@ -11,7 +11,8 @@ enum class ExpenseCategory(val label: String, val icon: String) {
     TRANSPORT("Di chuyển", "⛽"),
     TICKET("Vé tham quan", "🎟️"),
     GIFT("Quà cáp / Mua sắm", "🛍️"),
-    MISC("Phát sinh", "💸")
+    MISC("Phát sinh", "💸"),
+    ADVANCE("Ứng tiền", "💳")
 }
 
 @Entity(
@@ -54,5 +55,6 @@ data class ExpenseRecord(
     val paidBy: String,                // Tên người trả
     val description: String = "",
     val timestamp: Long = System.currentTimeMillis(),
-    val noteId: Long? = null
+    val noteId: Long? = null,
+    val advancedTo: String? = null
 )

@@ -427,8 +427,13 @@ fun TripCard(
                             tint = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.width(4.dp))
+                        val dateText = if (trip.startDate == 0L) {
+                            "Chưa xác định ngày"
+                        } else {
+                            "${DateUtils.formatDate(trip.startDate)} → ${DateUtils.formatDate(trip.endDate)}"
+                        }
                         Text(
-                            text = "${DateUtils.formatDate(trip.startDate)} → ${DateUtils.formatDate(trip.endDate)}",
+                            text = dateText,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

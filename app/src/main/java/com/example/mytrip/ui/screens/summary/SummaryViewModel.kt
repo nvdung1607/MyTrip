@@ -70,13 +70,18 @@ class SummaryViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    private val _transfers = MutableStateFlow<List<MoneyUtils.Transfer>>(emptyList())
+    val transfers: StateFlow<List<MoneyUtils.Transfer>> = _transfers.asStateFlow()
+
     private fun computeBalances() {
         val t = _trip.value ?: return
         val recs = _records.value
         val names = t.memberNames.trim('[', ']')
             .split(",").map { it.trim().trim('"') }.filter { it.isNotBlank() }
             .ifEmpty { listOf("Tôi") }
-        _memberBalances.value = MoneyUtils.splitExpenses(recs.map { it.paidBy to it.amount }, t.numPeople, names)
+        val result = MoneyUtils.splitExpenses(recs, t.numPeople, names)
+        _memberBalances.value = result.first
+        _transfers.value = result.second
     }
 
     fun exportToExcel(context: Context) {

@@ -9,9 +9,20 @@ object DateUtils {
     private val timeFormat = SimpleDateFormat("HH:mm", Locale("vi", "VN"))
     private val fullFormat = SimpleDateFormat("EEEE, dd/MM/yyyy", Locale("vi", "VN"))
 
-    fun formatDate(millis: Long): String = dateFormat.format(Date(millis))
-    fun formatDayOfWeek(millis: Long): String = dayOfWeekFormat.format(Date(millis)).replaceFirstChar { it.uppercase() }
-    fun formatFull(millis: Long): String = fullFormat.format(Date(millis)).replaceFirstChar { it.uppercase() }
+    fun formatDate(millis: Long): String {
+        if (millis == 0L) return "Chưa xác định"
+        return dateFormat.format(Date(millis))
+    }
+    
+    fun formatDayOfWeek(millis: Long): String {
+        if (millis == 0L) return "---"
+        return dayOfWeekFormat.format(Date(millis)).replaceFirstChar { it.uppercase() }
+    }
+    
+    fun formatFull(millis: Long): String {
+        if (millis == 0L) return "Chưa xác định"
+        return fullFormat.format(Date(millis)).replaceFirstChar { it.uppercase() }
+    }
 
     fun todayMillis(): Long {
         val cal = Calendar.getInstance()

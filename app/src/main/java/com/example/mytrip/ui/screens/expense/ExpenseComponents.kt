@@ -1,6 +1,7 @@
-﻿package com.example.mytrip.ui.screens.expense
+package com.example.mytrip.ui.screens.expense
 
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -145,6 +146,7 @@ fun BudgetTab(
 fun ActualTab(
     records: List<ExpenseRecord>,
     memberBalances: Map<String, Long>,
+    transfers: List<MoneyUtils.Transfer>,
     memberNames: List<String>,
     isEditable: Boolean,
     onDeleteRecord: (ExpenseRecord) -> Unit,
@@ -175,8 +177,13 @@ fun ActualTab(
                                 color = MaterialTheme.colorScheme.secondaryContainer,
                                 modifier = Modifier.padding(top = 4.dp)
                             ) {
+                                val text = if (rec.category == ExpenseCategory.ADVANCE && !rec.advancedTo.isNullOrBlank()) {
+                                    "${rec.paidBy} ➡️ ${rec.advancedTo}"
+                                } else {
+                                    rec.paidBy
+                                }
                                 Text(
-                                    text = rec.paidBy,
+                                    text = text,
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSecondaryContainer
@@ -222,6 +229,25 @@ fun ActualTab(
                 }
             }
         }
+
+        if (transfers.isNotEmpty()) {
+            item { Spacer(Modifier.height(16.dp)) }
+            item {
+                Text("💸 Giao dịch chuyển tiền", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            }
+            items(transfers) { transfer ->
+                GlassmorphismCard(modifier = Modifier.fillMaxWidth()) {
+                    Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Rounded.ArrowForward, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text("${transfer.from} ➡️ ${transfer.to}", fontWeight = FontWeight.Bold)
+                        }
+                        Text(MoneyUtils.formatShort(transfer.amount), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
     }
 
     deleteTarget?.let { rec ->
@@ -242,6 +268,7 @@ fun AddExpenseRecordSheet(
     initialCategory: ExpenseCategory = ExpenseCategory.FOOD,
     initialAmount: String = "",
     initialPaidBy: String = "",
+    initialAdvancedTo: String = "",
     initialDescription: String = "",
     memberNames: List<String>,
     onDismiss: () -> Unit,
@@ -250,6 +277,7 @@ fun AddExpenseRecordSheet(
     var category by remember { mutableStateOf(initialCategory) }
     var amountInput by remember { mutableStateOf(initialAmount) }
     var paidBy by remember { mutableStateOf(initialPaidBy.ifBlank { memberNames.firstOrNull() ?: "Tôi" }) }
+    var advancedTo by remember { mutableStateOf(initialAdvancedTo) }
     var description by remember { mutableStateOf(initialDescription) }
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
@@ -310,6 +338,21 @@ fun AddExpenseRecordSheet(
                 }
             }
 
+            AnimatedVisibility(visible = category == ExpenseCategory.ADVANCE) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Người nhận ứng", style = MaterialTheme.typography.labelLarge)
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(memberNames) { m ->
+                            MyTripChip(
+                                text = m,
+                                selected = advancedTo == m,
+                                onClick = { advancedTo = m }
+                            )
+                        }
+                    }
+                }
+            }
+
             MyTripTextField(
                 value = description,
                 onValueChange = { description = it },
@@ -323,7 +366,9 @@ fun AddExpenseRecordSheet(
                     onSave(ExpenseRecord(
                         tripId = 0L, category = category,
                         amount = MoneyUtils.inputToVnd(MoneyUtils.parseInput(amountInput)),
-                        paidBy = paidBy, description = description,
+                        paidBy = paidBy, 
+                        advancedTo = if (category == ExpenseCategory.ADVANCE) advancedTo else null,
+                        description = description,
                         timestamp = System.currentTimeMillis()
                     ))
                 },

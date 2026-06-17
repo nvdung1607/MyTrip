@@ -36,6 +36,9 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
     private val _memberBalances = MutableStateFlow<Map<String, Long>>(emptyMap())
     val memberBalances: StateFlow<Map<String, Long>> = _memberBalances.asStateFlow()
 
+    private val _transfers = MutableStateFlow<List<MoneyUtils.Transfer>>(emptyList())
+    val transfers: StateFlow<List<MoneyUtils.Transfer>> = _transfers.asStateFlow()
+
     private var tripId = 0L
 
     private var loadJob: kotlinx.coroutines.Job? = null
@@ -59,7 +62,7 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
             launch {
                 repository.getExpenseRecords(id).collect { list ->
                     _records.value = list
-                    _totalActual.value = list.sumOf { it.amount }
+                    _totalActual.value = list.filter { it.category != ExpenseCategory.ADVANCE }.sumOf { it.amount }
                     computeBalances()
                 }
             }
@@ -103,8 +106,9 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
         } catch (_: Exception) {
             listOf("Tôi")
         }
-        val pairs = recs.map { it.paidBy to it.amount }
-        _memberBalances.value = MoneyUtils.splitExpenses(pairs, t.numPeople, names)
+        val result = MoneyUtils.splitExpenses(recs, t.numPeople, names)
+        _memberBalances.value = result.first
+        _transfers.value = result.second
     }
 
 

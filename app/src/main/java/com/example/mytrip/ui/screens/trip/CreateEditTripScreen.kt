@@ -1,4 +1,4 @@
-﻿package com.example.mytrip.ui.screens.trip
+package com.example.mytrip.ui.screens.trip
 
 import android.app.DatePickerDialog
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -20,6 +20,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.CalendarToday
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Download
@@ -316,14 +317,25 @@ fun CreateEditTripScreen(
 
             // ── MODE SELECTOR (only in Create mode) ──────────────────────────
             if (!isEditMode) {
-                // File import toggle
-                MyTripSecondaryButton(
-                    onClick = { useFileImport = !useFileImport },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(if (useFileImport) Icons.Rounded.Remove else Icons.Rounded.Add, null)
-                    Spacer(Modifier.width(8.dp))
-                    Text("Nhập từ file Excel", fontWeight = FontWeight.Bold)
+                // Top Action Buttons
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    MyTripSecondaryButton(
+                        onClick = { useFileImport = !useFileImport },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(if (useFileImport) Icons.Rounded.Remove else Icons.Rounded.Add, null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Nhập từ Excel", fontWeight = FontWeight.Bold)
+                    }
+                    
+                    MyTripSecondaryButton(
+                        onClick = { viewModel.importSampleTemplateTrip() },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(Icons.Rounded.AutoAwesome, null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Lịch trình mẫu", fontWeight = FontWeight.Bold)
+                    }
                 }
 
                 // ── FILE IMPORT PANEL ─────────────────────────────────────────

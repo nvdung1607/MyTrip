@@ -46,27 +46,79 @@ object MoneyUtils {
     /** Nút shortcut amounts (đơn vị k) */
     val SHORTCUTS = listOf(0L, 50L, 100L, 200L, 300L, 500L, 1_000L)
 
+    data class Transfer(val from: String, val to: String, val amount: Long)
+
     /**
-     * Tính toán chia đầu người và số dư mỗi người.
-     * returns: Map<tên người, số tiền cần hoàn / cần trả thêm>
-     * Dương = được hoàn lại, Âm = cần trả thêm
+     * Tính toán chia đầu người và số dư mỗi người, kèm theo hướng dẫn chuyển tiền chi tiết.
+     * returns: Pair<Map<tên người, số dư>, List<Transfer>>
+     * Số dư dương = được hoàn lại, Âm = cần trả thêm
      */
     fun splitExpenses(
-        records: List<Pair<String, Long>>, // (người trả, số tiền VND)
+        records: List<com.example.mytrip.data.db.entities.ExpenseRecord>,
         numPeople: Int,
         memberNames: List<String>
-    ): Map<String, Long> {
-        val totalActual = records.sumOf { it.second }
-        val perPerson = totalActual / numPeople
+    ): Pair<Map<String, Long>, List<Transfer>> {
+        val normalRecords = records.filter { it.category != com.example.mytrip.data.db.entities.ExpenseCategory.ADVANCE }
+        val advanceRecords = records.filter { it.category == com.example.mytrip.data.db.entities.ExpenseCategory.ADVANCE }
 
-        // Tổng mỗi người đã trả
-        val paid = mutableMapOf<String, Long>()
-        memberNames.forEach { paid[it] = 0L }
-        records.forEach { (name, amount) ->
-            paid[name] = (paid[name] ?: 0L) + amount
+        val totalActual = normalRecords.sumOf { it.amount }
+        val perPerson = if (numPeople > 0) totalActual / numPeople else 0L
+
+        // Khởi tạo balance = 0
+        val balance = mutableMapOf<String, Long>()
+        memberNames.forEach { balance[it] = 0L }
+
+        // Chi phí chung: Người trả được cộng (+)
+        normalRecords.forEach { rec ->
+            balance[rec.paidBy] = (balance[rec.paidBy] ?: 0L) + rec.amount
         }
 
-        // Số dư = đã trả - phần phải đóng
-        return paid.mapValues { (_, totalPaid) -> totalPaid - perPerson }
+        // Trừ đi phần mỗi người phải đóng (-)
+        memberNames.forEach {
+            balance[it] = (balance[it] ?: 0L) - perPerson
+        }
+
+        // Xử lý ứng tiền: Người ứng (paidBy) được cộng, người nhận (advancedTo) bị trừ
+        advanceRecords.forEach { rec ->
+            val from = rec.paidBy
+            val to = rec.advancedTo
+            if (to != null && to.isNotBlank()) {
+                balance[from] = (balance[from] ?: 0L) + rec.amount
+                balance[to] = (balance[to] ?: 0L) - rec.amount
+            }
+        }
+
+        // Tính toán các giao dịch cần thiết để thanh toán
+        val debtors = balance.filterValues { it < 0 }.mapValues { -it.value }.toMutableMap()
+        val creditors = balance.filterValues { it > 0 }.toMutableMap()
+        val transfers = mutableListOf<Transfer>()
+
+        val debtorKeys = debtors.keys.toMutableList()
+        val creditorKeys = creditors.keys.toMutableList()
+
+        var i = 0
+        var j = 0
+
+        while (i < debtorKeys.size && j < creditorKeys.size) {
+            val debtor = debtorKeys[i]
+            val creditor = creditorKeys[j]
+
+            val debt = debtors[debtor] ?: 0L
+            val credit = creditors[creditor] ?: 0L
+
+            if (debt == 0L) { i++; continue }
+            if (credit == 0L) { j++; continue }
+
+            val amount = minOf(debt, credit)
+            transfers.add(Transfer(from = debtor, to = creditor, amount = amount))
+
+            debtors[debtor] = debt - amount
+            creditors[creditor] = credit - amount
+
+            if (debtors[debtor] == 0L) i++
+            if (creditors[creditor] == 0L) j++
+        }
+
+        return Pair(balance, transfers)
     }
 }

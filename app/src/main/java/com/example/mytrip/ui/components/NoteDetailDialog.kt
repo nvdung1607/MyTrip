@@ -1,4 +1,4 @@
-﻿package com.example.mytrip.ui.components
+package com.example.mytrip.ui.components
 
 import android.content.Intent
 import android.net.Uri
@@ -17,6 +17,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,15 +37,25 @@ import com.example.mytrip.data.db.entities.Note
 import com.example.mytrip.util.DateUtils
 import com.example.mytrip.util.MoneyUtils
 import java.io.File
+import androidx.compose.ui.draw.scale
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NoteDetailDialog(
     note: Note,
     dayNumber: Int?,
+    tripName: String,
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    var isExporting by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    var includeWatermark by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(true) }
+    val pagerState = rememberPagerState(pageCount = { 
+        if (note.photoPaths.isNotEmpty()) note.photoPaths.size 
+        else if (note.photoPath != null) 1 else 0 
+    })
     val images = if (note.photoPaths.isNotEmpty()) {
         note.photoPaths
     } else if (note.photoPath != null) {
@@ -118,7 +130,6 @@ fun NoteDetailDialog(
                 ) {
                     // Photos carousel/pager
                     if (images.isNotEmpty()) {
-                        val pagerState = rememberPagerState(pageCount = { images.size })
                         Column(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalAlignment = Alignment.CenterHorizontally
@@ -408,12 +419,54 @@ fun NoteDetailDialog(
                     modifier = Modifier.fillMaxWidth(),
                     tonalElevation = 1.dp
                 ) {
-                    Row(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(16.dp),
-                        horizontalArrangement = Arrangement.End
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
+                        if (images.isNotEmpty()) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text("Chèn thông tin chuyến đi", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                                Switch(
+                                    checked = includeWatermark,
+                                    onCheckedChange = { includeWatermark = it },
+                                    modifier = Modifier.scale(0.8f)
+                                )
+                            }
+                            OutlinedButton(
+                                onClick = {
+                                    scope.launch {
+                                        isExporting = true
+                                        val count = com.example.mytrip.util.PhotoExportUtils.exportSelectedPhotos(
+                                            context, tripName, listOf(Pair(note, images[pagerState.currentPage])), includeWatermark
+                                        )
+                                        isExporting = false
+                                        if (count > 0) {
+                                            android.widget.Toast.makeText(context, "Đã lưu ảnh", android.widget.Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth().height(48.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                enabled = !isExporting
+                            ) {
+                                if (isExporting) {
+                                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("Đang lưu...")
+                                } else {
+                                    Icon(Icons.Rounded.SaveAlt, null, modifier = Modifier.size(20.dp))
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("Lưu ảnh đang xem", fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                        
                         Button(
                             onClick = onDismiss,
                             modifier = Modifier

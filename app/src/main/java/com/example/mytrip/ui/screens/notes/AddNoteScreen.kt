@@ -63,6 +63,9 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executors
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -82,6 +85,10 @@ fun AddNoteScreen(
 
     val trip by tripVm.trip.collectAsStateWithLifecycle()
     
+    LaunchedEffect(tripId) {
+        tripVm.loadTrip(tripId)
+    }
+    
     // Watch for saved ID
     val savedId by noteVm.savedNoteId.collectAsStateWithLifecycle()
     LaunchedEffect(savedId) {
@@ -100,7 +107,7 @@ fun AddNoteScreen(
     }
 
     val cameraPermission = rememberPermissionState(Manifest.permission.CAMERA)
-    val locationPermission = rememberPermissionState(Manifest.permission.ACCESS_COARSE_LOCATION)
+    val locationPermission = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
 
     TripThemeProvider(trip = trip) {
     // State
@@ -110,6 +117,7 @@ fun AddNoteScreen(
     var selectedTag by remember { mutableStateOf(NoteTag.OTHER) }
     var costInput by remember { mutableStateOf("0") }
     var paidBy by remember { mutableStateOf("") }
+    var advancedTo by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var comment by remember { mutableStateOf("") }
     var showOptional by remember { mutableStateOf(false) }
@@ -148,6 +156,7 @@ fun AddNoteScreen(
                 selectedTag = note.tag
                 costInput = note.cost.toString()
                 paidBy = note.paidBy
+                advancedTo = note.advancedTo ?: ""
                 name = note.name
                 comment = note.comment
                 gpsLat = note.gpsLat
@@ -159,14 +168,31 @@ fun AddNoteScreen(
     }
 
     // Auto-get GPS
-    LaunchedEffect(Unit) {
+    LaunchedEffect(locationPermission.status.isGranted) {
         if (locationPermission.status.isGranted) {
             try {
-                val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-                val loc = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-                    ?: lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
-                loc?.let { gpsLat = it.latitude; gpsLng = it.longitude }
-            } catch (_: Exception) {}
+                val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+                val cancellationTokenSource = CancellationTokenSource()
+                
+                fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cancellationTokenSource.token)
+                    .addOnSuccessListener { loc ->
+                        if (loc != null) {
+                            gpsLat = loc.latitude
+                            gpsLng = loc.longitude
+                        } else {
+                            // Fallback to LocationManager if FusedLocationProvider returns null
+                            try {
+                                val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+                                val fallbackLoc = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                                    ?: lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+                                fallbackLoc?.let { 
+                                    gpsLat = it.latitude
+                                    gpsLng = it.longitude 
+                                }
+                            } catch (_: Exception) {}
+                        }
+                    }
+            } catch (_: SecurityException) {}
         } else {
             locationPermission.launchPermissionRequest()
         }
@@ -241,6 +267,7 @@ fun AddNoteScreen(
                                 tag = selectedTag,
                                 cost = cost,
                                 paidBy = paidBy,
+                                advancedTo = if (selectedTag == NoteTag.ADVANCE) advancedTo else null,
                                 name = name,
                                 comment = comment,
                                 gpsLat = gpsLat,
@@ -480,6 +507,26 @@ fun AddNoteScreen(
                     }
                 }
 
+                // 👤 Người nhận ứng (nếu là ứng tiền)
+                AnimatedVisibility(visible = selectedTag == NoteTag.ADVANCE) {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("Người nhận ứng *", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            memberNames.forEach { member ->
+                                val isSelected = advancedTo == member
+                                MyTripChip(
+                                    text = member,
+                                    selected = isSelected,
+                                    onClick = { advancedTo = member }
+                                )
+                            }
+                        }
+                    }
+                }
+
                 // Optional fields
                 MyTripSecondaryButton(
                     onClick = { showOptional = !showOptional },
@@ -523,13 +570,19 @@ private fun CameraScreen(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val executor = remember { Executors.newSingleThreadExecutor() }
+    
     var imageCapture by remember { mutableStateOf<ImageCapture?>(null) }
+    var camera by remember { mutableStateOf<androidx.camera.core.Camera?>(null) }
+    var lensFacing by remember { mutableIntStateOf(CameraSelector.LENS_FACING_BACK) }
 
     Box(Modifier.fillMaxSize().background(Color.Black)) {
         AndroidView(
             factory = { ctx ->
                 val previewView = PreviewView(ctx)
-                val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
+                previewView
+            },
+            update = { previewView ->
+                val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
                 cameraProviderFuture.addListener({
                     val provider = cameraProviderFuture.get()
                     val preview = Preview.Builder().build().also {
@@ -539,22 +592,68 @@ private fun CameraScreen(
                         .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
                         .build()
                     imageCapture = capture
+                    
+                    val cameraSelector = CameraSelector.Builder().requireLensFacing(lensFacing).build()
+                    
                     try {
                         provider.unbindAll()
-                        provider.bindToLifecycle(lifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, preview, capture)
+                        camera = provider.bindToLifecycle(lifecycleOwner, cameraSelector, preview, capture)
                     } catch (_: Exception) {}
-                }, ContextCompat.getMainExecutor(ctx))
-                previewView
+                }, ContextCompat.getMainExecutor(context))
             },
             modifier = Modifier.fillMaxSize()
         )
 
-        // Skip button top-right
-        MyTripSecondaryButton(
-            onClick = onSkip,
-            modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
+        // Top Controls: Skip & Switch Camera
+        Row(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Bỏ qua ảnh", color = Color.White, fontWeight = FontWeight.Bold)
+            IconButton(
+                onClick = {
+                    lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) 
+                        CameraSelector.LENS_FACING_FRONT else CameraSelector.LENS_FACING_BACK
+                },
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+            ) {
+                Icon(Icons.Rounded.FlipCameraIos, contentDescription = "Đổi camera", tint = Color.White)
+            }
+
+            MyTripSecondaryButton(onClick = onSkip) {
+                Text("Bỏ qua ảnh", color = Color.White, fontWeight = FontWeight.Bold)
+            }
+        }
+
+        // Zoom Controls
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 140.dp)
+                .background(Color.Black.copy(alpha = 0.5f), RoundedCornerShape(24.dp))
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            val zoomOptions = listOf(0.5f, 1f, 2f)
+            zoomOptions.forEach { ratio ->
+                TextButton(
+                    onClick = {
+                        val zoomState = camera?.cameraInfo?.zoomState?.value
+                        if (zoomState != null) {
+                            val clampedRatio = ratio.coerceIn(zoomState.minZoomRatio, zoomState.maxZoomRatio)
+                            camera?.cameraControl?.setZoomRatio(clampedRatio)
+                        }
+                    }
+                ) {
+                    val label = if (ratio == 0.5f) "0.5x" else "${ratio.toInt()}x"
+                    Text(label, color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            }
         }
 
         // Shutter button
@@ -563,7 +662,7 @@ private fun CameraScreen(
                 onClick = {
                     val ic = imageCapture ?: return@IconButton
                     val dir = context.getExternalFilesDir("Pictures")
-                    val file = File(dir, "NOTE_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())}.jpg")
+                    val file = File(dir, "NOTE_${java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.US).format(java.util.Date())}.jpg")
                     val opts = ImageCapture.OutputFileOptions.Builder(file).build()
                     ic.takePicture(opts, executor, object : ImageCapture.OnImageSavedCallback {
                         override fun onImageSaved(results: ImageCapture.OutputFileResults) { onPhotoCaptured(file.absolutePath) }

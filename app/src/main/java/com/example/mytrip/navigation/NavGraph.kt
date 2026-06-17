@@ -54,6 +54,9 @@ sealed class Screen(val route: String) {
     object AllNotes : Screen("all_notes/{tripId}") {
         fun createRoute(tripId: Long) = "all_notes/$tripId"
     }
+    object PhotoExport : Screen("photo_export/{tripId}") {
+        fun createRoute(tripId: Long) = "photo_export/$tripId"
+    }
 }
 
 @Composable
@@ -169,6 +172,14 @@ fun MyTripNavGraph(
         ) { backStack ->
             val tripId = backStack.arguments?.getLong("tripId") ?: return@composable
             AllNotesScreen(navController = navController, tripId = tripId)
+        }
+
+        composable(
+            route = Screen.PhotoExport.route,
+            arguments = listOf(navArgument("tripId") { type = NavType.LongType })
+        ) { backStack ->
+            val tripId = backStack.arguments?.getLong("tripId") ?: return@composable
+            com.example.mytrip.ui.screens.photoexport.PhotoExportScreen(navController = navController, tripId = tripId)
         }
     }
 }
