@@ -58,7 +58,14 @@ class PhotoExportViewModel(application: Application) : AndroidViewModel(applicat
                         val validPhotos = notePhotos.filter { File(it).exists() }
 
                         if (validPhotos.isNotEmpty()) {
-                            val day = note.dayId?.let { daysMap[it] } ?: continue
+                            val day = note.dayId?.let { daysMap[it] } 
+                                ?: com.example.mytrip.data.db.entities.Day(
+                                    id = 0L,
+                                    tripId = t.id,
+                                    dayNumber = 0,
+                                    date = note.timestamp,
+                                    title = "Chưa phân loại"
+                                )
                             groups.add(PhotoGroup(day, note, validPhotos))
                             allPhotoPaths.addAll(validPhotos)
                         }

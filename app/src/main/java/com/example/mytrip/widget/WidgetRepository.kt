@@ -24,8 +24,49 @@ class WidgetRepository(context: Context) {
      * Returns the current trip to show on the widget.
      * The widget intentionally shows only the trip that is actively ongoing.
      */
-    suspend fun getActiveTrip() =
-        tripDao.getTripsByStatusOnce(TripStatus.ONGOING).firstOrNull()
+    suspend fun getActiveTrip(): com.example.mytrip.data.db.entities.Trip? {
+        val now = System.currentTimeMillis()
+        val cal = Calendar.getInstance().apply { timeInMillis = now }
+        cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0)
+        cal.set(Calendar.SECOND, 0); cal.set(Calendar.MILLISECOND, 0)
+        val startOfToday = cal.timeInMillis
+
+        // 1. Auto-finish ONGOING trips if they are fully past
+        val ongoingTrips = tripDao.getTripsByStatusOnce(TripStatus.ONGOING)
+        for (trip in ongoingTrips) {
+             val tripEndOfDay = trip.endDate + 86_399_999L
+             if (now > tripEndOfDay) {
+                 tripDao.updateStatus(trip.id, TripStatus.DONE)
+             }
+        }
+
+        // 2. Check if there is currently an ONGOING trip
+        var active = tripDao.getTripsByStatusOnce(TripStatus.ONGOING).firstOrNull()
+
+        // 3. If no ONGOING trip, check if any PLANNING trip should be started
+        if (active == null) {
+            val planningTrips = tripDao.getTripsByStatusOnce(TripStatus.PLANNING)
+            for (trip in planningTrips) {
+                val tripEndOfDay = trip.endDate + 86_399_999L
+                if (startOfToday >= trip.startDate && now <= tripEndOfDay) {
+                    tripDao.updateStatusEnforcingSingleOngoing(trip.id, TripStatus.ONGOING)
+                    active = tripDao.getTripsByStatusOnce(TripStatus.ONGOING).firstOrNull()
+                    break // Only start the first one we find
+                } else if (now > tripEndOfDay) {
+                    tripDao.updateStatus(trip.id, TripStatus.DONE)
+                }
+            }
+        }
+
+        // 4. If STILL no ONGOING trip, return the closest upcoming PLANNING trip
+        if (active == null) {
+            active = tripDao.getTripsByStatusOnce(TripStatus.PLANNING)
+                .filter { it.startDate >= startOfToday } // only future/upcoming
+                .minByOrNull { it.startDate }
+        }
+
+        return active
+    }
 
     /** Today's [Day] for [tripId], or null if trip hasn't started or has ended. */
     suspend fun getTodayDay(tripId: Long): com.example.mytrip.data.db.entities.Day? {
@@ -63,11 +104,9 @@ class WidgetRepository(context: Context) {
         val todayDay  = if (trip.status == TripStatus.ONGOING) getTodayDay(trip.id) else null
         val currentDay = todayDay?.dayNumber ?: 0
 
-        // Days until trip starts (for PLANNING status)
-        val daysUntil = if (trip.status == TripStatus.PLANNING) {
-            val now = System.currentTimeMillis()
-            maxOf(0L, (trip.startDate - now) / 86_400_000L)
-        } else 0L
+        // Days until trip starts
+        val now = System.currentTimeMillis()
+        val daysUntil = maxOf(0L, (trip.startDate - now) / 86_400_000L)
 
         // ── Today's activities ────────────────────────────────────────
         val activities = if (todayDay != null) getTodayActivities(todayDay.id) else emptyList()

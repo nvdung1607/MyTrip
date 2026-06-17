@@ -58,6 +58,44 @@ class TripRepository(
         tripDao.updateStatusEnforcingSingleOngoing(id, status)
         refreshWidget()
     }
+
+    suspend fun autoUpdateTripStatuses() {
+        val now = System.currentTimeMillis()
+        val cal = java.util.Calendar.getInstance().apply { timeInMillis = now }
+        cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
+        cal.set(java.util.Calendar.MINUTE, 0)
+        cal.set(java.util.Calendar.SECOND, 0)
+        cal.set(java.util.Calendar.MILLISECOND, 0)
+        val startOfToday = cal.timeInMillis
+
+        // 1. Auto-finish ONGOING trips if they are fully past
+        val ongoingTrips = tripDao.getTripsByStatusOnce(TripStatus.ONGOING)
+        for (trip in ongoingTrips) {
+             val tripEndOfDay = trip.endDate + 86_399_999L
+             if (now > tripEndOfDay) {
+                 tripDao.updateStatus(trip.id, TripStatus.DONE)
+             }
+        }
+
+        // 2. Check if there is currently an ONGOING trip
+        var active = tripDao.getTripsByStatusOnce(TripStatus.ONGOING).firstOrNull()
+
+        // 3. If no ONGOING trip, check if any PLANNING trip should be started
+        if (active == null) {
+            val planningTrips = tripDao.getTripsByStatusOnce(TripStatus.PLANNING)
+            for (trip in planningTrips) {
+                val tripEndOfDay = trip.endDate + 86_399_999L
+                if (startOfToday >= trip.startDate && now <= tripEndOfDay) {
+                    tripDao.updateStatusEnforcingSingleOngoing(trip.id, TripStatus.ONGOING)
+                    active = tripDao.getTripsByStatusOnce(TripStatus.ONGOING).firstOrNull()
+                    break // Only start the first one we find
+                } else if (now > tripEndOfDay) {
+                    tripDao.updateStatus(trip.id, TripStatus.DONE)
+                }
+            }
+        }
+        refreshWidget()
+    }
         
     suspend fun updateTripStartDate(trip: Trip, newStartDate: Long, newStatus: TripStatus? = null) {
         val durationDays = if (trip.endDate >= trip.startDate && trip.startDate > 0) {

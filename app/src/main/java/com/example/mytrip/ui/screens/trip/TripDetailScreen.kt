@@ -72,7 +72,27 @@ fun TripDetailScreen(
             pendingStatusChange = newStatus
             showDatePicker = true
         } else {
-            viewModel.updateStatus(tripId, newStatus)
+            if (newStatus == TripStatus.ONGOING && trip != null) {
+                val now = System.currentTimeMillis()
+                val cal = java.util.Calendar.getInstance().apply { timeInMillis = now }
+                cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
+                cal.set(java.util.Calendar.MINUTE, 0)
+                cal.set(java.util.Calendar.SECOND, 0)
+                cal.set(java.util.Calendar.MILLISECOND, 0)
+                val startOfToday = cal.timeInMillis
+
+                if (trip!!.startDate > startOfToday) {
+                    android.widget.Toast.makeText(
+                        context,
+                        "Chưa đến ngày xuất phát! Nếu bạn xuất phát sớm, hãy cập nhật lại ngày bắt đầu.",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
+                } else {
+                    viewModel.updateStatus(tripId, newStatus)
+                }
+            } else {
+                viewModel.updateStatus(tripId, newStatus)
+            }
         }
     }
 

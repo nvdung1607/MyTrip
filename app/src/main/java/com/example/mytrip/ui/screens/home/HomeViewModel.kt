@@ -35,6 +35,12 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: TripRepository =
         (application as MyTripApplication).repository
 
+    init {
+        viewModelScope.launch {
+            repository.autoUpdateTripStatuses()
+        }
+    }
+
     // One-shot event: emitted after a sample trip is imported so UI can switch to 'Sắp đi'
     private val _sampleImportedEvent = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     val sampleImportedEvent: SharedFlow<Unit> = _sampleImportedEvent.asSharedFlow()

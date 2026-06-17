@@ -492,28 +492,34 @@ fun SmallWidget(state: MyTripWidgetState) {
 
         // ── Row 2: Badge ngày + tên ngày ─────────────────────────────────
         when {
-            state.tripStatus == TripStatus.ONGOING && state.currentDay > 0 -> {
-                val label = if (state.totalDays > 0)
-                    "Ngày ${state.currentDay}/${state.totalDays}"
-                else "Ngày ${state.currentDay}"
-                Row(
-                    modifier          = GlanceModifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.Vertical.CenterVertically
-                ) {
-                    DayBadge(label, accent, compact = true)
-                    if (state.todayTitle.isNotBlank()) {
-                        Spacer(GlanceModifier.width(6.dp))
-                        Text(
-                            state.todayTitle,
-                            style    = TextStyle(color = TextSecondary, fontSize = 9.sp),
-                            maxLines = 1,
-                            modifier = GlanceModifier.defaultWeight()
-                        )
+            state.tripStatus == TripStatus.ONGOING -> {
+                if (state.currentDay > 0) {
+                    val label = if (state.totalDays > 0)
+                        "Ngày ${state.currentDay}/${state.totalDays}"
+                    else "Ngày ${state.currentDay}"
+                    Row(
+                        modifier          = GlanceModifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.Vertical.CenterVertically
+                    ) {
+                        DayBadge(label, accent, compact = true)
+                        if (state.todayTitle.isNotBlank()) {
+                            Spacer(GlanceModifier.width(6.dp))
+                            Text(
+                                state.todayTitle,
+                                style    = TextStyle(color = TextSecondary, fontSize = 9.sp),
+                                maxLines = 1,
+                                modifier = GlanceModifier.defaultWeight()
+                            )
+                        }
                     }
-                }
-                if (state.totalDays > 0) {
-                    Spacer(GlanceModifier.height(4.dp))
-                    DayProgressBar(state.currentDay, state.totalDays, accent)
+                    if (state.totalDays > 0) {
+                        Spacer(GlanceModifier.height(4.dp))
+                        DayProgressBar(state.currentDay, state.totalDays, accent)
+                    }
+                } else if (state.daysUntilTrip > 0) {
+                    DayBadge("Bắt đầu sau ${state.daysUntilTrip} ngày", PlanningBg, compact = true)
+                } else {
+                    DayBadge("Đã kết thúc", DoneBg, compact = true)
                 }
             }
             state.tripStatus == TripStatus.PLANNING ->
@@ -608,16 +614,24 @@ fun MediumWidget(state: MyTripWidgetState) {
             )
             Spacer(GlanceModifier.height(8.dp))
             when {
-                state.tripStatus == TripStatus.ONGOING && state.currentDay > 0 -> {
-                    val label = if (state.totalDays > 0) "Ngày ${state.currentDay}/${state.totalDays}" else "Ngày ${state.currentDay}"
-                    DayBadge(label, accent, compact = false)
-                    if (state.todayTitle.isNotBlank()) {
-                        Spacer(GlanceModifier.height(6.dp))
-                        Text(state.todayTitle, style = TextStyle(color = TextSecondary, fontSize = 12.sp, textAlign = TextAlign.Center), maxLines = 2)
-                    }
-                    if (state.totalDays > 0) {
-                        Spacer(GlanceModifier.height(8.dp))
-                        DayProgressBar(state.currentDay, state.totalDays, accent)
+                state.tripStatus == TripStatus.ONGOING -> {
+                    if (state.currentDay > 0) {
+                        val label = if (state.totalDays > 0) "Ngày ${state.currentDay}/${state.totalDays}" else "Ngày ${state.currentDay}"
+                        DayBadge(label, accent, compact = false)
+                        if (state.todayTitle.isNotBlank()) {
+                            Spacer(GlanceModifier.height(6.dp))
+                            Text(state.todayTitle, style = TextStyle(color = TextSecondary, fontSize = 12.sp, textAlign = TextAlign.Center), maxLines = 2)
+                        }
+                        if (state.totalDays > 0) {
+                            Spacer(GlanceModifier.height(8.dp))
+                            DayProgressBar(state.currentDay, state.totalDays, accent)
+                        }
+                    } else if (state.daysUntilTrip > 0) {
+                        DayBadge("Sắp đi", PlanningBg, compact = false)
+                        Spacer(GlanceModifier.height(4.dp))
+                        Text("Còn ${state.daysUntilTrip} ngày", style = TextStyle(color = TextSecondary, fontSize = 11.sp))
+                    } else {
+                        DayBadge("Đã kết thúc", DoneBg, compact = false)
                     }
                 }
                 state.tripStatus == TripStatus.PLANNING ->
@@ -739,32 +753,40 @@ fun LargeWidget(state: MyTripWidgetState) {
 
         // ── Day counter + route title + progress (✔ clickable) ────────────────
         when {
-            state.tripStatus == TripStatus.ONGOING && state.currentDay > 0 -> {
-                Row(
-                    modifier          = GlanceModifier.fillMaxWidth().clickable(openApp),
-                    verticalAlignment = Alignment.Vertical.CenterVertically
-                ) {
-                    Box(
-                        modifier = GlanceModifier.cornerRadius(20.dp).background(accent)
-                            .padding(horizontal = 12.dp, vertical = 5.dp)
+            state.tripStatus == TripStatus.ONGOING -> {
+                if (state.currentDay > 0) {
+                    Row(
+                        modifier          = GlanceModifier.fillMaxWidth().clickable(openApp),
+                        verticalAlignment = Alignment.Vertical.CenterVertically
                     ) {
-                        Text(
-                            "Ngày ${state.currentDay}",
-                            style = TextStyle(color = TextOnDark, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                        )
-                    }
-                    Spacer(GlanceModifier.width(10.dp))
-                    Column(modifier = GlanceModifier.defaultWeight()) {
-                        if (state.totalDays > 0) {
-                            Text("/ ${state.totalDays} ngày", style = TextStyle(color = TextMuted, fontSize = 12.sp))
-                            Spacer(GlanceModifier.height(4.dp))
-                            DayProgressBar(state.currentDay, state.totalDays, accent)
+                        Box(
+                            modifier = GlanceModifier.cornerRadius(20.dp).background(accent)
+                                .padding(horizontal = 12.dp, vertical = 5.dp)
+                        ) {
+                            Text(
+                                "Ngày ${state.currentDay}",
+                                style = TextStyle(color = TextOnDark, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                            )
                         }
-                        if (state.todayTitle.isNotBlank()) {
-                            Spacer(GlanceModifier.height(3.dp))
-                            Text(state.todayTitle, style = TextStyle(color = TextSecondary, fontSize = 11.sp), maxLines = 1)
+                        Spacer(GlanceModifier.width(10.dp))
+                        Column(modifier = GlanceModifier.defaultWeight()) {
+                            if (state.totalDays > 0) {
+                                Text("/ ${state.totalDays} ngày", style = TextStyle(color = TextMuted, fontSize = 12.sp))
+                                Spacer(GlanceModifier.height(4.dp))
+                                DayProgressBar(state.currentDay, state.totalDays, accent)
+                            }
+                            if (state.todayTitle.isNotBlank()) {
+                                Spacer(GlanceModifier.height(3.dp))
+                                Text(state.todayTitle, style = TextStyle(color = TextSecondary, fontSize = 11.sp), maxLines = 1)
+                            }
                         }
                     }
+                } else if (state.daysUntilTrip > 0) {
+                    Box(modifier = GlanceModifier.clickable(openApp)) {
+                        DayBadge("Còn ${state.daysUntilTrip} ngày nữa", PlanningBg)
+                    }
+                } else {
+                    Text("Chuyến đi đã kết thúc", style = TextStyle(color = TextMuted, fontSize = 13.sp))
                 }
             }
             state.tripStatus == TripStatus.PLANNING ->
