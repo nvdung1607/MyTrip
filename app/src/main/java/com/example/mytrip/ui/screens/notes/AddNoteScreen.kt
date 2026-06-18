@@ -123,6 +123,7 @@ fun AddNoteScreen(
     var showOptional by remember { mutableStateOf(false) }
     var gpsLat by remember { mutableStateOf<Double?>(null) }
     var gpsLng by remember { mutableStateOf<Double?>(null) }
+    var timestamp by remember { mutableLongStateOf(System.currentTimeMillis()) }
 
     // Launcher chọn nhiều ảnh từ thư viện máy
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -161,6 +162,7 @@ fun AddNoteScreen(
                 comment = note.comment
                 gpsLat = note.gpsLat
                 gpsLng = note.gpsLng
+                timestamp = note.timestamp
                 if (comment.isNotBlank() || note.photoPaths.size > 1 || (note.gpsLat != null)) showOptional = true
                 isInitialized = true
             }
@@ -272,7 +274,7 @@ fun AddNoteScreen(
                                 comment = comment,
                                 gpsLat = gpsLat,
                                 gpsLng = gpsLng,
-                                timestamp = noteToEdit?.timestamp ?: System.currentTimeMillis()
+                                timestamp = timestamp
                             ))
                         },
                         modifier = Modifier.fillMaxWidth().height(52.dp),
@@ -408,6 +410,65 @@ fun AddNoteScreen(
                         leadingIcon = { Icon(Icons.Rounded.Place, null) },
                         singleLine = true
                     )
+                }
+
+                // 🕒 Thời gian
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Thời gian *", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        val dateStr = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale("vi", "VN")).format(java.util.Date(timestamp))
+                        val timeStr = java.text.SimpleDateFormat("HH:mm", java.util.Locale("vi", "VN")).format(java.util.Date(timestamp))
+
+                        // Nút chọn ngày
+                        OutlinedButton(
+                            onClick = {
+                                val cal = java.util.Calendar.getInstance().apply { timeInMillis = timestamp }
+                                android.app.DatePickerDialog(
+                                    context,
+                                    { _, year, month, dayOfMonth ->
+                                        cal.set(year, month, dayOfMonth)
+                                        timestamp = cal.timeInMillis
+                                    },
+                                    cal.get(java.util.Calendar.YEAR),
+                                    cal.get(java.util.Calendar.MONTH),
+                                    cal.get(java.util.Calendar.DAY_OF_MONTH)
+                                ).show()
+                            },
+                            modifier = Modifier.weight(1f).height(56.dp),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(Icons.Rounded.CalendarToday, null)
+                            Spacer(Modifier.width(8.dp))
+                            Text(dateStr, color = MaterialTheme.colorScheme.onSurface)
+                        }
+
+                        // Nút chọn giờ
+                        OutlinedButton(
+                            onClick = {
+                                val cal = java.util.Calendar.getInstance().apply { timeInMillis = timestamp }
+                                android.app.TimePickerDialog(
+                                    context,
+                                    { _, hourOfDay, minute ->
+                                        cal.set(java.util.Calendar.HOUR_OF_DAY, hourOfDay)
+                                        cal.set(java.util.Calendar.MINUTE, minute)
+                                        timestamp = cal.timeInMillis
+                                    },
+                                    cal.get(java.util.Calendar.HOUR_OF_DAY),
+                                    cal.get(java.util.Calendar.MINUTE),
+                                    true
+                                ).show()
+                            },
+                            modifier = Modifier.weight(1f).height(56.dp),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(Icons.Rounded.AccessTime, null)
+                            Spacer(Modifier.width(8.dp))
+                            Text(timeStr, color = MaterialTheme.colorScheme.onSurface)
+                        }
+                    }
                 }
 
                 // ⭐ Rating

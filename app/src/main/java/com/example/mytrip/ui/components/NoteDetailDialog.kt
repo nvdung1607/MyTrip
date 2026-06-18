@@ -63,6 +63,7 @@ fun NoteDetailDialog(
     } else {
         emptyList()
     }
+    var showFullScreenPage by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<Int?>(null) }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -95,9 +96,17 @@ fun NoteDetailDialog(
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
+                            val timeStr = java.text.SimpleDateFormat("HH:mm", java.util.Locale("vi", "VN")).format(java.util.Date(note.timestamp))
                             if (dayNumber != null) {
                                 Text(
-                                    text = "Ngày $dayNumber",
+                                    text = "Ngày $dayNumber • ${DateUtils.formatDate(note.timestamp)} $timeStr",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            } else {
+                                Text(
+                                    text = "${DateUtils.formatDate(note.timestamp)} $timeStr",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.SemiBold
@@ -149,7 +158,9 @@ fun NoteDetailDialog(
                                         model = File(images[page]),
                                         contentDescription = null,
                                         contentScale = ContentScale.Crop,
-                                        modifier = Modifier.fillMaxSize()
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .clickable { showFullScreenPage = page }
                                     )
                                 }
 
@@ -480,6 +491,14 @@ fun NoteDetailDialog(
                 }
             }
         }
+    }
+
+    if (showFullScreenPage != null) {
+        FullScreenImageDialog(
+            images = images,
+            initialPage = showFullScreenPage!!,
+            onDismiss = { showFullScreenPage = null }
+        )
     }
 }
 

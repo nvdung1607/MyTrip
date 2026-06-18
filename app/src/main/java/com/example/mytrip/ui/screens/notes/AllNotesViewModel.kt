@@ -17,10 +17,12 @@ import kotlinx.coroutines.launch
 
 sealed class NoteFilter {
     object All : NoteFilter()
-    data class ByDay(val dayId: Long) : NoteFilter()
+    data class ByDate(val startOfDay: Long) : NoteFilter()
     data class ByWeek(val weekNumber: Int) : NoteFilter() // 1 = N1-N7, 2 = N8-N14, etc.
     data class ByTag(val tag: NoteTag) : NoteFilter()
 }
+
+data class DateFilterOption(val startOfDay: Long, val label: String, val dayNumber: Int?)
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AllNotesViewModel(application: Application) : AndroidViewModel(application) {
@@ -45,44 +47,30 @@ class AllNotesViewModel(application: Application) : AndroidViewModel(application
     private val _currentFilter = MutableStateFlow<NoteFilter>(NoteFilter.All)
     val currentFilter: StateFlow<NoteFilter> = _currentFilter.asStateFlow()
 
+    val dateFilterOptions: StateFlow<List<DateFilterOption>> = combine(days, _allNotes) { dayList, notes ->
+        val optionsMap = mutableMapOf<Long, DateFilterOption>()
+        for (day in dayList) {
+            optionsMap[day.date] = DateFilterOption(day.date, "Ngày ${day.dayNumber} (${com.example.mytrip.util.DateUtils.formatDate(day.date)})", day.dayNumber)
+        }
+        for (note in notes) {
+            val startOfDay = com.example.mytrip.util.DateUtils.startOfDay(note.timestamp)
+            if (!optionsMap.containsKey(startOfDay)) {
+                optionsMap[startOfDay] = DateFilterOption(startOfDay, "Ngày khác (${com.example.mytrip.util.DateUtils.formatDate(startOfDay)})", null)
+            }
+        }
+        optionsMap.values.sortedBy { it.startOfDay }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
     // Filtered notes derived from combining notes, days list, and current filter state
-    val filteredNotes: StateFlow<List<Note>> = combine(_allNotes, days, _currentFilter) { notes, dayList, filter ->
-        val sortedDays = dayList.sortedBy { it.date }
-
-        // Helper: resolve dayNumber for a note, falling back to timestamp if dayId is null
-        fun resolveDayNumber(note: Note): Int? {
-            if (note.dayId != null) {
-                return dayList.find { it.id == note.dayId }?.dayNumber
-            }
-            // Fallback: find the day whose date range covers the note's timestamp
-            for (day in sortedDays) {
-                val dayStart = day.date
-                val dayEnd = dayStart + 86_399_999L
-                if (note.timestamp in dayStart..dayEnd) {
-                    return day.dayNumber
-                }
-            }
-            return null
-        }
-
-        // Helper: find day by timestamp match
-        fun resolveDayId(note: Note): Long? {
-            if (note.dayId != null) return note.dayId
-            for (day in sortedDays) {
-                val dayStart = day.date
-                val dayEnd = dayStart + 86_399_999L
-                if (note.timestamp in dayStart..dayEnd) {
-                    return day.id
-                }
-            }
-            return null
-        }
-
+    val filteredNotes: StateFlow<List<Note>> = combine(_allNotes, dateFilterOptions, _currentFilter) { notes, options, filter ->
         val resultList = when (filter) {
             is NoteFilter.All -> notes
-            is NoteFilter.ByDay -> notes.filter { resolveDayId(it) == filter.dayId }
+            is NoteFilter.ByDate -> notes.filter { 
+                it.timestamp in filter.startOfDay..(filter.startOfDay + 86399999L) 
+            }
             is NoteFilter.ByWeek -> notes.filter { note ->
-                val dayNum = resolveDayNumber(note)
+                val startOfDay = com.example.mytrip.util.DateUtils.startOfDay(note.timestamp)
+                val dayNum = options.find { it.startOfDay == startOfDay }?.dayNumber
                 if (dayNum != null) {
                     val w = ((dayNum - 1) / 7) + 1
                     w == filter.weekNumber

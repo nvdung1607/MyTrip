@@ -190,17 +190,22 @@ class TripRepository(
     suspend fun getNoteById(id: Long): Note? = noteDao.getNoteById(id)
     suspend fun getNotesOnce(tripId: Long): List<Note> = noteDao.getNotesForTripOnce(tripId)
     suspend fun insertNote(note: Note): Long {
-        val noteId = noteDao.insertNote(note)
-        if (note.cost > 0) {
+        val days = dayDao.getDaysForTripOnce(note.tripId)
+        val resolvedDayId = days.find { day -> note.timestamp in day.date..(day.date + 86399999L) }?.id ?: note.dayId
+        val finalNote = note.copy(dayId = resolvedDayId)
+
+        val noteId = noteDao.insertNote(finalNote)
+        if (finalNote.cost > 0) {
             val record = ExpenseRecord(
-                tripId = note.tripId,
-                dayId = note.dayId,
-                category = note.tag.toExpenseCategory(),
-                amount = note.cost,
-                paidBy = note.paidBy,
-                description = note.name.ifBlank { note.comment.take(30) }.ifBlank { note.tag.label },
-                timestamp = note.timestamp,
-                noteId = noteId
+                tripId = finalNote.tripId,
+                dayId = finalNote.dayId,
+                category = finalNote.tag.toExpenseCategory(),
+                amount = finalNote.cost,
+                paidBy = finalNote.paidBy,
+                description = finalNote.name.ifBlank { finalNote.comment.take(30) }.ifBlank { finalNote.tag.label },
+                timestamp = finalNote.timestamp,
+                noteId = noteId,
+                advancedTo = finalNote.advancedTo
             )
             expenseDao.insertRecord(record)
         }
@@ -209,19 +214,24 @@ class TripRepository(
     }
 
     suspend fun updateNote(note: Note) {
-        noteDao.updateNote(note)
-        val existingRecord = expenseDao.getRecordByNoteId(note.id)
-        if (note.cost > 0) {
+        val days = dayDao.getDaysForTripOnce(note.tripId)
+        val resolvedDayId = days.find { day -> note.timestamp in day.date..(day.date + 86399999L) }?.id ?: note.dayId
+        val finalNote = note.copy(dayId = resolvedDayId)
+
+        noteDao.updateNote(finalNote)
+        val existingRecord = expenseDao.getRecordByNoteId(finalNote.id)
+        if (finalNote.cost > 0) {
             val updatedRecord = ExpenseRecord(
                 id = existingRecord?.id ?: 0,
-                tripId = note.tripId,
-                dayId = note.dayId,
-                category = note.tag.toExpenseCategory(),
-                amount = note.cost,
-                paidBy = note.paidBy,
-                description = note.name.ifBlank { note.comment.take(30) }.ifBlank { note.tag.label },
-                timestamp = note.timestamp,
-                noteId = note.id
+                tripId = finalNote.tripId,
+                dayId = finalNote.dayId,
+                category = finalNote.tag.toExpenseCategory(),
+                amount = finalNote.cost,
+                paidBy = finalNote.paidBy,
+                description = finalNote.name.ifBlank { finalNote.comment.take(30) }.ifBlank { finalNote.tag.label },
+                timestamp = finalNote.timestamp,
+                noteId = finalNote.id,
+                advancedTo = finalNote.advancedTo
             )
             if (existingRecord != null) {
                 expenseDao.updateRecord(updatedRecord)

@@ -158,13 +158,16 @@ fun HomeScreen(
             )
         }
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
                 .padding(innerPadding)
         ) {
-            // ── Filter chips ──────────────────────────────────────────────
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                // ── Filter chips ──────────────────────────────────────────────
             FilterChipsRow(
                 activeFilter = activeFilter,
                 onFilterSelected = { viewModel.filterByStatus(it) }
@@ -242,6 +245,17 @@ fun HomeScreen(
                     }
                 }
             }
+
+            Text(
+                text = "v${com.example.mytrip.BuildConfig.VERSION_NAME}",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontSize = 10.sp,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f)
+                ),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 8.dp)
+            )
         }
     }
 }

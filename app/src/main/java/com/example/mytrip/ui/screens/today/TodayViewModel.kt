@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -39,9 +40,10 @@ class TodayViewModel(application: Application) : AndroidViewModel(application) {
     private val _allDays = MutableStateFlow<List<Day>>(emptyList())
     val allDays: StateFlow<List<Day>> = _allDays.asStateFlow()
 
-    // 0=yesterday, 1=today, 2=tomorrow
     private val _selectedDayIndex = MutableStateFlow(1)
     val selectedDayIndex: StateFlow<Int> = _selectedDayIndex.asStateFlow()
+
+    private val _targetDateMillis = MutableStateFlow(DateUtils.todayMillis())
 
     private val _todayDay = MutableStateFlow<Day?>(null)
     val todayDay: StateFlow<Day?> = _todayDay.asStateFlow()
@@ -56,9 +58,13 @@ class TodayViewModel(application: Application) : AndroidViewModel(application) {
         else repository.getActivities(dayId)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    private val _notesFlow = _activeDayId.flatMapLatest { dayId ->
-        if (dayId == null) flowOf(emptyList())
-        else repository.getNotesForDay(dayId)
+    private val _notesFlow = _trip.flatMapLatest { trip ->
+        if (trip == null) flowOf(emptyList())
+        else repository.getNotes(trip.id)
+    }.combine(_targetDateMillis) { notes, targetMillis ->
+        val startOfDay = targetMillis
+        val endOfDay = targetMillis + 86_399_999L
+        notes.filter { it.timestamp in startOfDay..endOfDay }.sortedByDescending { it.timestamp }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val todayActivities: StateFlow<List<Activity>> = _activitiesFlow
@@ -89,6 +95,7 @@ class TodayViewModel(application: Application) : AndroidViewModel(application) {
             2 -> DateUtils.todayMillis() + 86_400_000L // tomorrow
             else -> DateUtils.todayMillis()             // today
         }
+        _targetDateMillis.value = targetMillis
         val day = days.firstOrNull { day ->
             val startOfDay = targetMillis
             val endOfDay = targetMillis + 86_399_999L
@@ -102,8 +109,9 @@ class TodayViewModel(application: Application) : AndroidViewModel(application) {
      * Navigate directly to the day matching [dateMillis] (any date, not just ±1 day from today).
      */
     fun jumpToDate(dateMillis: Long) {
-        val startOfDay = dateMillis
-        val endOfDay = dateMillis + 86_399_999L
+        val startOfDay = DateUtils.startOfDay(dateMillis)
+        _targetDateMillis.value = startOfDay
+        val endOfDay = startOfDay + 86_399_999L
         val day = _allDays.value.firstOrNull { it.date in startOfDay..endOfDay }
         _todayDay.value = day
         _activeDayId.value = day?.id

@@ -65,6 +65,7 @@ fun AllNotesScreen(
     val days by viewModel.days.collectAsStateWithLifecycle()
     val filteredNotes by viewModel.filteredNotes.collectAsStateWithLifecycle()
     val currentFilter by viewModel.currentFilter.collectAsStateWithLifecycle()
+    val dateFilterOptions by viewModel.dateFilterOptions.collectAsStateWithLifecycle()
 
     var noteOptionsTarget by remember { mutableStateOf<Note?>(null) }
     var noteToDelete by remember { mutableStateOf<Note?>(null) }
@@ -129,8 +130,8 @@ fun AllNotesScreen(
                     when (group) {
                         "ALL" -> viewModel.setFilter(NoteFilter.All)
                         "DAY" -> {
-                            if (days.isNotEmpty()) {
-                                viewModel.setFilter(NoteFilter.ByDay(days.first().id))
+                            if (dateFilterOptions.isNotEmpty()) {
+                                viewModel.setFilter(NoteFilter.ByDate(dateFilterOptions.first().startOfDay))
                             }
                         }
                         "WEEK" -> viewModel.setFilter(NoteFilter.ByWeek(1))
@@ -143,6 +144,7 @@ fun AllNotesScreen(
             AnimatedSubFilters(
                 activeGroup = activeCategoryGroup,
                 days = days,
+                dateFilterOptions = dateFilterOptions,
                 currentFilter = currentFilter,
                 onFilterSelected = { viewModel.setFilter(it) }
             )
@@ -335,6 +337,7 @@ private fun ScrollableFilterCategories(
 private fun AnimatedSubFilters(
     activeGroup: String,
     days: List<Day>,
+    dateFilterOptions: List<DateFilterOption>,
     currentFilter: NoteFilter,
     onFilterSelected: (NoteFilter) -> Unit
 ) {
@@ -345,17 +348,16 @@ private fun AnimatedSubFilters(
         ) {
             when (activeGroup) {
                 "DAY" -> {
-                    val sortedDays = days.sortedBy { it.dayNumber }
                     LazyRow(
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(sortedDays, key = { it.id }) { day ->
-                            val selected = currentFilter is NoteFilter.ByDay && currentFilter.dayId == day.id
+                        items(dateFilterOptions, key = { it.startOfDay }) { option ->
+                            val selected = currentFilter is NoteFilter.ByDate && currentFilter.startOfDay == option.startOfDay
                             MyTripChip(
-                                text = "Ngày ${day.dayNumber} (${DateUtils.formatDate(day.date)})",
+                                text = option.label,
                                 selected = selected,
-                                onClick = { onFilterSelected(NoteFilter.ByDay(day.id)) }
+                                onClick = { onFilterSelected(NoteFilter.ByDate(option.startOfDay)) }
                             )
                         }
                     }
@@ -477,7 +479,13 @@ private fun AllNoteCard(
                     }
                 }
 
-                Spacer(Modifier.height(6.dp))
+                Text(
+                    text = "${DateUtils.formatDate(note.timestamp).substring(0, 5)} ${java.text.SimpleDateFormat("HH:mm", java.util.Locale("vi", "VN")).format(java.util.Date(note.timestamp))}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(Modifier.height(4.dp))
 
                 // Title
                 Text(
@@ -612,8 +620,7 @@ fun AllNoteListRow(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
-                            .format(java.util.Date(note.timestamp)),
+                        text = "${DateUtils.formatDate(note.timestamp)} ${java.text.SimpleDateFormat("HH:mm", java.util.Locale("vi", "VN")).format(java.util.Date(note.timestamp))}",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

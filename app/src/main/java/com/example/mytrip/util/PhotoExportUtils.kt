@@ -109,6 +109,9 @@ object PhotoExportUtils {
         val lineSpacing = paint.textSize * 1.2f
 
         val lines = mutableListOf<String>()
+        val timeStr = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale("vi", "VN")).format(java.util.Date(note.timestamp))
+        lines.add("${note.tag.icon} $timeStr")
+        
         val nameText = note.name.ifBlank { note.tag.label }
         lines.add(nameText)
         
