@@ -245,6 +245,7 @@ fun HomeScreen(
                     }
                 }
             }
+            }
 
             Text(
                 text = "v${com.example.mytrip.BuildConfig.VERSION_NAME}",
